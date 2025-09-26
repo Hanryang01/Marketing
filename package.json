@@ -1,0 +1,62 @@
+{
+  "name": "sihm-user-management",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "chart.js": "^4.5.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "concurrently": "^7.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "file-saver": "^2.0.5",
+    "mysql2": "^3.14.5",
+    "node-fetch": "^3.3.2",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "5.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "start:3000": "set PORT=3000 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
+    "build": "set NODE_OPTIONS=--no-deprecation --no-warnings && craco build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server:mysql": "set MYSQL_PASSWORD=8123& node --no-deprecation --no-warnings server.js",
+    "dev": "concurrently \"npm run server:mysql\" \"npm run start:3000\"",
+    "prod": "npm run build && npm run server:mysql"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@craco/craco": "^7.1.0",
+    "babel-loader": "^10.0.0",
+    "css-loader": "^7.1.2",
+    "file-loader": "^6.2.0",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2"
+  }
+}
