@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'sihm-admin',
-    script: 'server-mysql.js',
+    script: 'server.js',
     instances: 2, // CPU 코어 수에 맞게 조정
     exec_mode: 'cluster',
     env: {

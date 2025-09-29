@@ -73,6 +73,26 @@ setUsersPool(pool);
 setRevenuePool(pool);
 setHistoryPool(pool);
 
+// 헬스체크 엔드포인트
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: process.version
+  });
+});
+
+// API 테스트 엔드포인트
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // 라우터 등록
 app.use('/', usersRouter);
 app.use('/', revenueRouter);
@@ -342,6 +362,32 @@ const scheduleExpiredUserProcessing = () => {
   console.log(`⏰ 자동 만료 처리 스케줄링 완료 - 다음 실행: ${tomorrow.toISOString()}`);
 };
 
+// 누락된 만료 처리 복구 함수
+const recoverMissedProcessing = async () => {
+  try {
+    console.log('🔍 누락된 만료 처리 복구 시작...');
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = require('./utils/helpers').DateUtils.getTodayString();
+    
+    console.log(`📅 어제 날짜 확인: ${yesterdayString}`);
+    
+    // 어제 처리되지 않은 만료 사용자 확인 및 처리
+    const recoveredCount = await checkAndUpdateExpiredApprovals();
+    
+    if (recoveredCount > 0) {
+      console.log(`✅ 누락된 만료 처리 복구 완료: ${recoveredCount}명 처리`);
+    } else {
+      console.log('📝 복구할 만료된 사용자가 없습니다.');
+    }
+    
+  } catch (error) {
+    console.error('❌ 누락 복구 실패:', error.message);
+  }
+};
+
 // 서버 초기화 및 시작
 const startServer = async () => {
   try {
@@ -350,6 +396,10 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
       
+      // 서버 시작 시 누락된 처리 복구
+      recoverMissedProcessing();
+      
+      // 정상 스케줄링 시작
       scheduleExpiredUserProcessing();
     });
     

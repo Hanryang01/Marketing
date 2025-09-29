@@ -61,7 +61,7 @@ const NotificationModal = () => {
         endDateReminder7Days: notificationSettings.endDateReminder7Days || true,
         endDateReminderToday: notificationSettings.endDateReminderToday || true
       };
-      
+    
       // 이전 설정과 비교하여 변경된 경우에만 업데이트
       setTempSettings(prev => {
         const hasChanged = 
