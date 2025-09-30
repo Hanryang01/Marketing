@@ -19,13 +19,14 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "set PORT=3002 && react-scripts start",
     "start:3000": "set PORT=3000 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
+    "start:3002": "set PORT=3002 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
     "build": "set NODE_OPTIONS=--no-deprecation --no-warnings && craco build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server:mysql": "set MYSQL_PASSWORD=8123& node --no-deprecation --no-warnings server.js",
-    "dev": "concurrently \"npm run server:mysql\" \"npm run start:3000\"",
+    "server:mysql": "set MYSQL_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
+    "dev": "concurrently \"npm run server:mysql\" \"npm run start:3002\"",
     "prod": "npm run build && npm run server:mysql"
   },
   "eslintConfig": {

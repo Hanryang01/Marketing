@@ -52,7 +52,7 @@ const UserStatus = () => {
   // 월별 활성화 업체 수 데이터 가져오기 (그래프용)
   const loadMonthlyActiveCompanies = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/revenue?type=monthly-active-companies&year=${selectedYear}`);
+      const response = await fetch(`http://localhost:3003/api/revenue?type=monthly-active-companies&year=${selectedYear}`);
       const result = await response.json();
       
       if (result.success) {
@@ -70,7 +70,7 @@ const UserStatus = () => {
   // 월별 활성화 업체 수 데이터 가져오기 (표용 - 업체 형태별 구분)
   const loadMonthlyActiveTableData = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/revenue?type=monthly-active-companies-by-type&year=${selectedYear}`);
+      const response = await fetch(`http://localhost:3003/api/revenue?type=monthly-active-companies-by-type&year=${selectedYear}`);
       const result = await response.json();
       
       if (result.success) {
@@ -114,7 +114,7 @@ const UserStatus = () => {
       setLoading(true);
       
       // 사용자 데이터만 가져오기
-      const usersResponse = await fetch('http://localhost:3001/api/users');
+      const usersResponse = await fetch('http://localhost:3003/api/users');
       const usersResult = await usersResponse.json();
       
       if (!usersResult.success) {

@@ -51,7 +51,7 @@ const SalesManagement = () => {
   // API 호출 함수들
   const apiCall = async (url, options = {}) => {
     try {
-      const response = await fetch(`http://localhost:3001${url}`, {
+      const response = await fetch(`http://localhost:3003${url}`, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
@@ -320,7 +320,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.replace(/,/g, '')) || 0
       };
 
-      const response = await fetch('http://localhost:3001/api/revenue', {
+      const response = await fetch('http://localhost:3003/api/revenue', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -418,7 +418,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.toString().replace(/,/g, '')) || 0
       };
 
-                  const response = await fetch(`http://localhost:3001/api/revenue/${editingRevenue.id}`, {
+                  const response = await fetch(`http://localhost:3003/api/revenue/${editingRevenue.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -461,7 +461,7 @@ const SalesManagement = () => {
   // 매출 삭제 실행
   const performDeleteRevenue = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/revenue/${id}`, {
+      const response = await fetch(`http://localhost:3003/api/revenue/${id}`, {
         method: 'DELETE',
       });
 

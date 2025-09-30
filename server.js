@@ -9,7 +9,7 @@ process.env.TZ = 'Asia/Seoul';
 // 설정값 상수화
 const config = {
   server: {
-    port: process.env.PORT || 3001
+    port: process.env.PORT || 3003
   },
   database: {
     host: process.env.DB_HOST || 'localhost',
@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   const allowedOrigins = process.env.NODE_ENV === 'production' 
     ? [process.env.CORS_ORIGIN || 'https://your-domain.com']
-    : ['http://localhost:3000'];
+    : ['http://localhost:3000', 'http://localhost:3002'];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {

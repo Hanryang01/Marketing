@@ -49,7 +49,7 @@ const RevenueStatus = () => {
   // 매출 데이터 가져오기
   const loadRevenueData = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/revenue');
+      const response = await fetch('http://localhost:3003/api/revenue');
       const result = await response.json();
       
       if (result.success) {

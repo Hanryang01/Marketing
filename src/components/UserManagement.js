@@ -64,7 +64,7 @@ const UserManagement = () => {
   // API 호출 함수
   const apiCall = useCallback(async (url, options = {}) => {
     try {
-      const response = await fetch(`http://localhost:3001${url}`, {
+      const response = await fetch(`http://localhost:3003${url}`, {
         headers: {
           'Content-Type': 'application/json',
         },

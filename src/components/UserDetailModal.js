@@ -314,7 +314,7 @@ const UserDetailModal = ({
   // 사용자 이력 조회 - 승인 완료 이력만 표시 (승인 이력 탭과 동일)
   const fetchUserHistory = async (userId) => {
         try {
-      const response = await fetch(`http://localhost:3001/api/company-history-list`);
+      const response = await fetch(`http://localhost:3003/api/company-history-list`);
       const result = await response.json();
       
       if (result.success) {
@@ -344,7 +344,7 @@ const UserDetailModal = ({
   // 실제 삭제 실행 함수
   const executeDelete = async (historyId) => {
         try {
-      const response = await fetch(`http://localhost:3001/api/history/user/${historyId}`, {
+      const response = await fetch(`http://localhost:3003/api/history/user/${historyId}`, {
         method: 'DELETE'
       });
 

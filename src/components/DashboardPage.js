@@ -21,7 +21,7 @@ const DashboardPage = () => {
   const apiCall = async (url, options = {}) => {
     try {
       // 프록시 설정이 작동하지 않으므로 직접 백엔드 URL 사용
-      const fullUrl = url.startsWith('http') ? url : `http://localhost:3001${url}`;
+      const fullUrl = url.startsWith('http') ? url : `http://localhost:3003${url}`;
             const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',

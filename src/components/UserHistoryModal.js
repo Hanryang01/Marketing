@@ -9,7 +9,7 @@ const UserHistoryModal = ({ user, onClose }) => {
   const fetchDetailedHistory = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/history/user/detail?company=${user.companyName}`);
+      const response = await fetch(`http://localhost:3003/api/history/user/detail?company=${user.companyName}`);
       const data = await response.json();
       if (data.success) {
         setHistoryData(data.data);

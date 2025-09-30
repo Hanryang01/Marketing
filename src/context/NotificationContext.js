@@ -80,7 +80,7 @@ export const NotificationProvider = ({ children }) => {
       // 2. 종료일 체크 (서버 데이터)
       if (notificationSettings.endDateReminderToday || notificationSettings.endDateReminder7Days) {
         try {
-          const response = await fetch('http://localhost:3001/api/users/end-date-check');
+          const response = await fetch('http://localhost:3003/api/users/end-date-check');
           if (response.ok) {
             const data = await response.json();
             

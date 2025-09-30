@@ -6,11 +6,11 @@ module.exports = {
     exec_mode: 'cluster',
     env: {
       NODE_ENV: 'development',
-      PORT: 3001
+      PORT: 3003
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3001,
+      PORT: 3003,
       DB_HOST: process.env.DB_HOST || 'localhost',
       DB_PORT: process.env.DB_PORT || 3306,
       DB_USER: process.env.DB_USER || 'root',
