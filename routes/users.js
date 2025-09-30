@@ -474,8 +474,8 @@ router.put('/api/users/:id', async (req, res) => {
           await connection.execute(`
             INSERT INTO company_history (
               user_id_string, company_name, user_name, company_type, status_type,
-              start_date, end_date, pricing_plan, mobile_phone, email, position, department, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
           `, [
             user_id,
             company_name,
@@ -487,8 +487,7 @@ router.put('/api/users/:id', async (req, res) => {
             pricing_plan,
             mobile_phone,
             email,
-            manager_position,
-            department
+            manager_position
           ]);
         } catch (historyError) {
           console.error(`이력 기록 실패:`, historyError.message);
@@ -513,8 +512,8 @@ router.put('/api/users/:id', async (req, res) => {
             await connection.execute(`
               INSERT INTO company_history (
                 user_id_string, company_name, user_name, company_type, status_type,
-                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, department, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             `, [
               user_id,
               company_name,
@@ -526,8 +525,7 @@ router.put('/api/users/:id', async (req, res) => {
               pricing_plan,
               mobile_phone,
               email,
-              manager_position,
-              department
+              manager_position
             ]);
           }
         }
