@@ -104,7 +104,7 @@ const UserManagement = () => {
           businessLicense: user.business_license,
           notes: user.notes,
           accountInfo: user.account_info,
-          position: user.position || user.manager_position,
+          position: user.manager_position,
           accountantName: user.accountant_name,
           accountantPosition: user.accountant_position,
           accountantMobile: user.accountant_mobile,

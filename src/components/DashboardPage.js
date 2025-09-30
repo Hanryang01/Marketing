@@ -69,7 +69,7 @@ const DashboardPage = () => {
           faxNumber: user.fax_number || '',
           address: user.address || '',
           notes: user.notes || '',
-            position: user.position || user.manager_position || '',
+            position: user.manager_position || '',
           approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정'))
         }));
         // setUsers(users); // 사용되지 않는 변수 제거

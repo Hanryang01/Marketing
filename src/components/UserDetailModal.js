@@ -120,7 +120,7 @@ const UserDetailModal = ({
         pricingPlan: user.pricingPlan || user.pricing_plan || '무료',
         approvalStatus: user.approvalStatus || user.approval_status || '승인 예정',
         isActive: user.isActive || user.is_active || 1,
-        position: user.position || user.manager_position || '',
+        position: user.manager_position || '',
         msdsLimit: user.msdsLimit || user.msds_limit || 0,
         aiImageLimit: user.aiImageLimit || user.ai_image_limit || 0,
         aiReportLimit: user.aiReportLimit || user.ai_report_limit || 0
@@ -650,7 +650,7 @@ const UserDetailModal = ({
                 
                 {renderFormRow(
                   renderInputField('부서', 'department', editedUser?.department !== undefined ? editedUser.department : (user.department || ''), (e) => handleInputChange('department', e.target.value)),
-                  renderInputField('직책', 'position', editedUser?.position !== undefined ? editedUser.position : (user.position || ''), (e) => handleInputChange('position', e.target.value))
+                  renderInputField('직책', 'position', editedUser?.position !== undefined ? editedUser.position : (user.manager_position || ''), (e) => handleInputChange('position', e.target.value))
                 )}
                 
                 {renderFormRow(
