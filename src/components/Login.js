@@ -18,9 +18,9 @@ const Login = ({ onLogin }) => {
     const isDevelopment = process.env.NODE_ENV === 'development';
     
     if (isDevelopment) {
-      // 개발 버전: 빈 값이어도 로그인 허용
-      const userEmail = email.trim() || 'admin@example.com';
-      const userName = email.trim() || 'admin';
+      // 개발 버전: 빈 값이어도 로그인 허용 (기본값: herlab)
+      const userEmail = email.trim() || 'herlab@admin.com';
+      const userName = email.trim() || 'herlab';
       
       onLogin({ 
         id: 1, 
@@ -32,11 +32,11 @@ const Login = ({ onLogin }) => {
       navigate('/dashboard');
     } else {
       // 배포 버전: 하드코딩된 ID/PW 확인
-      if (email.trim() === 'technonia' && password === 'nonia8123') {
+      if (email.trim() === 'herlab' && password === 'herlab') {
         onLogin({ 
           id: 1, 
-          username: 'technonia', 
-          email: 'technonia@admin.com',
+          username: 'herlab', 
+          email: 'herlab@admin.com',
           role: 'admin' 
         }, `admin-session-${Date.now()}`);
         
@@ -84,7 +84,7 @@ const Login = ({ onLogin }) => {
                id="email"
                value={email}
                onChange={(e) => setEmail(e.target.value)}
-               placeholder="사용자 ID"
+               placeholder="herlab"
                className="form-input"
              />
           </div>
@@ -97,7 +97,7 @@ const Login = ({ onLogin }) => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호"
+                placeholder="herlab"
                 className="form-input"
               />
               <button
