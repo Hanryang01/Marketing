@@ -12,42 +12,7 @@ const setPool = (databasePool) => {
 
 // 공통 에러 처리 함수는 utils/helpers에서 import
 
-// company_history 테이블에서 department 컬럼 삭제
-router.post('/api/remove-department-column', async (req, res) => {
-  let connection;
-  try {
-    connection = await pool.getConnection();
-    
-    // department 컬럼이 존재하는지 확인
-    const [columns] = await connection.execute(`
-      SHOW COLUMNS FROM company_history LIKE 'department'
-    `);
-    
-    if (columns.length > 0) {
-      // department 컬럼 삭제
-      await connection.execute(`
-        ALTER TABLE company_history DROP COLUMN department
-      `);
-      
-      res.json({
-        success: true,
-        message: 'department 컬럼이 삭제되었습니다.'
-      });
-    } else {
-      res.json({
-        success: true,
-        message: 'department 컬럼이 존재하지 않습니다.'
-      });
-    }
-  } catch (err) {
-    console.error('department 컬럼 삭제 에러:', err);
-    handleError(res, err, 'Failed to remove department column');
-  } finally {
-    if (connection) {
-      connection.release();
-    }
-  }
-});
+// department 컬럼 삭제 API는 더 이상 필요하지 않음 (이미 삭제됨)
 
 // ID 136 데이터 수정 API
 router.post('/api/fix-id136-data', async (req, res) => {
@@ -55,16 +20,16 @@ router.post('/api/fix-id136-data', async (req, res) => {
   try {
     connection = await pool.getConnection();
     
-    // ID 136의 데이터 수정: position을 3으로, department를 2로
+    // ID 136의 데이터 수정: manager_position을 3으로
     await connection.execute(`
       UPDATE company_history 
-      SET position = '3', department = '2' 
+      SET manager_position = '3' 
       WHERE id = 136
     `);
     
     res.json({
       success: true,
-      message: 'ID 136 데이터가 수정되었습니다. Position: 3, Department: 2'
+      message: 'ID 136 데이터가 수정되었습니다. Manager Position: 3'
     });
   } catch (err) {
     console.error('ID 136 데이터 수정 에러:', err);
