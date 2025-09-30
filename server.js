@@ -21,7 +21,9 @@ const config = {
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
     charset: 'utf8mb4',
-    timezone: '+09:00'
+    timezone: '+09:00',
+    acquireTimeout: 60000,
+    timeout: 60000
   }
 };
 
@@ -229,7 +231,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     const [expiredUsers] = await conn.execute(`
       SELECT 
         id, user_id, company_name, user_name, company_type, pricing_plan,
-        start_date, end_date, mobile_phone, email, department
+        start_date, end_date, mobile_phone, email, department, manager_position
       FROM users 
       WHERE approval_status = '승인 완료' 
       AND company_type IN ('컨설팅 업체', '일반 업체')
@@ -256,7 +258,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
             user.pricing_plan,
             user.mobile_phone,
             user.email,
-            user.position || null,
+            user.manager_position || null,
             user.department || null
           ]);
           console.log(`📝 ${user.user_id} (${user.company_name}) - 기간 경과로 승인 완료 이력 기록`);

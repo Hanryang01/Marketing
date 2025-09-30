@@ -227,7 +227,7 @@ const UserManagement = () => {
             companyName: history.company_name,
             userName: history.user_name,
             email: history.email,
-            department: history.department || '', // company_history 테이블에 department 컬럼 추가됨
+            department: '', // company_history 테이블에는 department 필드 없음
             mobilePhone: history.mobile_phone,
             phoneNumber: history.phone_number,
             faxNumber: history.fax_number,

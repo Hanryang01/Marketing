@@ -12,50 +12,36 @@ const setPool = (databasePool) => {
 
 // 공통 에러 처리 함수는 utils/helpers에서 import
 
-// company_history 테이블에 department 컬럼 추가
-router.post('/api/add-department-column', async (req, res) => {
+// company_history 테이블에서 department 컬럼 삭제
+router.post('/api/remove-department-column', async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
     
-    // department 컬럼이 이미 존재하는지 확인
+    // department 컬럼이 존재하는지 확인
     const [columns] = await connection.execute(`
       SHOW COLUMNS FROM company_history LIKE 'department'
     `);
     
-    if (columns.length === 0) {
-      // department 컬럼 추가
+    if (columns.length > 0) {
+      // department 컬럼 삭제
       await connection.execute(`
-        ALTER TABLE company_history ADD COLUMN department VARCHAR(100) AFTER position
-      `);
-      
-      // ID 69의 데이터 수정: position을 부장으로, department를 전략개발팀으로
-      await connection.execute(`
-        UPDATE company_history 
-        SET position = '부장', department = '전략개발팀' 
-        WHERE id = 69
-      `);
-      
-      // ID 136의 데이터 수정: position을 3으로, department를 2로
-      await connection.execute(`
-        UPDATE company_history 
-        SET position = '3', department = '2' 
-        WHERE id = 136
+        ALTER TABLE company_history DROP COLUMN department
       `);
       
       res.json({
         success: true,
-        message: 'department 컬럼이 추가되고 ID 69 데이터가 수정되었습니다.'
+        message: 'department 컬럼이 삭제되었습니다.'
       });
     } else {
       res.json({
         success: true,
-        message: 'department 컬럼이 이미 존재합니다.'
+        message: 'department 컬럼이 존재하지 않습니다.'
       });
     }
   } catch (err) {
-    console.error('department 컬럼 추가 에러:', err);
-    handleError(res, err, 'Failed to add department column');
+    console.error('department 컬럼 삭제 에러:', err);
+    handleError(res, err, 'Failed to remove department column');
   } finally {
     if (connection) {
       connection.release();
@@ -244,7 +230,7 @@ router.get('/api/company-history', async (req, res) => {
     let query = `
       SELECT 
         id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
-        start_date, end_date, pricing_plan, position, department, mobile_phone, email, created_at
+        start_date, end_date, pricing_plan, position, mobile_phone, email, created_at
       FROM company_history
     `;
     let values = [];
@@ -291,7 +277,7 @@ router.get('/api/company-history-list', async (req, res) => {
     const [rows] = await connection.execute(`
       SELECT 
         id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
-        start_date, end_date, pricing_plan, position, department, mobile_phone, email, created_at
+        start_date, end_date, pricing_plan, position, mobile_phone, email, created_at
       FROM company_history
       ORDER BY created_at DESC
       LIMIT 10
