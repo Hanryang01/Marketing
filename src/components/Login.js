@@ -41,6 +41,15 @@ const Login = ({ onLogin }) => {
         }, `admin-session-${Date.now()}`);
         
         navigate('/dashboard');
+      } else if (email.trim() === 'technonia' && password === 'nonia8123') {
+        onLogin({ 
+          id: 2, 
+          username: 'technonia', 
+          email: 'technonia@admin.com',
+          role: 'admin' 
+        }, `admin-session-${Date.now()}`);
+        
+        navigate('/dashboard');
       } else {
         showMessage('error', '로그인 오류', '잘못된 ID 또는 비밀번호입니다.', {
           showCancel: false,
@@ -84,7 +93,7 @@ const Login = ({ onLogin }) => {
                id="email"
                value={email}
                onChange={(e) => setEmail(e.target.value)}
-               placeholder="herlab"
+               placeholder=""
                className="form-input"
              />
           </div>
@@ -97,7 +106,7 @@ const Login = ({ onLogin }) => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="herlab"
+                placeholder=""
                 className="form-input"
               />
               <button
