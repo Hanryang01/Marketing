@@ -284,7 +284,7 @@ const UserDetailModal = ({
         pricing_plan: editedUser.pricingPlan,
         start_date: editedUser.startDate,
         end_date: editedUser.endDate,
-        manager_position: editedUser.position,
+        manager_position: editedUser.position || '',
         accountant_name: editedUser.accountantName,
         accountant_position: editedUser.accountantPosition,
         accountant_mobile: editedUser.accountantMobile || '',
