@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `revenue` (
   INDEX `idx_payment_date` (`payment_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User status history table (REMOVED - 기능이 company_history와 중복됨)
+-- User status history table (REMOVED - 기능이 company_history와 중복되어 완전 삭제됨)
 
 -- Company history table (for approval tracking)
 CREATE TABLE IF NOT EXISTS `company_history` (
