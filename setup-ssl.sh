@@ -26,7 +26,7 @@ log_error() {
 }
 
 # 도메인 설정
-DOMAIN="manage.sihm.co.kr"
+DOMAIN="marketing.sihm.co.kr"
 EMAIL="admin@sihm.co.kr"  # Let's Encrypt 알림용 이메일
 
 # 1. Certbot 설치 확인

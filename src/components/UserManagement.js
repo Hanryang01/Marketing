@@ -50,7 +50,7 @@ const UserManagement = () => {
     faxNumber: '',
     address: '',
     businessLicense: '',
-    managerPosition: '',
+    position: '',
     startDate: '',
     endDate: '',
     pricingPlan: '무료',
@@ -104,7 +104,7 @@ const UserManagement = () => {
           businessLicense: user.business_license,
           notes: user.notes,
           accountInfo: user.account_info,
-          managerPosition: user.manager_position,
+          position: user.position || user.manager_position,
           accountantName: user.accountant_name,
           accountantPosition: user.accountant_position,
           accountantMobile: user.accountant_mobile,
@@ -233,7 +233,7 @@ const UserManagement = () => {
             faxNumber: history.fax_number,
             address: history.address,
             businessLicense: history.business_license,
-            managerPosition: history.position || history.manager_position,
+            position: history.position,
             startDate: history.start_date,
             endDate: history.end_date,
             companyType: history.company_type,
@@ -321,7 +321,7 @@ const UserManagement = () => {
         pricing_plan: userData.pricingPlan,
         start_date: userData.startDate,
         end_date: userData.endDate,
-        manager_position: userData.managerPosition,
+        manager_position: userData.position || '',
         representative: '',  // 대표자는 별도로 입력받지 않으므로 빈 문자열
         industry: ''
       };
@@ -348,7 +348,7 @@ const UserManagement = () => {
           faxNumber: '',
           address: '',
           businessLicense: '',
-          managerPosition: '',
+          position: '',
           startDate: '',
           endDate: '',
           pricingPlan: '무료',
@@ -619,7 +619,7 @@ const UserManagement = () => {
         pricing_plan: approvalData.pricingPlan || approvalData.pricing_plan,
         start_date: approvalData.startDate || approvalData.start_date,
         end_date: approvalData.endDate || approvalData.end_date,
-        manager_position: approvalData.managerPosition || approvalData.manager_position,
+        manager_position: approvalData.position,
         accountant_name: approvalData.accountantName || approvalData.accountant_name,
         accountant_position: approvalData.accountantPosition || approvalData.accountant_position,
         accountant_mobile: approvalData.accountantMobile || approvalData.accountant_mobile || '',
@@ -822,7 +822,7 @@ const UserManagement = () => {
                   faxNumber: '',
                   address: '',
                   businessLicense: '',
-                  managerPosition: '',
+                  position: '',
                   startDate: '',
                   endDate: '',
                   pricingPlan: '무료',
@@ -983,7 +983,7 @@ const UserManagement = () => {
                   <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.userId}</td>
                   <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.companyName}</td>
                   <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.userName}</td>
-                  {(activeTab === '전체' || activeTab === '무료' || activeTab === '탈퇴' || activeTab === '승인') && <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.managerPosition || ''}</td>}
+                  {(activeTab === '전체' || activeTab === '무료' || activeTab === '탈퇴' || activeTab === '승인') && <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.position || ''}</td>}
                                     { activeTab === '무료' ? (
                     <>
                       <td onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>

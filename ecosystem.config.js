@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'sihm-admin',
     script: 'server.js',
-    instances: 2, // CPU 코어 수에 맞게 조정
+    instances: process.env.PM2_INSTANCES || 1, // AWS EC2 인스턴스 CPU 코어 수에 맞게 조정
     exec_mode: 'cluster',
     env: {
       NODE_ENV: 'development',
@@ -11,13 +11,13 @@ module.exports = {
     env_production: {
       NODE_ENV: 'production',
       PORT: 3001,
-      DB_HOST: 'localhost',
-      DB_PORT: 3306,
-      DB_USER: 'root',
-      DB_PASSWORD: '8123',
-      DB_NAME: 'sihm_user_management',
-      DB_CONNECTION_LIMIT: 20,
-      CORS_ORIGIN: 'https://manage.sihm.co.kr'
+      DB_HOST: process.env.DB_HOST || 'localhost',
+      DB_PORT: process.env.DB_PORT || 3306,
+      DB_USER: process.env.DB_USER || 'root',
+      DB_PASSWORD: process.env.DB_PASSWORD || '8123',
+      DB_NAME: process.env.DB_NAME || 'sihm_user_management',
+      DB_CONNECTION_LIMIT: process.env.DB_CONNECTION_LIMIT || 20,
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://marketing.sihm.co.kr'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

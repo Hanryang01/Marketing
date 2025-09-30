@@ -183,8 +183,8 @@ chmod +x setup-ssl.sh
 - 프로덕션: `NODE_ENV=production`
 
 ### 배포 URL
-- 프로덕션: https://manage.sihm.co.kr
-- API: https://manage.sihm.co.kr/api/test
+- 프로덕션: https://marketing.sihm.co.kr
+- API: https://marketing.sihm.co.kr/api/test
 
 ## 📚 추가 문서
 

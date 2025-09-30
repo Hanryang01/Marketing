@@ -230,10 +230,10 @@ router.post('/api/users', async (req, res) => {
     const {
       company_name, user_id, email, password_hash, company_type,
       user_name, department, mobile_phone, business_license,
-      phone_number, fax_number, address, notes, msds_limit,
+      phone_number, fax_number, address, notes, account_info, msds_limit,
       ai_image_limit, ai_report_limit, is_active, approval_status,
-      pricing_plan, start_date, end_date, manager_name, manager_position,
-      manager_mobile, manager_email, representative, industry
+      pricing_plan, start_date, end_date, manager_position, representative, industry,
+      accountant_name, accountant_position, accountant_mobile, accountant_email
     } = req.body;
 
     const finalCompanyType = company_type || '무료 사용자';
@@ -297,19 +297,20 @@ router.post('/api/users', async (req, res) => {
       INSERT INTO users (
         company_name, user_id, email, password_hash, company_type,
         user_name, department, mobile_phone, business_license,
-        phone_number, fax_number, address, notes, msds_limit,
+        phone_number, fax_number, address, notes, account_info, msds_limit,
         ai_image_limit, ai_report_limit, is_active, approval_status,
-        pricing_plan, start_date, end_date, manager_name, manager_position,
-        manager_mobile, manager_email, representative, industry,
+        pricing_plan, start_date, end_date, manager_position, representative, industry,
+        accountant_name, accountant_position, accountant_mobile, accountant_email,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       company_name || null, user_id || null, email || null, password_hash || null, finalCompanyType,
       user_name || null, department || null, mobile_phone || null, business_license || null,
-      phone_number || null, fax_number || null, address || null, notes || null, msds_limit || null,
+      phone_number || null, fax_number || null, address || null, notes || null, account_info || null, msds_limit || null,
       ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || '승인 예정',
-      finalPricingPlan, startDateValue, endDateValue, manager_name || null, manager_position || null,
-      manager_mobile || null, manager_email || null, representative || null, industry || null
+      finalPricingPlan, startDateValue, endDateValue, manager_position || null, representative || null, industry || null,
+      accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null,
+      new Date(), new Date()
     ]);
 
     res.status(201).json({
@@ -336,10 +337,10 @@ router.put('/api/users/:id', async (req, res) => {
     const {
       company_name, user_id, email, password_hash, company_type,
       user_name, department, mobile_phone, business_license,
-      phone_number, fax_number, address, notes, msds_limit,
+      phone_number, fax_number, address, notes, account_info, msds_limit,
       ai_image_limit, ai_report_limit, is_active, approval_status,
-      pricing_plan, start_date, end_date, manager_name, manager_position,
-      manager_mobile, manager_email, representative, industry
+      pricing_plan, start_date, end_date, manager_position, representative, industry,
+      accountant_name, accountant_position, accountant_mobile, accountant_email
     } = req.body;
 
     if (!user_id || !user_id.trim()) {
@@ -415,19 +416,19 @@ router.put('/api/users/:id', async (req, res) => {
       UPDATE users SET
         company_name = ?, user_id = ?, email = ?, password_hash = ?, company_type = ?,
         user_name = ?, department = ?, mobile_phone = ?, business_license = ?,
-        phone_number = ?, fax_number = ?, address = ?, notes = ?, msds_limit = ?,
+        phone_number = ?, fax_number = ?, address = ?, notes = ?, account_info = ?, msds_limit = ?,
         ai_image_limit = ?, ai_report_limit = ?, is_active = ?, approval_status = ?,
-        pricing_plan = ?, start_date = ?, end_date = ?, manager_name = ?, manager_position = ?,
-        manager_mobile = ?, manager_email = ?, representative = ?, industry = ?,
+        pricing_plan = ?, start_date = ?, end_date = ?, manager_position = ?, representative = ?, industry = ?,
+        accountant_name = ?, accountant_position = ?, accountant_mobile = ?, accountant_email = ?,
         updated_at = NOW()
       WHERE id = ?
     `, [
       company_name || null, user_id || null, email || null, password_hash || null, company_type || null,
       user_name || null, department || null, mobile_phone || null, business_license || null,
-      phone_number || null, fax_number || null, address || null, notes || null, msds_limit || null,
+      phone_number || null, fax_number || null, address || null, notes || null, account_info || null, msds_limit || null,
       ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || null,
-      pricing_plan || null, startDateValue || null, endDateValue || null, manager_name || null, manager_position || null,
-      manager_mobile || null, manager_email || null, representative || null, industry || null, userId
+      pricing_plan || null, startDateValue || null, endDateValue || null, manager_position || null, representative || null, industry || null,
+      accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null, userId
     ]);
 
     if (result.affectedRows === 0) {

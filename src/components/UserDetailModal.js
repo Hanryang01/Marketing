@@ -101,29 +101,29 @@ const UserDetailModal = ({
         userId: user.userId || user.user_id || '',
         representative: user.representative || '',
         industry: user.industry || '',
-        accountantName: user.accountantName || '',
-        accountantPosition: user.accountantPosition || '',
-        accountantMobile: user.accountantMobile || '',
-        accountantEmail: user.accountantEmail || '',
-        startDate: user.startDate || '',
-        endDate: user.endDate || '',
-        accountInfo: user.accountInfo || '',
+        accountantName: user.accountantName || user.accountant_name || '',
+        accountantPosition: user.accountantPosition || user.accountant_position || '',
+        accountantMobile: user.accountantMobile || user.accountant_mobile || '',
+        accountantEmail: user.accountantEmail || user.accountant_email || '',
+        startDate: user.startDate || user.start_date || '',
+        endDate: user.endDate || user.end_date || '',
+        accountInfo: user.accountInfo || user.account_info || '',
         department: user.department || '',
-        mobilePhone: user.mobilePhone || '',
-        phoneNumber: user.phoneNumber || '',
-        faxNumber: user.faxNumber || '',
+        mobilePhone: user.mobilePhone || user.mobile_phone || '',
+        phoneNumber: user.phoneNumber || user.phone_number || '',
+        faxNumber: user.faxNumber || user.fax_number || '',
         address: user.address || '',
-        businessLicense: user.businessLicense || '',
+        businessLicense: user.businessLicense || user.business_license || '',
         notes: user.notes || '',
-        companyName: user.companyName || '',
-        companyType: user.companyType || '무료 사용자',
-        pricingPlan: user.pricingPlan || '무료',
-        approvalStatus: user.approvalStatus || '승인 예정',
-        isActive: user.isActive || 1,
-        managerPosition: user.managerPosition || '',
-        msdsLimit: user.msdsLimit || 0,
-        aiImageLimit: user.aiImageLimit || 0,
-        aiReportLimit: user.aiReportLimit || 0
+        companyName: user.companyName || user.company_name || '',
+        companyType: user.companyType || user.company_type || '무료 사용자',
+        pricingPlan: user.pricingPlan || user.pricing_plan || '무료',
+        approvalStatus: user.approvalStatus || user.approval_status || '승인 예정',
+        isActive: user.isActive || user.is_active || 1,
+        position: user.position || user.manager_position || '',
+        msdsLimit: user.msdsLimit || user.msds_limit || 0,
+        aiImageLimit: user.aiImageLimit || user.ai_image_limit || 0,
+        aiReportLimit: user.aiReportLimit || user.ai_report_limit || 0
       };
       
       setEditedUser(userWithAdditionalFields);
@@ -219,9 +219,9 @@ const UserDetailModal = ({
       return;
     }
       
-    // 회계 담당자 필드 특별 처리
+    // 회계 담당자 필드 특별 처리 (스페이스 허용)
     if (field === 'accountantMobile' || field === 'accountantEmail') {
-      const cleanValue = value === undefined || value === null ? '' : value.toString().trim();
+      const cleanValue = value === undefined || value === null ? '' : value.toString();
       setEditedUser(prev => ({
         ...prev,
         [field]: cleanValue
@@ -284,7 +284,7 @@ const UserDetailModal = ({
         pricing_plan: editedUser.pricingPlan,
         start_date: editedUser.startDate,
         end_date: editedUser.endDate,
-        manager_position: editedUser.managerPosition,
+        manager_position: editedUser.position,
         accountant_name: editedUser.accountantName,
         accountant_position: editedUser.accountantPosition,
         accountant_mobile: editedUser.accountantMobile || '',
@@ -650,7 +650,7 @@ const UserDetailModal = ({
                 
                 {renderFormRow(
                   renderInputField('부서', 'department', editedUser?.department !== undefined ? editedUser.department : (user.department || ''), (e) => handleInputChange('department', e.target.value)),
-                  renderInputField('직책', 'managerPosition', editedUser?.managerPosition !== undefined ? editedUser.managerPosition : (user.managerPosition || ''), (e) => handleInputChange('managerPosition', e.target.value))
+                  renderInputField('직책', 'position', editedUser?.position !== undefined ? editedUser.position : (user.position || ''), (e) => handleInputChange('position', e.target.value))
                 )}
                 
                 {renderFormRow(
@@ -797,7 +797,7 @@ const UserDetailModal = ({
                     <label>계좌 정보</label>
                     <input 
                       type="text" 
-                      value={editedUser?.accountInfo || ''} 
+                      value={editedUser?.accountInfo !== undefined ? editedUser.accountInfo : (user.accountInfo || user.account_info || '')} 
                       onChange={(e) => handleInputChange('accountInfo', e.target.value)}
                       readOnly={!isEditable}
                       className={!isEditable ? 'readonly-input' : ''}
@@ -824,21 +824,21 @@ const UserDetailModal = ({
                 <h3 className="section-title">회계 담당자 정보</h3>
                 
                 <div className="form-row">
-                                                       <div className="form-group">
+                  <div className="form-group">
                     <label>이름</label>
                     <input 
                       type="text" 
-                      value={editedUser?.accountantName !== undefined ? editedUser.accountantName : (user.accountantName || '')} 
+                      value={editedUser?.accountantName !== undefined ? editedUser.accountantName : (user.accountantName || user.accountant_name || '')} 
                       onChange={(e) => handleInputChange('accountantName', e.target.value)}
                       readOnly={!isEditable}
                       className={!isEditable ? 'readonly-input' : ''}
                     />
                   </div>
-                                     <div className="form-group">
+                  <div className="form-group">
                     <label>직책</label>
                     <input 
                       type="text" 
-                      value={editedUser?.accountantPosition !== undefined ? editedUser.accountantPosition : (user.accountantPosition || '')} 
+                      value={editedUser?.accountantPosition !== undefined ? editedUser.accountantPosition : (user.accountantPosition || user.accountant_position || '')} 
                       onChange={(e) => handleInputChange('accountantPosition', e.target.value)}
                       readOnly={!isEditable}
                       className={!isEditable ? 'readonly-input' : ''}
@@ -851,7 +851,7 @@ const UserDetailModal = ({
                     <label>휴대전화</label>
                     <input 
                       type="text" 
-                      value={editedUser?.accountantMobile !== undefined ? editedUser.accountantMobile : (user.accountantMobile || '')} 
+                      value={editedUser?.accountantMobile !== undefined ? editedUser.accountantMobile : (user.accountantMobile || user.accountant_mobile || '')} 
                       onChange={(e) => handleInputChange('accountantMobile', e.target.value)}
                       readOnly={!isEditable}
                       className={!isEditable ? 'readonly-input' : ''}
@@ -862,7 +862,7 @@ const UserDetailModal = ({
                     <label>이메일</label>
                     <input 
                       type="text" 
-                      value={editedUser?.accountantEmail !== undefined ? editedUser.accountantEmail : (user.accountantEmail || '')} 
+                      value={editedUser?.accountantEmail !== undefined ? editedUser.accountantEmail : (user.accountantEmail || user.accountant_email || '')} 
                       onChange={(e) => handleInputChange('accountantEmail', e.target.value)}
                       readOnly={!isEditable}
                       className={!isEditable ? 'readonly-input' : ''}

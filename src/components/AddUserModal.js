@@ -104,8 +104,8 @@ const AddUserModal = ({
               <label>직책</label>
               <input
                 type="text"
-                value={newUser.managerPosition}
-                onChange={(e) => handleInputChange('managerPosition', e.target.value)}
+              value={newUser.position}
+              onChange={(e) => handleInputChange('position', e.target.value)}
                 placeholder="직책"
               />
             </div>

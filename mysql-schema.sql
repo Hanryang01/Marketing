@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password_hash` VARCHAR(255) DEFAULT 'default_hash_for_existing_users',
   `user_name` VARCHAR(100),
   `department` VARCHAR(100),
+  `position` VARCHAR(100),
   `mobile_phone` VARCHAR(20),
   `phone_number` VARCHAR(20),
   `fax_number` VARCHAR(20),
@@ -34,14 +35,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
   -- Manager information
-  `manager_name` VARCHAR(100),
   `manager_position` VARCHAR(100),
-  `manager_mobile` VARCHAR(20),
-  `manager_email` VARCHAR(255),
-  `manager_name2` VARCHAR(100),
-  `manager_position2` VARCHAR(100),
-  `manager_mobile2` VARCHAR(20),
-  `manager_email2` VARCHAR(255),
   
   -- Accountant information
   `accountant_name` VARCHAR(100),
@@ -87,32 +81,7 @@ CREATE TABLE IF NOT EXISTS `revenue` (
   INDEX `idx_payment_date` (`payment_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User status history table
-CREATE TABLE IF NOT EXISTS `user_status_history` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` INT NOT NULL,
-  `user_id_string` VARCHAR(100) NOT NULL,
-  `company_name` VARCHAR(255) NOT NULL,
-  `user_name` VARCHAR(100),
-  `company_type` VARCHAR(100),
-  `pricing_plan` VARCHAR(100),
-  `start_date` DATE,
-  `end_date` DATE,
-  `status_type` ENUM('승인 예정', '승인 완료', '기간 종료', '탈퇴') NOT NULL,
-  `active_days` INT DEFAULT 0,
-  `status_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `mobile_phone` VARCHAR(20),
-  `email` VARCHAR(255),
-  `position` VARCHAR(100),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  INDEX `idx_user_id` (`user_id`),
-  INDEX `idx_user_id_string` (`user_id_string`),
-  INDEX `idx_status_type` (`status_type`),
-  INDEX `idx_status_date` (`status_date`),
-  
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- User status history table (REMOVED - 기능이 company_history와 중복됨)
 
 -- Company history table (for approval tracking)
 CREATE TABLE IF NOT EXISTS `company_history` (
@@ -138,19 +107,7 @@ CREATE TABLE IF NOT EXISTS `company_history` (
   INDEX `idx_status_date` (`status_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Notification log table (for tracking notification creation)
-CREATE TABLE IF NOT EXISTS `notification_log` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` VARCHAR(100) NOT NULL,
-  `notification_type` VARCHAR(50) NOT NULL,
-  `notification_date` DATE NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  UNIQUE KEY `unique_notification` (`user_id`, `notification_type`, `notification_date`),
-  INDEX `idx_user_id` (`user_id`),
-  INDEX `idx_notification_type` (`notification_type`),
-  INDEX `idx_notification_date` (`notification_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Notification log table (REMOVED - 프론트엔드에서 localStorage 사용)
 
 -- Error log table (for tracking processing errors)
 CREATE TABLE IF NOT EXISTS `error_logs` (
