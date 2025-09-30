@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password_hash` VARCHAR(255) DEFAULT 'default_hash_for_existing_users',
   `user_name` VARCHAR(100),
   `department` VARCHAR(100),
-  `position` VARCHAR(100),
   `mobile_phone` VARCHAR(20),
   `phone_number` VARCHAR(20),
   `fax_number` VARCHAR(20),
@@ -98,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `company_history` (
   `status_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `mobile_phone` VARCHAR(20),
   `email` VARCHAR(255),
-  `position` VARCHAR(100),
+  `manager_position` VARCHAR(100),
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
   INDEX `idx_user_id_string` (`user_id_string`),

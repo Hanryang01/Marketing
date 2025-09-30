@@ -245,7 +245,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
           await conn.execute(`
             INSERT INTO company_history (
               user_id_string, company_name, user_name, company_type, status_type,
-              start_date, end_date, pricing_plan, mobile_phone, email, position, department, created_at
+              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, department, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
           `, [
             user.user_id,

@@ -228,6 +228,7 @@ const UserManagement = () => {
             userName: history.user_name,
             email: history.email,
             department: '', // company_history 테이블에는 department 필드 없음
+            managerPosition: history.manager_position || '', // company_history 테이블의 manager_position 필드 사용
             mobilePhone: history.mobile_phone,
             phoneNumber: history.phone_number,
             faxNumber: history.fax_number,
