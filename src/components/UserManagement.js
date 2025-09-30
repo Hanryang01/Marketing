@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './UserManagement.css';
 
 // Import the UserDetailModal component
@@ -28,6 +28,12 @@ const UserManagement = () => {
   // 메시지 관련 로직을 useMessage 훅으로 분리
   const messageProps = useMessage();
   const { showMessage } = messageProps;
+  const showMessageRef = useRef(showMessage);
+  
+  // showMessage 함수가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    showMessageRef.current = showMessage;
+  }, [showMessage]);
   
   // 날짜 처리 관련 로직을 useCalendar 훅으로 분리
   const calendarProps = useCalendar();
@@ -79,6 +85,7 @@ const UserManagement = () => {
       
       return responseData;
     } catch (error) {
+      console.error('API 호출 에러:', error);
       throw error;
     }
   }, []);
@@ -87,7 +94,13 @@ const UserManagement = () => {
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await apiCall('/api/users');
+      const response = await fetch('http://localhost:3003/api/users', {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const result = await response.json();
       
       if (result && result.success && Array.isArray(result.data)) {
         const formattedUsers = result.data.map(user => ({
@@ -127,16 +140,26 @@ const UserManagement = () => {
         setUsers(formattedUsers);
       }
     } catch (error) {
-      // 사용자 데이터 로드 중 오류 발생
+      console.error('사용자 데이터 로드 중 오류 발생:', error);
+      showMessageRef.current('error', '데이터 로드 실패', '사용자 데이터를 불러오는 중 오류가 발생했습니다.', {
+        showCancel: false,
+        confirmText: '확인'
+      });
     } finally {
       setLoading(false);
     }
-  }, [apiCall]);
+  }, []);
 
   // 승인 이력 데이터 로드
   const fetchCompanyHistory = useCallback(async () => {
     try {
-      const result = await apiCall('/api/company-history-list');
+      const response = await fetch('http://localhost:3003/api/company-history-list', {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const result = await response.json();
       
       if (result && result.success && result.data && result.data.history && Array.isArray(result.data.history)) {
         setCompanyHistory(result.data.history);
@@ -148,13 +171,13 @@ const UserManagement = () => {
       console.error('승인 이력 데이터 로드 중 오류 발생:', error);
       setCompanyHistory([]);
     }
-  }, [apiCall]);
+  }, []);
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     loadUsers();
     fetchCompanyHistory();
-  }, [loadUsers, fetchCompanyHistory]);
+  }, []);
 
   // 탭별 필터링된 사용자 데이터
 
@@ -233,7 +256,7 @@ const UserManagement = () => {
             faxNumber: history.fax_number,
             address: history.address,
             businessLicense: history.business_license,
-            position: history.position,
+            position: history.manager_position,
             startDate: history.start_date,
             endDate: history.end_date,
             companyType: history.company_type,

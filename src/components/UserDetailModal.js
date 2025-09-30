@@ -120,7 +120,7 @@ const UserDetailModal = ({
         pricingPlan: user.pricingPlan || user.pricing_plan || '무료',
         approvalStatus: user.approvalStatus || user.approval_status || '승인 예정',
         isActive: user.isActive || user.is_active || 1,
-        position: user.manager_position || '',
+        position: user.manager_position || user.position || '',
         msdsLimit: user.msdsLimit || user.msds_limit || 0,
         aiImageLimit: user.aiImageLimit || user.ai_image_limit || 0,
         aiReportLimit: user.aiReportLimit || user.ai_report_limit || 0

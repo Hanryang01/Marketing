@@ -73,6 +73,10 @@ router.get('/api/users', async (req, res) => {
   try {
     connection = await pool.getConnection();
     
+    // 데이터베이스 연결 정보 확인
+    const [dbInfo] = await connection.execute('SELECT DATABASE() as current_db');
+    console.log('현재 연결된 데이터베이스:', dbInfo[0].current_db);
+    
     const [rows] = await connection.execute(`
       SELECT 
         u.id, u.company_name, u.user_id, u.email, u.user_name, u.department,
@@ -85,6 +89,9 @@ router.get('/api/users', async (req, res) => {
       FROM users u
       ORDER BY u.id DESC
     `);
+    
+    console.log('조회된 사용자 수:', rows.length);
+    console.log('첫 번째 사용자 ID:', rows[0]?.id);
     
     // 날짜는 이미 YYYY-MM-DD 형식으로 저장되어 있으므로 변환 불필요
     const formattedRows = rows.map(user => ({

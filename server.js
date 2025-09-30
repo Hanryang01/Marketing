@@ -245,8 +245,8 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
           await conn.execute(`
             INSERT INTO company_history (
               user_id_string, company_name, user_name, company_type, status_type,
-              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, department, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
           `, [
             user.user_id,
             user.company_name,
@@ -258,8 +258,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
             user.pricing_plan,
             user.mobile_phone,
             user.email,
-            user.manager_position || null,
-            user.department || null
+            user.manager_position || null
           ]);
           console.log(`📝 ${user.user_id} (${user.company_name}) - 기간 경과로 승인 완료 이력 기록`);
         } catch (historyError) {
