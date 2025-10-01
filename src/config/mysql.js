@@ -1,13 +1,16 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+// 환경 감지 (개발/프로덕션)
+const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_NAME === 'sihm_local';
+
 // MySQL Database configuration (server.js와 동일한 설정 사용)
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '8123',
-  database: process.env.DB_NAME || 'sihm_user_management',
+  database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
   waitForConnections: true,
   connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
   queueLimit: 0,

@@ -26,7 +26,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "server:mysql": "set MYSQL_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
-    "dev": "concurrently \"npm run server:mysql\" \"npm run start:3002\"",
+    "server:dev": "set DB_NAME=sihm_local& set DB_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
+    "dev": "concurrently \"npm run server:dev\" \"npm run start:3002\"",
     "prod": "npm run build && npm run server:mysql"
   },
   "eslintConfig": {

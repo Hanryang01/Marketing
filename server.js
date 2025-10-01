@@ -6,6 +6,9 @@ require('dotenv').config();
 // 한국 시간대 설정
 process.env.TZ = 'Asia/Seoul';
 
+// 환경 감지 (개발/프로덕션)
+const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_NAME === 'sihm_local';
+
 // 설정값 상수화
 const config = {
   server: {
@@ -16,7 +19,7 @@ const config = {
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '8123',
-    database: process.env.DB_NAME || 'sihm_user_management',
+    database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
@@ -396,6 +399,7 @@ const startServer = async () => {
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
+  console.log(`🔧 Environment: ${isDevelopment ? 'DEVELOPMENT (sihm_local)' : 'PRODUCTION (sihm_user_management)'}`);
       
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();
