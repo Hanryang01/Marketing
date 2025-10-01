@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 import './UserHistoryModal.css';
 
 const UserHistoryModal = ({ user, onClose }) => {
@@ -9,7 +10,7 @@ const UserHistoryModal = ({ user, onClose }) => {
   const fetchDetailedHistory = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3003/api/history/user/detail?company=${user.companyName}`);
+      const response = await apiCall(`${API_ENDPOINTS.HISTORY_USER_DETAIL}?company=${user.companyName}`);
       const data = await response.json();
       if (data.success) {
         setHistoryData(data.data);

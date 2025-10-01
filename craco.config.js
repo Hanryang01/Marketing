@@ -1,6 +1,6 @@
 module.exports = {
   webpack: {
-    configure: (webpackConfig) => {
+    configure: (webpackConfig, { env }) => {
       // source-map-loader 규칙을 완전히 제거 (더 강력한 방법)
       webpackConfig.module.rules = webpackConfig.module.rules.filter(rule => {
         if (rule.use && Array.isArray(rule.use)) {
@@ -24,6 +24,23 @@ module.exports = {
         /Module Warning \(from .*source-map-loader/,
         /source map/,
       ];
+
+      // React Refresh Babel 플러그인을 프로덕션에서 비활성화
+      if (env === 'production') {
+        webpackConfig.module.rules.forEach(rule => {
+          if (rule.use && Array.isArray(rule.use)) {
+            rule.use.forEach(loader => {
+              if (loader.loader && loader.loader.includes('babel-loader')) {
+                if (!loader.options) loader.options = {};
+                if (!loader.options.plugins) loader.options.plugins = [];
+                loader.options.plugins = loader.options.plugins.filter(plugin => 
+                  !(Array.isArray(plugin) && plugin[0] && plugin[0].includes('react-refresh'))
+                );
+              }
+            });
+          }
+        });
+      }
       
       return webpackConfig;
     }

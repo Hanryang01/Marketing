@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './SalesManagement.css';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { useCalendar } from '../hooks/useCalendar';
@@ -48,27 +49,27 @@ const SalesManagement = () => {
   
 
 
-  // API 호출 함수들
-  const apiCall = async (url, options = {}) => {
-    try {
-      const response = await fetch(`http://localhost:3003${url}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API 호출 오류:', error);
-      throw error;
-    }
-  };
+  // API 호출 함수들 (현재 사용하지 않음 - apiCall 직접 사용)
+  // const makeApiCall = async (url, options = {}) => {
+  //   try {
+  //     const response = await apiCall(url, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         ...options.headers,
+  //       },
+  //       ...options,
+  //     });
+  //     
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+  //     
+  //     return await response.json();
+  //   } catch (error) {
+  //     console.error('API 호출 오류:', error);
+  //     throw error;
+  //   }
+  // };
 
   // 매출 데이터 가져오기
   const fetchRevenueData = useCallback(async () => {
@@ -320,7 +321,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.replace(/,/g, '')) || 0
       };
 
-      const response = await fetch('http://localhost:3003/api/revenue', {
+      const response = await apiCall(API_ENDPOINTS.REVENUE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -418,7 +419,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.toString().replace(/,/g, '')) || 0
       };
 
-                  const response = await fetch(`http://localhost:3003/api/revenue/${editingRevenue.id}`, {
+                  const response = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(editingRevenue.id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -461,7 +462,7 @@ const SalesManagement = () => {
   // 매출 삭제 실행
   const performDeleteRevenue = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/revenue/${id}`, {
+      const response = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(id), {
         method: 'DELETE',
       });
 

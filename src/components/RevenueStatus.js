@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './RevenueStatus.css';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -49,7 +50,7 @@ const RevenueStatus = () => {
   // 매출 데이터 가져오기
   const loadRevenueData = async () => {
     try {
-      const response = await fetch('http://localhost:3003/api/revenue');
+      const response = await apiCall(API_ENDPOINTS.REVENUE);
       const result = await response.json();
       
       if (result.success) {

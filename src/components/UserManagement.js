@@ -11,6 +11,7 @@ import { useMessage } from '../hooks/useMessage';
 import { useCalendar } from '../hooks/useCalendar';
 import { isValidBusinessLicense } from '../utils/businessLicenseUtils';
 import { isUserActive } from '../utils/userUtils';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -67,34 +68,34 @@ const UserManagement = () => {
   });
 
 
-  // API 호출 함수
-  const apiCall = useCallback(async (url, options = {}) => {
-    try {
-      const response = await fetch(`http://localhost:3003${url}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        ...options
-      });
-      
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status} - ${responseData.error || responseData.message || 'Unknown error'}`);
-      }
-      
-      return responseData;
-    } catch (error) {
-      console.error('API 호출 에러:', error);
-      throw error;
-    }
-  }, []);
+  // API 호출 함수 (현재 사용하지 않음 - apiCall 직접 사용)
+  // const makeApiCall = useCallback(async (url, options = {}) => {
+  //   try {
+  //     const response = await apiCall(url, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       ...options
+  //     });
+  //     
+  //     const responseData = await response.json();
+  //     
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status} - ${responseData.error || responseData.message || 'Unknown error'}`);
+  //     }
+  //     
+  //     return responseData;
+  //   } catch (error) {
+  //     console.error('API 호출 에러:', error);
+  //     throw error;
+  //   }
+  // }, []);
 
   // 사용자 목록 로드
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3003/api/users', {
+      const response = await apiCall(API_ENDPOINTS.USERS, {
         headers: {
           'Content-Type': 'application/json',
         }
@@ -153,7 +154,7 @@ const UserManagement = () => {
   // 승인 이력 데이터 로드
   const fetchCompanyHistory = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3003/api/company-history-list', {
+      const response = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST, {
         headers: {
           'Content-Type': 'application/json',
         }
@@ -177,7 +178,7 @@ const UserManagement = () => {
   useEffect(() => {
     loadUsers();
     fetchCompanyHistory();
-  }, []);
+  }, [loadUsers, fetchCompanyHistory]);
 
   // 탭별 필터링된 사용자 데이터
 

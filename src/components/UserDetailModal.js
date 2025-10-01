@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './UserDetailModal.css';
 import { useCalendar } from '../hooks/useCalendar';
 import { handleBusinessLicenseInput, formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 
 const UserDetailModal = ({ 
   isOpen, 
@@ -314,7 +315,7 @@ const UserDetailModal = ({
   // 사용자 이력 조회 - 승인 완료 이력만 표시 (승인 이력 탭과 동일)
   const fetchUserHistory = async (userId) => {
         try {
-      const response = await fetch(`http://localhost:3003/api/company-history-list`);
+      const response = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST);
       const result = await response.json();
       
       if (result.success) {
@@ -344,7 +345,7 @@ const UserDetailModal = ({
   // 실제 삭제 실행 함수
   const executeDelete = async (historyId) => {
         try {
-      const response = await fetch(`http://localhost:3003/api/history/user/${historyId}`, {
+      const response = await apiCall(API_ENDPOINTS.HISTORY_USER(historyId), {
         method: 'DELETE'
       });
 

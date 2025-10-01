@@ -13,8 +13,8 @@ const dbConfig = {
   queueLimit: 0,
   charset: 'utf8mb4',
   timezone: '+09:00',
-  acquireTimeout: 60000,
-  timeout: 60000
+  acquireTimeout: 60000
+  // timeout 옵션은 MySQL2에서 지원하지 않음 (제거)
 };
 
 // Create connection pool

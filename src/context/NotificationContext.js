@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 
 const NotificationContext = createContext();
 
@@ -80,7 +81,7 @@ export const NotificationProvider = ({ children }) => {
       // 2. 종료일 체크 (서버 데이터)
       if (notificationSettings.endDateReminderToday || notificationSettings.endDateReminder7Days) {
         try {
-          const response = await fetch('http://localhost:3003/api/users/end-date-check');
+          const response = await apiCall(API_ENDPOINTS.END_DATE_CHECK);
           if (response.ok) {
             const data = await response.json();
             
