@@ -10,9 +10,9 @@ USE `sihm_user_management`;
 -- Users table
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `company_name` VARCHAR(255) NOT NULL,
+  `company_name` VARCHAR(255),
   `user_id` VARCHAR(100) UNIQUE NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255),
   `password_hash` VARCHAR(255) DEFAULT 'default_hash_for_existing_users',
   `user_name` VARCHAR(100),
   `department` VARCHAR(100),
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Revenue table
 CREATE TABLE IF NOT EXISTS `revenue` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `company_name` VARCHAR(255) NOT NULL,
+  `company_name` VARCHAR(255),
   `business_license` VARCHAR(255),
   `issue_date` DATE,
   `payment_date` DATE,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `revenue` (
 CREATE TABLE IF NOT EXISTS `company_history` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id_string` VARCHAR(100) NOT NULL,
-  `company_name` VARCHAR(255) NOT NULL,
+  `company_name` VARCHAR(255),
   `user_name` VARCHAR(100),
   `company_type` VARCHAR(100),
   `pricing_plan` VARCHAR(100),

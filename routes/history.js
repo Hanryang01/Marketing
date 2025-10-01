@@ -238,14 +238,14 @@ router.get('/api/company-history-list', async (req, res) => {
     const limitNum = parseInt(limit) || 100;
     const offsetNum = parseInt(offset) || 0;
     
-    // 간단한 쿼리로 테스트
+    // company_history 테이블에서 모든 승인 이력 조회
     const [rows] = await connection.execute(`
       SELECT 
         id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
         start_date, end_date, pricing_plan, manager_position, mobile_phone, email, created_at
       FROM company_history
       ORDER BY created_at DESC
-      LIMIT 10
+      LIMIT ${limitNum} OFFSET ${offsetNum}
     `);
     
     // DATE_FORMAT으로 이미 YYYY-MM-DD 문자열로 반환되므로 그대로 사용
