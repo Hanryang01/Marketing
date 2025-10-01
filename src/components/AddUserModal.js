@@ -24,7 +24,7 @@ const AddUserModal = ({
     }
     
     // 빈 문자열도 허용하도록 처리
-    const cleanValue = value === undefined || value === null ? '' : value.toString();
+    const cleanValue = value === undefined || value === null ? '' : String(value);
     setNewUser(prev => ({
       ...prev,
       [field]: cleanValue
@@ -45,8 +45,6 @@ const AddUserModal = ({
       }
       return;
     }
-
-
 
     // 사업자 등록번호 유효성 검사
     if (newUser.businessLicense && !isValidBusinessLicense(newUser.businessLicense)) {
@@ -78,35 +76,40 @@ const AddUserModal = ({
               <label>사용자 ID<span className="required-asterisk">*</span></label>
               <input
                 type="text"
-                value={newUser.userId}
+                value={newUser.userId || ''}
                 onChange={(e) => handleInputChange('userId', e.target.value)}
                 placeholder="사용자 ID"
                 required
               />
             </div>
             <div className="form-group">
-              <label></label>
-              <div></div>
+              <label>이름</label>
+              <input
+                type="text"
+                value={newUser.userName || ''}
+                onChange={(e) => handleInputChange('userName', e.target.value)}
+                placeholder="이름"
+              />
             </div>
           </div>
           
           <div className="form-row">
             <div className="form-group">
-              <label>이름</label>
-              <input
-                type="text"
-                value={newUser.userName}
-                onChange={(e) => handleInputChange('userName', e.target.value)}
-                placeholder="이름"
-              />
-            </div>
-            <div className="form-group">
               <label>직책</label>
               <input
                 type="text"
-              value={newUser.position}
-              onChange={(e) => handleInputChange('position', e.target.value)}
+                value={newUser.position || ''}
+                onChange={(e) => handleInputChange('position', e.target.value)}
                 placeholder="직책"
+              />
+            </div>
+            <div className="form-group">
+              <label>부서</label>
+              <input
+                type="text"
+                value={newUser.department || ''}
+                onChange={(e) => handleInputChange('department', e.target.value)}
+                placeholder="부서"
               />
             </div>
           </div>
@@ -116,7 +119,7 @@ const AddUserModal = ({
               <label>이메일</label>
               <input
                 type="email"
-                value={newUser.email}
+                value={newUser.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="이메일"
               />
@@ -125,7 +128,7 @@ const AddUserModal = ({
               <label>휴대전화</label>
               <input
                 type="text"
-                value={newUser.mobilePhone}
+                value={newUser.mobilePhone || ''}
                 onChange={(e) => handleInputChange('mobilePhone', e.target.value)}
                 placeholder="휴대전화"
               />
@@ -138,7 +141,7 @@ const AddUserModal = ({
               <label>회사명</label>
               <input
                 type="text"
-                value={newUser.companyName}
+                value={newUser.companyName || ''}
                 onChange={(e) => handleInputChange('companyName', e.target.value)}
                 placeholder="회사명"
               />
@@ -147,7 +150,7 @@ const AddUserModal = ({
               <label>사업자 등록 번호</label>
               <input
                 type="text"
-                value={formatBusinessLicense(newUser.businessLicense)}
+                value={formatBusinessLicense(newUser.businessLicense || '')}
                 onChange={(e) => handleInputChange('businessLicense', e.target.value)}
                 placeholder="123-45-67890"
                 maxLength="12"
@@ -160,7 +163,7 @@ const AddUserModal = ({
               <label>전화번호</label>
               <input
                 type="text"
-                value={newUser.phoneNumber}
+                value={newUser.phoneNumber || ''}
                 onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                 placeholder="전화번호"
               />
@@ -169,7 +172,7 @@ const AddUserModal = ({
               <label>팩스번호</label>
               <input
                 type="text"
-                value={newUser.faxNumber}
+                value={newUser.faxNumber || ''}
                 onChange={(e) => handleInputChange('faxNumber', e.target.value)}
                 placeholder="팩스번호"
               />
@@ -181,7 +184,7 @@ const AddUserModal = ({
               <label>주소</label>
               <input
                 type="text"
-                value={newUser.address}
+                value={newUser.address || ''}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="주소"
                 style={{ width: 'calc(90% - 15px)' }}

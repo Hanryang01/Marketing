@@ -75,7 +75,6 @@ const NotificationModal = () => {
     }
   }, [isModalOpen, notificationSettings]);
 
-  // 탭 변경 시 설정 초기화 제거 - 모달 열림 시에만 초기화
 
   // 세금계산서 설정 추가
   const handleAddTaxInvoiceSetting = () => {
@@ -113,19 +112,36 @@ const NotificationModal = () => {
   };
 
 
-  // 알림 메시지에서 회사명 강조 처리
+  // 알림 메시지에서 회사명 강조 처리 (XSS 방지)
   const formatNotificationMessage = (content, type) => {
     // 모든 알림 타입에서 동일한 스타일로 회사명 강조 (언더스코어 포함)
     if (type === 'tax_invoice' || type === 'end_date_today' || type === 'end_date_7days') {
+      // XSS 방지를 위해 HTML 이스케이프 처리
+      const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
+      
       const companyRegex = /^([가-힣a-zA-Z0-9\s_]+)는/g;
       return content.replace(companyRegex, (match, companyName) => {
         const trimmedCompanyName = companyName.trim();
-        return `<span class="company-name">${trimmedCompanyName}</span>는`;
+        const escapedCompanyName = escapeHtml(trimmedCompanyName);
+        return `<span class="company-name">${escapedCompanyName}</span>는`;
       });
     }
     
-    // 기본 처리
-    return content;
+    // 기본 처리 - HTML 이스케이프
+    return content.replace(/[<>&"']/g, (match) => {
+      const escapeMap = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return escapeMap[match];
+    });
   };
 
   // 알림 타입별 아이콘

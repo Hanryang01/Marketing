@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `company_type` ENUM('무료 사용자', '컨설팅 업체', '일반 업체', '탈퇴 사용자', '기타') DEFAULT '무료 사용자',
   `approval_status` ENUM('승인 예정', '승인 완료', '탈퇴') DEFAULT '승인 예정',
   `is_active` BOOLEAN DEFAULT FALSE,
-  `pricing_plan` ENUM('무료', '기본', '프리미엄', '엔터프라이즈') DEFAULT '무료',
+  `pricing_plan` ENUM('무료', '스탠다드', '프리미엄') DEFAULT '무료',
   `start_date` DATE,
   `end_date` DATE,
   `registration_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

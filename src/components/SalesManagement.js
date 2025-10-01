@@ -49,33 +49,12 @@ const SalesManagement = () => {
   
 
 
-  // API 호출 함수들 (현재 사용하지 않음 - apiCall 직접 사용)
-  // const makeApiCall = async (url, options = {}) => {
-  //   try {
-  //     const response = await apiCall(url, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         ...options.headers,
-  //       },
-  //       ...options,
-  //     });
-  //     
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-  //     
-  //     return await response.json();
-  //   } catch (error) {
-  //     console.error('API 호출 오류:', error);
-  //     throw error;
-  //   }
-  // };
 
   // 매출 데이터 가져오기
   const fetchRevenueData = useCallback(async () => {
     try {
       setLoading(true);
-            const result = await apiCall('/api/revenue');
+            const result = await apiCall(API_ENDPOINTS.REVENUE);
             if (result && result.success && Array.isArray(result.data)) {
         // DB 데이터를 프론트엔드 형식으로 변환 (snake_case → camelCase)
         const formattedData = result.data.map(revenue => ({
@@ -321,7 +300,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.replace(/,/g, '')) || 0
       };
 
-      const response = await apiCall(API_ENDPOINTS.REVENUE, {
+      const result = await apiCall(API_ENDPOINTS.REVENUE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -329,7 +308,7 @@ const SalesManagement = () => {
         body: JSON.stringify(serverData),
       });
 
-      if (response.ok) {
+      if (result && result.success) {
         showMessage('success', '성공', '매출이 성공적으로 등록되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -337,9 +316,7 @@ const SalesManagement = () => {
         setShowAddRevenueModal(false);
         fetchRevenueData();
       } else {
-        console.error('매출 추가 실패:', response.status, response.statusText);
-        const errorData = await response.json();
-        console.error('에러 상세:', errorData);
+        console.error('매출 추가 실패:', result);
         showMessage('error', '오류', '매출 등록에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (error) {
@@ -419,7 +396,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.toString().replace(/,/g, '')) || 0
       };
 
-                  const response = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(editingRevenue.id), {
+                  const result = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(editingRevenue.id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -427,7 +404,7 @@ const SalesManagement = () => {
         body: JSON.stringify(serverData),
       });
 
-      if (response.ok) {
+      if (result && result.success) {
                 showMessage('success', '성공', '매출이 성공적으로 수정되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -438,9 +415,7 @@ const SalesManagement = () => {
         // 즉시 리스트 새로고침
                 await fetchRevenueData();
               } else {
-        console.error('매출 수정 실패:', response.status, response.statusText);
-        const errorData = await response.json();
-        console.error('에러 상세:', errorData);
+        console.error('매출 수정 실패:', result);
         showMessage('error', '오류', '매출 수정에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (error) {
@@ -466,7 +441,7 @@ const SalesManagement = () => {
         method: 'DELETE',
       });
 
-      if (response.ok) {
+      if (response && response.success) {
         fetchRevenueData();
         showMessage('success', '성공', '매출이 성공적으로 삭제되었습니다.', {
           showCancel: false,

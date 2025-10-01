@@ -53,8 +53,7 @@ const UserStatus = () => {
   // 월별 활성화 업체 수 데이터 가져오기 (그래프용)
   const loadMonthlyActiveCompanies = useCallback(async () => {
     try {
-      const response = await apiCall(`${API_ENDPOINTS.REVENUE}?type=monthly-active-companies&year=${selectedYear}`);
-      const result = await response.json();
+      const result = await apiCall(`${API_ENDPOINTS.REVENUE}?type=monthly-active-companies&year=${selectedYear}`);
       
       if (result.success) {
         setMonthlyActiveCompanies(result.data.monthlyData);
@@ -71,8 +70,7 @@ const UserStatus = () => {
   // 월별 활성화 업체 수 데이터 가져오기 (표용 - 업체 형태별 구분)
   const loadMonthlyActiveTableData = useCallback(async () => {
     try {
-      const response = await apiCall(`${API_ENDPOINTS.REVENUE}?type=monthly-active-companies-by-type&year=${selectedYear}`);
-      const result = await response.json();
+      const result = await apiCall(`${API_ENDPOINTS.REVENUE}?type=monthly-active-companies-by-type&year=${selectedYear}`);
       
       if (result.success) {
         const monthlyData = result.data.monthlyData;
@@ -115,8 +113,7 @@ const UserStatus = () => {
       setLoading(true);
       
       // 사용자 데이터만 가져오기
-      const usersResponse = await apiCall(API_ENDPOINTS.USERS);
-      const usersResult = await usersResponse.json();
+      const usersResult = await apiCall(API_ENDPOINTS.USERS);
       
       if (!usersResult.success) {
         throw new Error(usersResult.error || '사용자 API 호출 실패');

@@ -315,8 +315,7 @@ const UserDetailModal = ({
   // 사용자 이력 조회 - 승인 완료 이력만 표시 (승인 이력 탭과 동일)
   const fetchUserHistory = async (userId) => {
         try {
-      const response = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST);
-      const result = await response.json();
+      const result = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST);
       
       if (result.success) {
         // 해당 사용자의 승인 완료 이력만 필터링 (종료일 < 오늘, 승인 이력 탭과 동일)
@@ -345,11 +344,9 @@ const UserDetailModal = ({
   // 실제 삭제 실행 함수
   const executeDelete = async (historyId) => {
         try {
-      const response = await apiCall(API_ENDPOINTS.HISTORY_USER(historyId), {
+      const data = await apiCall(API_ENDPOINTS.HISTORY_USER(historyId), {
         method: 'DELETE'
       });
-
-      const data = await response.json();
       
       if (data.success) {
         // 삭제 성공 후 이력 데이터 새로고침

@@ -24,7 +24,6 @@ const RevenueModal = ({
     totalAmount: ''
   });
 
-
   // useCalendar 훅 사용
   const {
     showIssueDatePicker,
@@ -119,6 +118,61 @@ const RevenueModal = ({
     }
   };
 
+  // 달력 컴포넌트 렌더링 함수
+  const renderCalendar = (type, showPicker, setShowPicker) => {
+    const isIssue = type === 'issue';
+    const currentDate = isIssue ? revenueData.issueDate : revenueData.paymentDate;
+    
+    return showPicker && (
+      <div className="date-picker-overlay" onClick={() => setShowPicker(false)}>
+        <div 
+          className="date-picker" 
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            top: `${calendarPosition.top}px`,
+            left: `${calendarPosition.left}px`,
+            zIndex: 9999
+          }}
+        >
+          <div className="date-picker-header">
+            <button className="today-button" onClick={() => goToToday(type)}>오늘</button>
+            <button className="close-button" onClick={() => setShowPicker(false)}>×</button>
+          </div>
+          <div className="date-picker-body">
+            <div className="calendar-grid">
+              <div className="calendar-header">
+                <button onClick={() => handleMonthChange(type, -1)}>&lt;</button>
+                <span>{getCurrentMonthYear(type)}</span>
+                <button onClick={() => handleMonthChange(type, 1)}>&gt;</button>
+              </div>
+              <div className="calendar-weekdays">
+                <div>일</div>
+                <div>월</div>
+                <div>화</div>
+                <div>수</div>
+                <div>목</div>
+                <div>금</div>
+                <div>토</div>
+              </div>
+              <div className="calendar-days">
+                {getCalendarDays(type, currentDate).map((day, index) => (
+                  <div
+                    key={index}
+                    className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                    onClick={() => day.isCurrentMonth && handleDateSelect(day.date, type, handleRevenueDateSelect)}
+                  >
+                    {day.day}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -161,19 +215,12 @@ const RevenueModal = ({
                   type="text"
                   value={revenueData.issueDate || ''}
                   onChange={(e) => {
-                    console.log('🔍 revenueData issueDate onChange:', e.target.value);
                     handleDateInputChange('issueDate', e.target.value, setRevenueData);
-                  }}
-                  onFocus={(e) => {
-                    console.log('🔍 revenueData issueDate onFocus');
                   }}
                   placeholder="YYYY-MM-DD"
                   maxLength="10"
                   required
-                  style={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #ccc'
-                  }}
+                  className="date-input"
                 />
                 <div 
                   className="calendar-icon" 
@@ -193,18 +240,11 @@ const RevenueModal = ({
                   type="text"
                   value={revenueData.paymentDate || ''}
                   onChange={(e) => {
-                    console.log('🔍 revenueData paymentDate onChange:', e.target.value);
                     handleDateInputChange('paymentDate', e.target.value, setRevenueData);
-                  }}
-                  onFocus={(e) => {
-                    console.log('🔍 revenueData paymentDate onFocus');
                   }}
                   placeholder="YYYY-MM-DD"
                   maxLength="10"
-                  style={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #ccc'
-                  }}
+                  className="date-input"
                 />
                 <div 
                   className="calendar-icon" 
@@ -310,105 +350,9 @@ const RevenueModal = ({
         </div>
       </div>
 
-      {/* 발행일 달력 팝업창 */}
-      {showIssueDatePicker && (
-        <div className="date-picker-overlay" onClick={() => setShowIssueDatePicker(false)}>
-          <div 
-            className="date-picker" 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: `${calendarPosition.top}px`,
-              left: `${calendarPosition.left}px`,
-              zIndex: 9999
-            }}
-          >
-            <div className="date-picker-header">
-              <button className="today-button" onClick={() => goToToday('issue')}>오늘</button>
-              <button className="close-button" onClick={() => setShowIssueDatePicker(false)}>×</button>
-            </div>
-            <div className="date-picker-body">
-              <div className="calendar-grid">
-                <div className="calendar-header">
-                  <button onClick={() => handleMonthChange('issue', -1)}>&lt;</button>
-                  <span>{getCurrentMonthYear('issue')}</span>
-                  <button onClick={() => handleMonthChange('issue', 1)}>&gt;</button>
-                </div>
-                <div className="calendar-weekdays">
-                  <div>일</div>
-                  <div>월</div>
-                  <div>화</div>
-                  <div>수</div>
-                  <div>목</div>
-                  <div>금</div>
-                  <div>토</div>
-                </div>
-                <div className="calendar-days">
-                  {getCalendarDays('issue', revenueData.issueDate).map((day, index) => (
-                    <div
-                      key={index}
-                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'issue', handleRevenueDateSelect)}
-                    >
-                      {day.day}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 입금일 달력 팝업창 */}
-      {showPaymentDatePicker && (
-        <div className="date-picker-overlay" onClick={() => setShowPaymentDatePicker(false)}>
-          <div 
-            className="date-picker" 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: `${calendarPosition.top}px`,
-              left: `${calendarPosition.left}px`,
-              zIndex: 9999
-            }}
-          >
-            <div className="date-picker-header">
-              <button className="today-button" onClick={() => goToToday('payment')}>오늘</button>
-              <button className="close-button" onClick={() => setShowPaymentDatePicker(false)}>×</button>
-            </div>
-            <div className="date-picker-body">
-              <div className="calendar-grid">
-                <div className="calendar-header">
-                  <button onClick={() => handleMonthChange('payment', -1)}>&lt;</button>
-                  <span>{getCurrentMonthYear('payment')}</span>
-                  <button onClick={() => handleMonthChange('payment', 1)}>&gt;</button>
-                </div>
-                <div className="calendar-weekdays">
-                  <div>일</div>
-                  <div>월</div>
-                  <div>화</div>
-                  <div>수</div>
-                  <div>목</div>
-                  <div>금</div>
-                  <div>토</div>
-                </div>
-                <div className="calendar-days">
-                  {getCalendarDays('payment', revenueData.paymentDate).map((day, index) => (
-                    <div
-                      key={index}
-                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'payment', handleRevenueDateSelect)}
-                    >
-                      {day.day}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 달력 팝업창 */}
+      {renderCalendar('issue', showIssueDatePicker, setShowIssueDatePicker)}
+      {renderCalendar('payment', showPaymentDatePicker, setShowPaymentDatePicker)}
     </div>
   );
 };

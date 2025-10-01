@@ -255,7 +255,7 @@ router.post('/api/users', async (req, res) => {
       });
     }
     
-    const validPricingPlans = ['무료', '기본', '프리미엄', '엔터프라이즈', '스탠다드'];
+    const validPricingPlans = ['무료', '스탠다드', '프리미엄'];
     const finalPricingPlan = pricing_plan || '무료';
     if (!validPricingPlans.includes(finalPricingPlan)) {
       connection.release();

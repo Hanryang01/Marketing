@@ -10,8 +10,7 @@ const UserHistoryModal = ({ user, onClose }) => {
   const fetchDetailedHistory = async () => {
     setLoading(true);
     try {
-      const response = await apiCall(`${API_ENDPOINTS.HISTORY_USER_DETAIL}?company=${user.companyName}`);
-      const data = await response.json();
+      const data = await apiCall(`${API_ENDPOINTS.HISTORY_USER_DETAIL}?company=${user.companyName}`);
       if (data.success) {
         setHistoryData(data.data);
       } else {
@@ -48,6 +47,17 @@ const UserHistoryModal = ({ user, onClose }) => {
       case '승인 예정': return '⏳';
       default: return '🔵';
     }
+  };
+
+  // 날짜 비교 유틸리티 함수
+  const isDateBeforeToday = (dateString) => {
+    if (!dateString) return false;
+    
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    const targetDateString = dateString.toString().split('T')[0];
+    
+    return targetDateString < todayString;
   };
 
   return (
@@ -142,12 +152,7 @@ const UserHistoryModal = ({ user, onClose }) => {
                           // 승인 완료 이력만 표시 (종료일 < 오늘, 승인 이력 탭과 동일)
                           if (item.approval_status !== '승인 완료' || !item.end_date) return false;
                           
-                          // 문자열 비교 사용 (YYYY-MM-DD 형식)
-                          const today = new Date();
-                          const todayString = today.toISOString().split('T')[0];
-                          const endDateString = item.end_date.toString().split('T')[0];
-                          
-                          return endDateString < todayString;
+                          return isDateBeforeToday(item.end_date);
                         })
                         .map((item, index) => (
                         <tr key={index}>
@@ -174,8 +179,9 @@ const UserHistoryModal = ({ user, onClose }) => {
                             <button 
                               className="edit-button"
                               onClick={() => {
-                                // 수정 기능 구현
-                                                              }}
+                                console.log('이력 수정 기능은 추후 구현 예정입니다.');
+                                alert('이력 수정 기능은 추후 구현 예정입니다.');
+                              }}
                               title="이력 수정"
                             >
                               수정
@@ -197,8 +203,9 @@ const UserHistoryModal = ({ user, onClose }) => {
           <button onClick={onClose}>닫기</button>
           <button onClick={() => window.print()}>인쇄</button>
           <button onClick={() => {
-            // 내보내기 기능 구현
-                      }}>내보내기</button>
+            console.log('내보내기 기능은 추후 구현 예정입니다.');
+            alert('내보내기 기능은 추후 구현 예정입니다.');
+          }}>내보내기</button>
         </div>
       </div>
     </div>

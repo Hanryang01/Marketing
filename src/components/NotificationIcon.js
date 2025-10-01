@@ -71,7 +71,6 @@ const NotificationIcon = () => {
 
   // 사이트 열기
   const handleSiteOpen = (url) => {
-    // console.log('사이트 클릭됨:', url); // 디버깅용 - 제거됨
     window.open(url, '_blank', 'noopener,noreferrer');
     setIsDropdownOpen(false);
   };
@@ -149,7 +148,6 @@ const NotificationIcon = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  // console.log('버튼 클릭됨:', site.name); // 디버깅용 - 제거됨
                   handleSiteOpen(site.url);
                 }}
                 onMouseDown={(e) => {

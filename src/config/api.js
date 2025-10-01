@@ -34,7 +34,19 @@ export const apiCall = async (url, options = {}) => {
     },
   };
   
-  return fetch(fullUrl, { ...defaultOptions, ...options });
+  try {
+    const response = await fetch(fullUrl, { ...defaultOptions, ...options });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('API 호출 실패:', error);
+    throw error;
+  }
 };
 
 export default API_BASE_URL;

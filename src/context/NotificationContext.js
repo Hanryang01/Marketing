@@ -81,11 +81,8 @@ export const NotificationProvider = ({ children }) => {
       // 2. 종료일 체크 (서버 데이터)
       if (notificationSettings.endDateReminderToday || notificationSettings.endDateReminder7Days) {
         try {
-          const response = await apiCall(API_ENDPOINTS.END_DATE_CHECK);
-          if (response.ok) {
-            const data = await response.json();
-            
-            if (data && data.success) {
+          const data = await apiCall(API_ENDPOINTS.END_DATE_CHECK);
+          if (data && data.success) {
               // 7일 후 종료일인 사용자들 처리
               if (data.weekEndUsers && data.weekEndUsers.length > 0 && notificationSettings.endDateReminder7Days) {
                 for (const user of data.weekEndUsers) {
@@ -110,7 +107,6 @@ export const NotificationProvider = ({ children }) => {
                 }
               }
             }
-          }
         } catch (error) {
           console.error('종료일 확인 중 오류:', error);
         }

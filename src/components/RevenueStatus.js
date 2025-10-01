@@ -50,8 +50,7 @@ const RevenueStatus = () => {
   // 매출 데이터 가져오기
   const loadRevenueData = async () => {
     try {
-      const response = await apiCall(API_ENDPOINTS.REVENUE);
-      const result = await response.json();
+      const result = await apiCall(API_ENDPOINTS.REVENUE);
       
       if (result.success) {
         // DB 데이터를 프론트엔드 형식으로 변환 (snake_case → camelCase)
@@ -93,35 +92,8 @@ const RevenueStatus = () => {
     // 12개월 각각에 대해 계산
     for (let month = 1; month <= 12; month++) {
       const monthData = revenueList.filter(item => {
-        // issueDate가 null이거나 undefined인 경우 제외
-        if (!item.issueDate) {
-          return false;
-        }
-        
-        let itemDate;
-        if (typeof item.issueDate === 'string') {
-          itemDate = new Date(item.issueDate);
-        } else if (item.issueDate instanceof Date) {
-          itemDate = item.issueDate;
-        } else if (typeof item.issueDate === 'number') {
-          // 8자리 숫자 형식 (예: 20250826)을 Date 객체로 변환
-          const dateStr = String(item.issueDate);
-          if (dateStr.length === 8) {
-            const year = parseInt(dateStr.substring(0, 4));
-            const monthNum = parseInt(dateStr.substring(4, 6)) - 1; // getMonth()는 0부터 시작
-            const day = parseInt(dateStr.substring(6, 8));
-            itemDate = new Date(year, monthNum, day);
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
-        
-        // 유효한 날짜인지 확인
-        if (isNaN(itemDate.getTime())) {
-          return false;
-        }
+        const itemDate = parseDate(item.issueDate);
+        if (!itemDate) return false;
         
         // 한국 시간 기준으로 월과 연도 비교
         const itemYear = itemDate.getFullYear();
@@ -162,6 +134,34 @@ const RevenueStatus = () => {
     setSelectedYear(newYear);
   };
 
+  // 날짜 파싱 유틸리티 함수
+  const parseDate = (dateValue) => {
+    if (!dateValue) return null;
+    
+    let itemDate;
+    if (typeof dateValue === 'string') {
+      itemDate = new Date(dateValue);
+    } else if (dateValue instanceof Date) {
+      itemDate = dateValue;
+    } else if (typeof dateValue === 'number') {
+      // 8자리 숫자 형식 (예: 20250826)을 Date 객체로 변환
+      const dateStr = String(dateValue);
+      if (dateStr.length === 8) {
+        const year = parseInt(dateStr.substring(0, 4));
+        const month = parseInt(dateStr.substring(4, 6)) - 1; // getMonth()는 0부터 시작
+        const day = parseInt(dateStr.substring(6, 8));
+        itemDate = new Date(year, month, day);
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+    
+    // 유효한 날짜인지 확인
+    return isNaN(itemDate.getTime()) ? null : itemDate;
+  };
+
   // 누적 매출 계산 함수
   const calculateCumulativeRevenue = (monthlyData) => {
     const cumulative = [];
@@ -184,9 +184,6 @@ const RevenueStatus = () => {
       calculateMonthlyRevenueTableData();
     }
   }, [calculateMonthlyRevenueTableData, revenueList.length]);
-
-
-
 
   // 업체 형태별 매출 계산 (공급가액 기준)
   const getCompanyTypeRevenue = useCallback(() => {
@@ -306,35 +303,8 @@ const RevenueStatus = () => {
             const month = i + 1;
             const monthData = revenueList
               .filter(item => {
-                // issueDate가 null이거나 undefined인 경우 제외
-                if (!item.issueDate) {
-                  return false;
-                }
-                
-                let itemDate;
-                if (typeof item.issueDate === 'string') {
-                  itemDate = new Date(item.issueDate);
-                } else if (item.issueDate instanceof Date) {
-                  itemDate = item.issueDate;
-                } else if (typeof item.issueDate === 'number') {
-                  // 8자리 숫자 형식 (예: 20250826)을 Date 객체로 변환
-                  const dateStr = String(item.issueDate);
-                  if (dateStr.length === 8) {
-                    const year = parseInt(dateStr.substring(0, 4));
-                    const month = parseInt(dateStr.substring(4, 6)) - 1; // getMonth()는 0부터 시작
-                    const day = parseInt(dateStr.substring(6, 8));
-                    itemDate = new Date(year, month, day);
-                  } else {
-                    return false;
-                  }
-                } else {
-                  return false;
-                }
-                
-                // 유효한 날짜인지 확인
-                if (isNaN(itemDate.getTime())) {
-                  return false;
-                }
+                const itemDate = parseDate(item.issueDate);
+                if (!itemDate) return false;
                 
                 // 한국 시간 기준으로 월과 연도 비교
                 const itemYear = itemDate.getFullYear();
@@ -375,27 +345,11 @@ const RevenueStatus = () => {
     // 실제 데이터에서 존재하는 모든 연도 추출
     const existingYears = new Set();
     revenueList.forEach(item => {
-      if (item.issueDate) {
-        let itemDate;
-        if (typeof item.issueDate === 'string') {
-          itemDate = new Date(item.issueDate);
-        } else if (item.issueDate instanceof Date) {
-          itemDate = item.issueDate;
-        } else if (typeof item.issueDate === 'number') {
-          const dateStr = String(item.issueDate);
-          if (dateStr.length === 8) {
-            const year = parseInt(dateStr.substring(0, 4));
-            const month = parseInt(dateStr.substring(4, 6)) - 1;
-            const day = parseInt(dateStr.substring(6, 8));
-            itemDate = new Date(year, month, day);
-          }
-        }
-        
-        if (itemDate && !isNaN(itemDate.getTime())) {
-          const year = itemDate.getFullYear();
-          if (year >= startYear) {
-            existingYears.add(year);
-          }
+      const itemDate = parseDate(item.issueDate);
+      if (itemDate) {
+        const year = itemDate.getFullYear();
+        if (year >= startYear) {
+          existingYears.add(year);
         }
       }
     });
@@ -417,29 +371,8 @@ const RevenueStatus = () => {
     const yearlyData = years.map(year => {
       return revenueList
         .filter(item => {
-          if (!item.issueDate) return false;
-          
-          let itemDate;
-          if (typeof item.issueDate === 'string') {
-            itemDate = new Date(item.issueDate);
-          } else if (item.issueDate instanceof Date) {
-            itemDate = item.issueDate;
-          } else if (typeof item.issueDate === 'number') {
-            const dateStr = String(item.issueDate);
-            if (dateStr.length === 8) {
-              const year = parseInt(dateStr.substring(0, 4));
-              const month = parseInt(dateStr.substring(4, 6)) - 1;
-              const day = parseInt(dateStr.substring(6, 8));
-              itemDate = new Date(year, month, day);
-            } else {
-              return false;
-            }
-          } else {
-            return false;
-          }
-          
-          if (isNaN(itemDate.getTime())) return false;
-          return itemDate.getFullYear() === year;
+          const itemDate = parseDate(item.issueDate);
+          return itemDate && itemDate.getFullYear() === year;
         })
         .reduce((sum, item) => sum + item.supplyAmount, 0);
     });
@@ -676,12 +609,6 @@ const RevenueStatus = () => {
 
   return (
     <div className="revenue-status">
-
-
-
-
-
-
       {/* 매출 현황 상세 분석 섹션 */}
       <div className="revenue-charts-section">
         <h2>매출 현황 상세</h2>
@@ -715,29 +642,8 @@ const RevenueStatus = () => {
                 <p className="summary-number">
                   {revenueList
                     .filter(item => {
-                      if (!item.issueDate) return false;
-                      
-                      let itemDate;
-                      if (typeof item.issueDate === 'string') {
-                        itemDate = new Date(item.issueDate);
-                      } else if (item.issueDate instanceof Date) {
-                        itemDate = item.issueDate;
-                      } else if (typeof item.issueDate === 'number') {
-                        const dateStr = String(item.issueDate);
-                        if (dateStr.length === 8) {
-                          const year = parseInt(dateStr.substring(0, 4));
-                          const month = parseInt(dateStr.substring(4, 6)) - 1;
-                          const day = parseInt(dateStr.substring(6, 8));
-                          itemDate = new Date(year, month, day);
-                        } else {
-                          return false;
-                        }
-                      } else {
-                        return false;
-                      }
-                      
-                      if (isNaN(itemDate.getTime())) return false;
-                      return itemDate.getFullYear() === new Date().getFullYear();
+                      const itemDate = parseDate(item.issueDate);
+                      return itemDate && itemDate.getFullYear() === new Date().getFullYear();
                     })
                     .reduce((sum, item) => sum + item.supplyAmount, 0)
                     .toLocaleString()}원
@@ -748,29 +654,8 @@ const RevenueStatus = () => {
                 <p className="summary-number">
                   {revenueList
                     .filter(item => {
-                      if (!item.issueDate) return false;
-                      
-                      let itemDate;
-                      if (typeof item.issueDate === 'string') {
-                        itemDate = new Date(item.issueDate);
-                      } else if (item.issueDate instanceof Date) {
-                        itemDate = item.issueDate;
-                      } else if (typeof item.issueDate === 'number') {
-                        const dateStr = String(item.issueDate);
-                        if (dateStr.length === 8) {
-                          const year = parseInt(dateStr.substring(0, 4));
-                          const month = parseInt(dateStr.substring(4, 6)) - 1;
-                          const day = parseInt(dateStr.substring(6, 8));
-                          itemDate = new Date(year, month, day);
-                        } else {
-                          return false;
-                        }
-                      } else {
-                        return false;
-                      }
-                      
-                      if (isNaN(itemDate.getTime())) return false;
-                      return itemDate.getFullYear() === new Date().getFullYear();
+                      const itemDate = parseDate(item.issueDate);
+                      return itemDate && itemDate.getFullYear() === new Date().getFullYear();
                     }).length}건
                 </p>
               </div>
@@ -895,9 +780,6 @@ const RevenueStatus = () => {
             <Doughnut data={doughnutChartData} options={doughnutChartOptions} />
           </div>
         </div>
-
-
-
       </div>
     </div>
   );

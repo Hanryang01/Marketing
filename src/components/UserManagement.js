@@ -68,40 +68,16 @@ const UserManagement = () => {
   });
 
 
-  // API 호출 함수 (현재 사용하지 않음 - apiCall 직접 사용)
-  // const makeApiCall = useCallback(async (url, options = {}) => {
-  //   try {
-  //     const response = await apiCall(url, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       ...options
-  //     });
-  //     
-  //     const responseData = await response.json();
-  //     
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status} - ${responseData.error || responseData.message || 'Unknown error'}`);
-  //     }
-  //     
-  //     return responseData;
-  //   } catch (error) {
-  //     console.error('API 호출 에러:', error);
-  //     throw error;
-  //   }
-  // }, []);
 
   // 사용자 목록 로드
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiCall(API_ENDPOINTS.USERS, {
+      const result = await apiCall(API_ENDPOINTS.USERS, {
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
-      const result = await response.json();
       
       if (result && result.success && Array.isArray(result.data)) {
         const formattedUsers = result.data.map(user => ({
@@ -154,13 +130,11 @@ const UserManagement = () => {
   // 승인 이력 데이터 로드
   const fetchCompanyHistory = useCallback(async () => {
     try {
-      const response = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST, {
+      const result = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST, {
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
-      const result = await response.json();
       
       if (result && result.success && result.data && result.data.history && Array.isArray(result.data.history)) {
         setCompanyHistory(result.data.history);
@@ -350,7 +324,7 @@ const UserManagement = () => {
         industry: ''
       };
 
-      const result = await apiCall('/api/users', {
+      const result = await apiCall(API_ENDPOINTS.USERS, {
         method: 'POST',
         body: JSON.stringify(serverData)
       });
@@ -461,7 +435,7 @@ const UserManagement = () => {
         }
       }
       
-      const result = await apiCall(`/api/users/${actualUserId}`, {
+      const result = await apiCall(API_ENDPOINTS.USER_DETAIL(actualUserId), {
         method: 'PUT',
         body: JSON.stringify(userData)
       });
@@ -587,7 +561,7 @@ const UserManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.replace(/,/g, '')) || 0
       };
 
-      const result = await apiCall('/api/revenue', {
+      const result = await apiCall(API_ENDPOINTS.REVENUE, {
         method: 'POST',
         body: JSON.stringify(serverData)
       });
@@ -652,7 +626,7 @@ const UserManagement = () => {
         industry: approvalData.industry || ''
       };
 
-      const result = await apiCall(`/api/users/${approvalData.id}`, {
+      const result = await apiCall(API_ENDPOINTS.USER_DETAIL(approvalData.id), {
         method: 'PUT',
         body: JSON.stringify(serverData)
       });
@@ -705,7 +679,7 @@ const UserManagement = () => {
   // 실제 사용자 삭제 실행 함수
   const executeDeleteUser = async (user) => {
     try {
-      const result = await apiCall(`/api/users/${user.id}`, {
+      const result = await apiCall(API_ENDPOINTS.USER_DETAIL(user.id), {
         method: 'DELETE'
       });
       
@@ -743,7 +717,7 @@ const UserManagement = () => {
   // 실제 삭제 실행 함수
   const executeDeleteHistory = async (historyId) => {
     try {
-      const result = await apiCall(`/api/history/user/${historyId}`, {
+      const result = await apiCall(API_ENDPOINTS.HISTORY_USER(historyId), {
         method: 'DELETE'
       });
       

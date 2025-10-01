@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './DashboardPage.css';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState({
@@ -17,35 +18,13 @@ const DashboardPage = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // API 호출 함수들
-  const apiCall = async (url, options = {}) => {
-    try {
-      // 프록시 설정이 작동하지 않으므로 직접 백엔드 URL 사용
-      const fullUrl = url.startsWith('http') ? url : `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003'}${url}`;
-            const response = await fetch(fullUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      throw error;
-    }
-  };
 
   const fetchDashboardStats = useCallback(async () => {
     try {
       setLoading(true);
       
       // 사용자 데이터 가져오기
-      const usersResult = await apiCall('/api/users');
+      const usersResult = await apiCall(API_ENDPOINTS.USERS);
       let users = [];
       if (usersResult && usersResult.success && Array.isArray(usersResult.data)) {
         // DB 데이터를 프론트엔드 형식으로 변환
@@ -72,11 +51,22 @@ const DashboardPage = () => {
             position: user.manager_position || '',
           approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정'))
         }));
-        // setUsers(users); // 사용되지 않는 변수 제거
       }
 
       // 매출 데이터 가져오기
-      const revenueResult = await apiCall('/api/revenue');
+      console.log('🔍 매출 데이터 요청 중...');
+      let revenueResult;
+      try {
+        revenueResult = await apiCall(API_ENDPOINTS.REVENUE);
+        console.log('📥 매출 데이터 응답:', revenueResult);
+        console.log('📥 매출 데이터 success:', revenueResult?.success);
+        console.log('📥 매출 데이터 data 타입:', typeof revenueResult?.data);
+        console.log('📥 매출 데이터 data 길이:', Array.isArray(revenueResult?.data) ? revenueResult.data.length : 'not array');
+      } catch (error) {
+        console.error('❌ 매출 데이터 API 호출 실패:', error);
+        revenueResult = null;
+      }
+      
       let revenueData = [];
       if (revenueResult && revenueResult.success && Array.isArray(revenueResult.data)) {
         // DB 데이터를 프론트엔드 형식으로 변환 (snake_case → camelCase)
@@ -95,6 +85,10 @@ const DashboardPage = () => {
           createdAt: revenue.created_at,
           updatedAt: revenue.updated_at
         }));
+        console.log('📊 변환된 매출 데이터:', revenueData);
+        console.log('📊 매출 데이터 개수:', revenueData.length);
+      } else {
+        console.log('❌ 매출 데이터 로딩 실패:', revenueResult);
       }
 
       // 통계 계산
@@ -128,19 +122,23 @@ const DashboardPage = () => {
       ).length;
       
       const totalRevenue = revenueData.reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
+      console.log('💰 총 매출 계산:', totalRevenue);
       
       // 업체 형태별 매출 계산 (공급가액 기준)
       const consultingRevenue = revenueData
         .filter(item => item.companyType === '컨설팅 업체')
         .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
+      console.log('🏢 컨설팅 업체 매출:', consultingRevenue);
       
       const generalRevenue = revenueData
         .filter(item => item.companyType === '일반 업체')
         .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
+      console.log('🏭 일반 업체 매출:', generalRevenue);
       
       const otherRevenue = revenueData
         .filter(item => item.companyType === '기타')
         .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
+      console.log('📊 기타 매출:', otherRevenue);
       
       setStats({
         totalUsers,
@@ -157,7 +155,7 @@ const DashboardPage = () => {
       });
 
     } catch (error) {
-      // 대시보드 통계 가져오기 실패
+      console.error('대시보드 통계 가져오기 실패:', error);
     } finally {
       setLoading(false);
     }
