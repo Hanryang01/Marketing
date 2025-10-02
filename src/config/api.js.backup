@@ -1,8 +1,6 @@
 // API 설정
 // 개발 환경: localhost:3003, 프로덕션 환경: 상대 경로 사용 (Nginx 프록시)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 
-  (window.location.hostname === 'marketing.sihm.co.kr' ? '' : 
-   window.location.hostname === '43.201.198.165' ? '' : 'http://localhost:3003');
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
 
 export const API_ENDPOINTS = {
   // 사용자 관련
@@ -26,7 +24,7 @@ export const API_ENDPOINTS = {
 
 // API 호출 헬퍼 함수
 export const apiCall = async (url, options = {}) => {
-  console.log('🌐 apiCall 입력:', { url, API_BASE_URL });
+  console.log('🌐 apiCall 함수 시작:', { url, options, API_BASE_URL });
   
   let fullUrl;
   if (url.startsWith('http')) {
@@ -38,7 +36,12 @@ export const apiCall = async (url, options = {}) => {
     console.log('🌐 /api/로 시작하는 URL 처리:', fullUrl);
   } else {
     // /api/로 시작하지 않는 경우 추가
-    fullUrl = `${API_BASE_URL}/api${url}`;
+    // API_BASE_URL이 빈 문자열인 경우를 대비해 상대 경로 사용
+    if (API_BASE_URL) {
+      fullUrl = `${API_BASE_URL}/api${url}`;
+    } else {
+      fullUrl = `/api${url}`;
+    }
     console.log('🌐 일반 URL 처리:', fullUrl);
   }
   
@@ -50,16 +53,23 @@ export const apiCall = async (url, options = {}) => {
   };
   
   try {
+    console.log('🌐 fetch 요청 시작:', fullUrl);
+    console.log('🌐 요청 옵션:', { ...defaultOptions, ...options });
+    
     const response = await fetch(fullUrl, { ...defaultOptions, ...options });
+    console.log('🌐 fetch 응답 받음:', { status: response.status, ok: response.ok });
     
     if (!response.ok) {
+      console.error('🌐 HTTP 에러:', response.status, response.statusText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log('🌐 JSON 파싱 완료:', fullUrl, data);
     return data;
   } catch (error) {
-    console.error('API 호출 실패:', error);
+    console.error('🌐 API 호출 오류:', fullUrl, error);
+    console.error('🌐 에러 상세:', { message: error.message, stack: error.stack });
     throw error;
   }
 };

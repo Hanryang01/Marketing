@@ -209,15 +209,8 @@ const UserManagement = () => {
         
         const transformedData = companyHistory
           .filter(history => {
-            // 승인 완료 이력만 표시 (종료일 < 오늘, 승인 완료 이력과 동일)
-            if (history.approval_status !== '승인 완료' || !history.end_date) return false;
-            
-            // 문자열 비교 사용 (YYYY-MM-DD 형식)
-            const today = new Date();
-            const todayString = today.toISOString().split('T')[0];
-            const endDateString = history.end_date.toString().split('T')[0];
-            
-            return endDateString < todayString;
+            // 승인 완료 이력만 표시 (모든 승인 완료 이력)
+            return history.status_type === '승인 완료';
           })
           .map(history => ({
             id: history.id,
@@ -236,11 +229,20 @@ const UserManagement = () => {
             endDate: history.end_date,
             companyType: history.company_type,
             pricingPlan: history.pricing_plan,
+            activeDays: history.active_days || 0,
+            activeMonths: history.active_days ? Math.round(history.active_days / 30) : 0,
             approvalStatus: history.approval_status,
             statusType: history.status_type,
             statusDate: history.status_date,
             user_id_string: history.user_id_string
-        }));
+        }))
+        .sort((a, b) => {
+          // 종료일이 가장 늦은 순서대로 정렬 (내림차순)
+          if (!a.endDate && !b.endDate) return 0;
+          if (!a.endDate) return 1;
+          if (!b.endDate) return -1;
+          return new Date(b.endDate) - new Date(a.endDate);
+        });
         
         return transformedData;
       default:
@@ -927,6 +929,7 @@ const UserManagement = () => {
                     <th>이메일</th>
                     <th>업체 형태</th>
                     <th>요금제</th>
+                    <th>활성화 기간</th>
                     <th>시작일</th>
                     <th>종료일</th>
                     <th>삭제</th>
@@ -1079,6 +1082,7 @@ const UserManagement = () => {
                       <td>{user.email}</td>
                       <td>{user.companyType || ''}</td>
                       <td>{user.pricingPlan || '무료'}</td>
+                      <td>{user.activeMonths ? `${user.activeMonths}개월` : '-'}</td>
                       <td>{formatDate(user.startDate)}</td>
                       <td>{formatDate(user.endDate)}</td>
                       <td>

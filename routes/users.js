@@ -419,6 +419,13 @@ router.put('/api/users/:id', async (req, res) => {
       }
     }
 
+    // 현재 사용자의 manager_position 값을 보존하기 위해 조회
+    const [currentUserData] = await connection.execute(`
+      SELECT manager_position FROM users WHERE id = ?
+    `, [userId]);
+    
+    const preservedManagerPosition = currentUserData.length > 0 ? currentUserData[0].manager_position : null;
+    
     const [result] = await connection.execute(`
       UPDATE users SET
         company_name = ?, user_id = ?, email = ?, password_hash = ?, company_type = ?,
@@ -434,7 +441,8 @@ router.put('/api/users/:id', async (req, res) => {
       user_name || null, department || null, mobile_phone || null, business_license || null,
       phone_number || null, fax_number || null, address || null, notes || null, account_info || null, msds_limit || null,
       ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || null,
-      pricing_plan || null, startDateValue || null, endDateValue || null, manager_position || null, representative || null, industry || null,
+      pricing_plan || null, startDateValue || null, endDateValue || null, 
+      manager_position || preservedManagerPosition, representative || null, industry || null,
       accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null, userId
     ]);
 
@@ -460,7 +468,53 @@ router.put('/api/users/:id', async (req, res) => {
       
       if (endDateObj < todayObj) {
         
-        // 종료일이 지난 모든 사용자를 무료 사용자로 전환
+        // 먼저 승인 완료 시점의 원본 데이터를 히스토리에 기록
+        try {
+          // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
+          const [userData] = await connection.execute(`
+            SELECT user_name, company_name, company_type, pricing_plan, 
+                   mobile_phone, email, manager_position, start_date, end_date
+            FROM users WHERE id = ?
+          `, [userId]);
+          
+          if (userData.length > 0) {
+            const user = userData[0];
+            
+            // 활성화 일수 계산
+            let activeDays = 0;
+            if (user.start_date && user.end_date) {
+              const startDate = new Date(user.start_date);
+              const endDate = new Date(user.end_date);
+              const timeDiff = endDate.getTime() - startDate.getTime();
+              activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
+            }
+            
+            await connection.execute(`
+              INSERT INTO company_history (
+                user_id_string, company_name, user_name, company_type, status_type,
+                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `, [
+              user_id || null,
+              user.company_name || null,
+              user.user_name || null,
+              user.company_type || null,
+              '승인 완료',
+              user.start_date || null,
+              user.end_date || null,
+              user.pricing_plan || null,
+              user.mobile_phone || null,
+              user.email || null,
+              user.manager_position || null,
+              activeDays
+            ]);
+            console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료`);
+          }
+        } catch (historyError) {
+          console.error(`이력 기록 실패:`, historyError.message);
+        }
+        
+        // 그 후에 사용자 상태를 무료 사용자로 전환
         await connection.execute(`
           UPDATE users 
           SET approval_status = '승인 예정', 
@@ -475,30 +529,6 @@ router.put('/api/users/:id', async (req, res) => {
         
         statusChanged = true;
         newStatus = '승인 예정';
-        
-        // 승인 이력 기록
-        try {
-          await connection.execute(`
-            INSERT INTO company_history (
-              user_id_string, company_name, user_name, company_type, status_type,
-              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-          `, [
-            user_id,
-            company_name,
-            user_name,
-            company_type,
-            '승인 완료',
-            DateUtils.formatDate(startDateValue),
-            DateUtils.formatDate(endDateValue),
-            pricing_plan,
-            mobile_phone,
-            email,
-            manager_position
-          ]);
-        } catch (historyError) {
-          console.error(`이력 기록 실패:`, historyError.message);
-        }
       }
     }
 
@@ -516,24 +546,34 @@ router.put('/api/users/:id', async (req, res) => {
           `, [userId]);
           
           if (currentUser.length > 0 && currentUser[0].approval_status === '승인 예정') {
-            await connection.execute(`
-              INSERT INTO company_history (
-                user_id_string, company_name, user_name, company_type, status_type,
-                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            `, [
-              user_id,
-              company_name,
-              user_name,
-              company_type,
-              '승인 완료',
-              startDateValue,
-              endDateValue,
-              pricing_plan,
-              mobile_phone,
-              email,
-              manager_position
-            ]);
+            // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
+            const [userData] = await connection.execute(`
+              SELECT user_name, company_name, company_type, pricing_plan, 
+                     mobile_phone, email, manager_position, start_date, end_date
+              FROM users WHERE id = ?
+            `, [userId]);
+            
+            if (userData.length > 0) {
+              const user = userData[0];
+              await connection.execute(`
+                INSERT INTO company_history (
+                  user_id_string, company_name, user_name, company_type, status_type,
+                  start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+              `, [
+                user_id || null,
+                user.company_name || null,
+                user.user_name || null,
+                user.company_type || null,
+                '승인 완료',
+                user.start_date || null,
+                user.end_date || null,
+                user.pricing_plan || null,
+                user.mobile_phone || null,
+                user.email || null,
+                user.manager_position || null
+              ]);
+            }
           }
         }
       } catch (historyError) {

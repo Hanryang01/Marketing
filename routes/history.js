@@ -185,8 +185,8 @@ router.delete('/api/error-logs/:id', async (req, res) => {
   }
 });
 
-// Get company history
-router.get('/api/company-history', async (req, res) => {
+// Get company history (alias for /api/history)
+router.get('/api/history', async (req, res) => {
   let connection;
   try {
     const { userId, limit = 100, offset = 0 } = req.query;
@@ -194,8 +194,8 @@ router.get('/api/company-history', async (req, res) => {
     
     let query = `
       SELECT 
-        id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
-        start_date, end_date, pricing_plan, manager_position, mobile_phone, email, created_at
+        id, user_id_string, company_name, user_name, company_type, status_type,
+        start_date, end_date, pricing_plan, manager_position, mobile_phone, email, active_days, created_at
       FROM company_history
     `;
     let values = [];
@@ -205,10 +205,48 @@ router.get('/api/company-history', async (req, res) => {
       values.push(userId);
     }
     
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     const limitNum = parseInt(limit) || 100;
     const offsetNum = parseInt(offset) || 0;
-    values.push(limitNum, offsetNum);
+    query += ` ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+    
+    const [rows] = await connection.execute(query, values);
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (err) {
+    handleError(res, err, 'Failed to fetch company history');
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
+// Get company history
+router.get('/api/company-history', async (req, res) => {
+  let connection;
+  try {
+    const { userId, limit = 100, offset = 0 } = req.query;
+    connection = await pool.getConnection();
+    
+    let query = `
+      SELECT 
+        id, user_id_string, company_name, user_name, company_type, status_type,
+        start_date, end_date, pricing_plan, manager_position, mobile_phone, email, active_days, created_at
+      FROM company_history
+    `;
+    let values = [];
+    
+    if (userId) {
+      query += ' WHERE user_id_string = ?';
+      values.push(userId);
+    }
+    
+    const limitNum = parseInt(limit) || 100;
+    const offsetNum = parseInt(offset) || 0;
+    query += ` ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
     
     const [rows] = await connection.execute(query, values);
     
@@ -241,8 +279,8 @@ router.get('/api/company-history-list', async (req, res) => {
     // company_history 테이블에서 모든 승인 이력 조회
     const [rows] = await connection.execute(`
       SELECT 
-        id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
-        start_date, end_date, pricing_plan, manager_position, mobile_phone, email, created_at
+        id, user_id_string, company_name, user_name, company_type, status_type,
+        start_date, end_date, pricing_plan, manager_position, mobile_phone, email, active_days, created_at
       FROM company_history
       ORDER BY created_at DESC
       LIMIT ${limitNum} OFFSET ${offsetNum}
@@ -276,7 +314,7 @@ router.get('/api/user-approval-history/:userId', async (req, res) => {
     
     const [rows] = await connection.execute(`
       SELECT 
-        id, user_id_string, company_name, user_name, company_type, status_type as approval_status,
+        id, user_id_string, company_name, user_name, company_type, status_type,
         start_date, end_date, pricing_plan, created_at
       FROM company_history
       WHERE user_id_string = ?
@@ -324,15 +362,109 @@ router.post('/api/record-approval-history', async (req, res) => {
       start_date, end_date, pricing_plan
     } = req.body;
 
+    // 필수 파라미터 검증
+    if (!user_id_string) {
+      return res.status(400).json({
+        success: false,
+        error: 'user_id_string is required'
+      });
+    }
+
+    // 승인 완료 상태가 아니면 히스토리 기록 거부
+    if (approval_status !== '승인 완료') {
+      return res.status(400).json({
+        success: false,
+        error: '승인 완료 상태가 아닌 사용자는 히스토리를 기록할 수 없습니다.'
+      });
+    }
+
+    // 시작일과 종료일이 없으면 히스토리 기록 거부
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        error: '시작일과 종료일이 모두 있어야 히스토리를 기록할 수 있습니다.'
+      });
+    }
+
+    // 업체 형태가 무료 사용자이면 히스토리 기록 거부
+    if (company_type === '무료 사용자') {
+      return res.status(400).json({
+        success: false,
+        error: '무료 사용자는 히스토리를 기록할 수 없습니다.'
+      });
+    }
+
+    // 사용자의 현재 상태 확인
+    const [currentUser] = await connection.execute(`
+      SELECT user_name, company_name, company_type, pricing_plan, 
+             mobile_phone, email, manager_position, start_date, end_date, approval_status
+      FROM users WHERE user_id = ?
+    `, [user_id_string]);
+
+    if (currentUser.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '사용자를 찾을 수 없습니다.'
+      });
+    }
+
+    const user = currentUser[0];
+
+    // 현재 사용자가 승인 완료 상태가 아니면 히스토리 기록 거부
+    if (user.approval_status !== '승인 완료') {
+      return res.status(400).json({
+        success: false,
+        error: '현재 사용자가 승인 완료 상태가 아닙니다.'
+      });
+    }
+
+    // 활성화 일수 계산
+    let activeDays = 0;
+    if (user.start_date && user.end_date) {
+      const startDate = new Date(user.start_date);
+      const endDate = new Date(user.end_date);
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
+    }
+
+    // 현재 사용자의 실제 데이터를 사용하여 히스토리 기록
+    const safeParams = [
+      user_id_string || null,
+      user.company_name || null,
+      user.user_name || null,
+      user.company_type || null,
+      '승인 완료',
+      user.start_date || null,
+      user.end_date || null,
+      user.pricing_plan || null,
+      user.mobile_phone || null,
+      user.email || null,
+      user.manager_position || null,
+      activeDays
+    ];
+
+    console.log('📝 승인 이력 기록 시도 (사용자 현재 상태 기준):', {
+      user_id_string: safeParams[0],
+      company_name: safeParams[1],
+      user_name: safeParams[2],
+      company_type: safeParams[3],
+      status_type: safeParams[4],
+      start_date: safeParams[5],
+      end_date: safeParams[6],
+      pricing_plan: safeParams[7],
+      mobile_phone: safeParams[8],
+      email: safeParams[9],
+      manager_position: safeParams[10],
+      active_days: safeParams[11],
+      safeParamsLength: safeParams.length
+    });
+
     const [result] = await connection.execute(`
       INSERT INTO company_history (
-        user_id_string, company_name, company_type, status_type,
-        start_date, end_date, pricing_plan, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-    `, [
-      user_id_string, company_name, company_type, approval_status,
-      start_date, end_date, pricing_plan
-    ]);
+        user_id_string, company_name, user_name, company_type, status_type,
+        start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [...safeParams]);
 
     res.status(201).json({
       success: true,
@@ -341,6 +473,51 @@ router.post('/api/record-approval-history', async (req, res) => {
     });
   } catch (err) {
     handleError(res, err, 'Failed to record approval history');
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
+// 기존 히스토리 데이터의 active_days 업데이트
+router.post('/api/update-history-active-days', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    // 모든 히스토리 데이터 조회 (active_days가 null이거나 0인 경우)
+    const [histories] = await connection.execute(`
+      SELECT id, start_date, end_date FROM company_history 
+      WHERE (active_days IS NULL OR active_days = 0) AND start_date IS NOT NULL AND end_date IS NOT NULL
+    `);
+    
+    let updatedCount = 0;
+    
+    for (const history of histories) {
+      // 활성화 일수 계산
+      const startDate = new Date(history.start_date);
+      const endDate = new Date(history.end_date);
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
+      
+      // active_days 업데이트
+      await connection.execute(`
+        UPDATE company_history 
+        SET active_days = ? 
+        WHERE id = ?
+      `, [activeDays, history.id]);
+      
+      updatedCount++;
+    }
+    
+    res.json({
+      success: true,
+      message: `${updatedCount}건의 히스토리 데이터가 업데이트되었습니다.`,
+      updatedCount
+    });
+  } catch (err) {
+    handleError(res, err, 'Failed to update history active days');
   } finally {
     if (connection) {
       connection.release();

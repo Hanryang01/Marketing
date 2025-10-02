@@ -22,10 +22,10 @@
     "start": "set PORT=3002 && react-scripts start",
     "start:3000": "set PORT=3000 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
     "start:3002": "set PORT=3002 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
-    "build": "set NODE_OPTIONS=--no-deprecation --no-warnings && craco build",
+    "build": "set NODE_OPTIONS=--no-deprecation --no-warnings && set GENERATE_SOURCEMAP=false && set INLINE_RUNTIME_CHUNK=false && craco build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server:mysql": "set MYSQL_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
+    "server:mysql": "set DB_PASSWORD=Tech8123!& set PORT=3003& node --no-deprecation --no-warnings server.js",
     "server:dev": "set DB_NAME=sihm_local& set DB_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
     "dev": "concurrently \"npm run server:dev\" \"npm run start:3002\"",
     "prod": "npm run build && npm run server:mysql"

@@ -286,6 +286,61 @@ const RevenueHelpers = {
       year: targetYear,
       monthlyData: monthlyData
     };
+  },
+
+  getMonthlyNewUsers: async (connection, year, month) => {
+    const targetYear = year || new Date().getFullYear();
+    
+    const monthlyData = [];
+    
+    for (let month = 1; month <= 12; month++) {
+      const monthStart = `${targetYear}-${String(month).padStart(2, '0')}-01`;
+      const monthEnd = new Date(targetYear, month, 0);
+      const monthEndString = monthEnd.toISOString().split('T')[0];
+      
+      // 1. company_history 테이블에서 해당 월에 시작일이 있는 사용자 수 조회 (무료 요금제 제외)
+      const [historyUsers] = await connection.execute(`
+        SELECT COUNT(DISTINCT user_id_string) as count 
+        FROM company_history 
+        WHERE status_type = '승인 완료'
+        AND pricing_plan != '무료'
+        AND DATE(start_date) >= ? AND DATE(start_date) <= ?
+      `, [monthStart, monthEndString]);
+      
+      // 2. users 테이블에서 해당 월에 시작일이 있는 사용자 수 조회 (무료 요금제 제외)
+      const [currentUsers] = await connection.execute(`
+        SELECT COUNT(DISTINCT user_id) as count 
+        FROM users 
+        WHERE approval_status = '승인 완료'
+        AND pricing_plan != '무료'
+        AND DATE(start_date) >= ? AND DATE(start_date) <= ?
+      `, [monthStart, monthEndString]);
+      
+      // 3. 중복 제거를 위한 총 신규 가입자 수 계산 (UNION으로 중복 제거)
+      const [totalNewUsers] = await connection.execute(`
+        SELECT COUNT(DISTINCT user_id) as count FROM (
+          SELECT user_id_string as user_id FROM company_history 
+          WHERE status_type = '승인 완료'
+          AND pricing_plan != '무료'
+          AND DATE(start_date) >= ? AND DATE(start_date) <= ?
+          UNION
+          SELECT user_id FROM users 
+          WHERE approval_status = '승인 완료'
+          AND pricing_plan != '무료'
+          AND DATE(start_date) >= ? AND DATE(start_date) <= ?
+        ) as combined
+      `, [monthStart, monthEndString, monthStart, monthEndString]);
+      
+      monthlyData.push({
+        month: month,
+        newUsers: totalNewUsers[0].count
+      });
+    }
+    
+    return {
+      year: targetYear,
+      monthlyData: monthlyData
+    };
   }
 };
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DashboardPage.css';
-import { apiCall, API_ENDPOINTS } from '../config/api';
+import { apiCall } from '../config/api';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState({
@@ -19,12 +19,12 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
 
 
-  const fetchDashboardStats = useCallback(async () => {
+  const fetchDashboardStats = async () => {
     try {
       setLoading(true);
       
       // 사용자 데이터 가져오기
-      const usersResult = await apiCall(API_ENDPOINTS.USERS);
+      const usersResult = await apiCall('/api/users');
       let users = [];
       if (usersResult && usersResult.success && Array.isArray(usersResult.data)) {
         // DB 데이터를 프론트엔드 형식으로 변환
@@ -57,7 +57,7 @@ const DashboardPage = () => {
       console.log('🔍 매출 데이터 요청 중...');
       let revenueResult;
       try {
-        revenueResult = await apiCall(API_ENDPOINTS.REVENUE);
+        revenueResult = await apiCall('/api/revenue');
         console.log('📥 매출 데이터 응답:', revenueResult);
         console.log('📥 매출 데이터 success:', revenueResult?.success);
         console.log('📥 매출 데이터 data 타입:', typeof revenueResult?.data);
@@ -159,11 +159,11 @@ const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchDashboardStats();
-  }, [fetchDashboardStats]);
+  }, []);
 
   if (loading) {
     return <div className="loading">로딩 중...</div>;

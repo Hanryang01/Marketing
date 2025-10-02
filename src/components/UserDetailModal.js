@@ -318,9 +318,9 @@ const UserDetailModal = ({
       const result = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST);
       
       if (result.success) {
-        // 해당 사용자의 승인 완료 이력만 필터링 (종료일 < 오늘, 승인 이력 탭과 동일)
+        // 해당 사용자의 승인 완료 이력만 필터링 (승인 이력 탭과 동일)
         const userApprovalHistory = result.data.history.filter(history => {
-          return history.user_id_string === userId && history.approval_status === '승인 완료' && history.end_date && new Date(history.end_date) < new Date();
+          return history.user_id_string === userId && history.status_type === '승인 완료';
         });
         
                 setUserHistory(userApprovalHistory);
@@ -578,15 +578,8 @@ const UserDetailModal = ({
                     <tbody>
                       {userHistory
                         .filter(history => {
-                          // 승인 완료 이력만 표시 (종료일 < 오늘, 승인 이력 탭과 동일)
-                          if (history.approval_status !== '승인 완료' || !history.end_date) return false;
-                          
-                          // 문자열 비교 사용 (YYYY-MM-DD 형식)
-                          const today = new Date();
-                          const todayString = today.toISOString().split('T')[0];
-                          const endDateString = history.end_date.toString().split('T')[0];
-                          
-                          return endDateString < todayString;
+                          // 승인 완료 이력만 표시 (승인 이력 탭과 동일)
+                          return history.status_type === '승인 완료';
                         })
                         .map((history, index) => (
                         <tr key={index}>
@@ -600,8 +593,8 @@ const UserDetailModal = ({
                           <td>{history.company_type || '-'}</td>
                           <td>{history.pricing_plan || '-'}</td>
                           <td>
-                            {history.start_date && history.end_date ? 
-                              `${Math.round((new Date(history.end_date) - new Date(history.start_date)) / (1000 * 60 * 60 * 24 * 30))}개월` : 
+                            {history.active_days ? 
+                              `${Math.round(history.active_days / 30)}개월` : 
                               '-'
                             }
                           </td>
@@ -620,8 +613,8 @@ const UserDetailModal = ({
                         </tr>
                       ))}
                       {userHistory.filter(history => {
-                        // approval_status가 '승인 완료'이고 종료일 < 오늘인 경우만 표시 (승인 이력 탭과 동일)
-                        return history.approval_status === '승인 완료' && history.end_date && new Date(history.end_date) < new Date();
+                        // status_type이 '승인 완료'인 경우만 표시 (승인 이력 탭과 동일)
+                        return history.status_type === '승인 완료';
                       }).length === 0 && (
                         <tr>
                           <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>

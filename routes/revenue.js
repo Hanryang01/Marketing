@@ -25,6 +25,8 @@ router.get('/api/revenue', async (req, res) => {
       result = await RevenueHelpers.getMonthlyActiveCompaniesByType(connection, year, month);
     } else if (type === 'monthly-revenue-by-type') {
       result = await RevenueHelpers.getMonthlyRevenueByType(connection, year, month);
+    } else if (type === 'monthly-new-users') {
+      result = await RevenueHelpers.getMonthlyNewUsers(connection, year, month);
     } else {
       const [rows] = await connection.execute(`
         SELECT 

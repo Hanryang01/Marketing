@@ -6,9 +6,6 @@ require('dotenv').config();
 // 한국 시간대 설정
 process.env.TZ = 'Asia/Seoul';
 
-// 환경 감지 (개발/프로덕션)
-const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_NAME === 'sihm_local';
-
 // 설정값 상수화
 const config = {
   server: {
@@ -18,15 +15,15 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: 'Tech8123!',
-    database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
+    password: process.env.DB_PASSWORD || 'Tech8123!',
+    database: process.env.DB_NAME || 'sihm_user_management',
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
     charset: 'utf8mb4',
     timezone: '+09:00',
-    // acquireTimeout과 timeout은 MySQL2 Connection에서 지원하지 않음
-    // Connection Pool 레벨에서만 사용 가능
+    acquireTimeout: 60000,
+    timeout: 60000
   }
 };
 
@@ -40,11 +37,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   const allowedOrigins = process.env.NODE_ENV === 'production' 
     ? [process.env.CORS_ORIGIN || 'https://your-domain.com']
-    : ['http://localhost:3000', 'http://localhost:3002'];
+    : [
+        'http://localhost:3000', 
+        'http://localhost:3002', 
+        'http://43.201.198.165:3003', 
+        'http://43.201.198.165',
+        'http://43.201.198.165:80',
+        'http://43.201.198.165:443'
+      ];
   
   const origin = req.headers.origin;
+  console.log('Request origin:', origin);
+  
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
+  } else if (origin && origin.includes('43.201.198.165')) {
+    // 43.201.198.165로 시작하는 모든 origin 허용
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // origin이 없는 경우 (Nginx 프록시를 통한 요청) 허용
+    res.header('Access-Control-Allow-Origin', '*');
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -96,26 +108,6 @@ app.get('/api/test', (req, res) => {
     message: 'API is working',
     timestamp: new Date().toISOString()
   });
-});
-
-// 수동 만료 처리 API
-app.post('/api/process-expired-approvals', async (req, res) => {
-  try {
-    const updatedCount = await checkAndUpdateExpiredApprovals();
-    res.json({
-      success: true,
-      message: `만료 처리 완료: ${updatedCount}명 처리됨`,
-      processedCount: updatedCount,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ 수동 만료 처리 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '만료 처리 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
 });
 
 // 라우터 등록
@@ -254,7 +246,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     const [expiredUsers] = await conn.execute(`
       SELECT 
         id, user_id, company_name, user_name, company_type, pricing_plan,
-        start_date, end_date, mobile_phone, email, department, manager_position
+        start_date, end_date, mobile_phone, email, manager_position
       FROM users 
       WHERE approval_status = '승인 완료' 
       AND company_type IN ('컨설팅 업체', '일반 업체')
@@ -265,33 +257,23 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     if (expiredUsers.length > 0) {
       for (const user of expiredUsers) {
         try {
-          // 활성화 일수 계산
-          let activeDays = 0;
-          if (user.start_date && user.end_date) {
-            const startDate = new Date(user.start_date);
-            const endDate = new Date(user.end_date);
-            const timeDiff = endDate.getTime() - startDate.getTime();
-            activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
-          }
-          
           await conn.execute(`
             INSERT INTO company_history (
               user_id_string, company_name, user_name, company_type, status_type,
-              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+              start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
           `, [
             user.user_id,
-            user.company_name,
-            user.user_name,
-            user.company_type,
+            user.company_name || null,
+            user.user_name || null,
+            user.company_type || null,
             '승인 완료',
             user.start_date,
             user.end_date,
-            user.pricing_plan,
-            user.mobile_phone,
-            user.email,
-            user.manager_position || null,
-            activeDays
+            user.pricing_plan || null,
+            user.mobile_phone || null,
+            user.email || null,
+            user.manager_position || null
           ]);
           console.log(`📝 ${user.user_id} (${user.company_name}) - 기간 경과로 승인 완료 이력 기록`);
         } catch (historyError) {
@@ -429,7 +411,6 @@ const startServer = async () => {
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  console.log(`🔧 Environment: ${isDevelopment ? 'DEVELOPMENT (sihm_local)' : 'PRODUCTION (sihm_user_management)'}`);
       
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();

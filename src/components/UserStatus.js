@@ -49,6 +49,7 @@ const UserStatus = () => {
     general: Array(12).fill(0),
     total: Array(12).fill(0)
   });
+  const [monthlyNewUsers, setMonthlyNewUsers] = useState([]);
 
   // 월별 활성화 업체 수 데이터 가져오기 (그래프용)
   const loadMonthlyActiveCompanies = useCallback(async () => {
@@ -105,6 +106,23 @@ const UserStatus = () => {
         general: Array(12).fill(0),
         total: Array(12).fill(0)
       });
+    }
+  }, [selectedYear]);
+
+  // 월별 신규 가입자 수 데이터 가져오기
+  const loadMonthlyNewUsers = useCallback(async () => {
+    try {
+      const result = await apiCall(`${API_ENDPOINTS.REVENUE}?type=monthly-new-users&year=${selectedYear}`);
+      
+      if (result.success) {
+        setMonthlyNewUsers(result.data.monthlyData);
+      } else {
+        console.error('월별 신규 가입자 수 데이터 로드 실패:', result.error);
+        setMonthlyNewUsers([]);
+      }
+    } catch (error) {
+      console.error('월별 신규 가입자 수 데이터 로드 오류:', error);
+      setMonthlyNewUsers([]);
     }
   }, [selectedYear]);
 
@@ -215,6 +233,7 @@ const UserStatus = () => {
     fetchUserStats();
     loadMonthlyActiveCompanies();
     loadMonthlyActiveTableData();
+    loadMonthlyNewUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
@@ -260,6 +279,43 @@ const UserStatus = () => {
       ]
     };
   }, [monthlyActiveCompanies]);
+
+  // 월별 신규 가입자 수 그래프 데이터
+  const monthlyNewUsersChartData = useMemo(() => {
+    return {
+      labels: monthlyNewUsers && monthlyNewUsers.length > 0 
+        ? monthlyNewUsers.map(item => `${item.month}월`)
+        : ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+      datasets: [
+        {
+          type: 'bar',
+          label: '신규 가입자 수',
+          data: monthlyNewUsers && monthlyNewUsers.length > 0 
+            ? monthlyNewUsers.map(item => item.newUsers || 0)
+            : Array(12).fill(0),
+          backgroundColor: 'rgba(255, 159, 64, 0.8)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1,
+          borderRadius: 4,
+          cornerRadius: 4,
+          datalabels: {
+            display: true,
+            color: '#333',
+            font: {
+              weight: 'bold',
+              size: 12
+            },
+            formatter: function(value) {
+              return value > 0 ? value + '명' : '';
+            },
+            anchor: 'end',
+            align: 'top',
+            offset: 2
+          }
+        }
+      ]
+    };
+  }, [monthlyNewUsers]);
 
   // 업체 형태별 가입자 수 그래프 데이터
   const companyTypeUsersChartData = useMemo(() => {
@@ -344,6 +400,100 @@ const UserStatus = () => {
         right: 20,
         bottom: 20,
         left: 20
+      }
+    }
+  }), []);
+
+  // 월별 신규 가입자 수 그래프 옵션
+  const monthlyNewUsersChartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    elements: {
+      bar: {
+        borderRadius: 4
+      }
+    },
+    categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
+    barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        align: 'start',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        },
+        margin: {
+          top: 20,
+          bottom: 40
+        }
+      },
+      layout: {
+        padding: {
+          top: 30,
+          right: 20,
+          bottom: 20,
+          left: 20
+        }
+      },
+      datalabels: {
+        display: true,
+        color: '#333',
+        font: {
+          weight: 'bold',
+          size: 11
+        },
+        formatter: function(value) {
+          return value > 0 ? value + '명' : '';
+        },
+        anchor: 'end',
+        align: 'top',
+        offset: 4
+      }
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: false
+        },
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 11,
+            weight: 'bold'
+          },
+          color: '#666'
+        }
+      },
+      y: {
+        display: true,
+        title: {
+          display: false
+        },
+        grid: {
+          display: true,
+          color: 'rgba(0, 0, 0, 0.1)'
+        },
+        ticks: {
+          font: {
+            size: 11,
+            weight: 'bold'
+          },
+          color: '#666',
+          stepSize: 1,
+          callback: function(value) {
+            return value + '명';
+          }
+        },
+        beginAtZero: true
       }
     }
   }), []);
@@ -585,6 +735,25 @@ const UserStatus = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 월별 신규 가입자 수 그래프 */}
+      <div className="monthly-new-users-chart-container">
+        <div className="monthly-chart-header">
+          <h3>월별 신규 가입자 수</h3>
+          <div className="monthly-year-selector">
+            <label>연도 선택:</label>
+            <select 
+              value={selectedYear} 
+              onChange={(e) => handleYearChange(parseInt(e.target.value))}
+            >
+              {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+                <option key={year} value={year}>{year}년</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <Bar data={monthlyNewUsersChartData} options={monthlyNewUsersChartOptions} />
       </div>
     </div>
   );
