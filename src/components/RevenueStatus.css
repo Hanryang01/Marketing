@@ -1,0 +1,640 @@
+.revenue-status {
+  padding: 0 20px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  min-height: 100vh;
+}
+
+.revenue-header {
+  margin-bottom: 30px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-text {
+  text-align: left;
+  flex: 1;
+}
+
+.export-excel-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.export-excel-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4);
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+.revenue-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.revenue-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.chart-controls {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.year-selector label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.year-selector select {
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+.year-selector select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  height: 430px;
+  position: relative;
+}
+
+.revenue-summary {
+  padding: 0 10px;
+}
+
+.summary-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 5px;
+  height: auto;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.yearly-revenue-chart {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  height: 430px;
+  position: relative;
+}
+
+.yearly-revenue-chart h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.summary-card {
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  border: 2px solid;
+  transition: all 0.3s ease;
+  height: 213px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 총 매출 카드 - 파란색 계열 */
+.summary-card:nth-child(1) {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-color: #2196f3;
+}
+
+.summary-card:nth-child(1):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(33, 150, 243, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+  border-color: #1976d2;
+}
+
+/* 총 거래 건수 카드 - 초록색 계열 */
+.summary-card:nth-child(2) {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-color: #4caf50;
+}
+
+.summary-card:nth-child(2):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e8f5e8 100%);
+  border-color: #388e3c;
+}
+
+/* 올해 매출 카드 - 주황색 계열 */
+.summary-card:nth-child(3) {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%);
+  border-color: #ff9800;
+}
+
+.summary-card:nth-child(3):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #fff3e0 100%);
+  border-color: #f57c00;
+}
+
+/* 올해 매출 건수 카드 - 보라색 계열 */
+.summary-card:nth-child(4) {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border-color: #9c27b0;
+}
+
+.summary-card:nth-child(4):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(156, 39, 176, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f3e5f5 100%);
+  border-color: #7b1fa2;
+}
+
+.summary-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 총 매출 카드 텍스트 색상 */
+.summary-card:nth-child(1) h3 {
+  color: #1565c0;
+}
+
+.summary-card:nth-child(1) .summary-number {
+  color: #0d47a1;
+}
+
+/* 총 거래 건수 카드 텍스트 색상 */
+.summary-card:nth-child(2) h3 {
+  color: #2e7d32;
+}
+
+.summary-card:nth-child(2) .summary-number {
+  color: #1b5e20;
+}
+
+/* 올해 매출 카드 텍스트 색상 */
+.summary-card:nth-child(3) h3 {
+  color: #e65100;
+}
+
+.summary-card:nth-child(3) .summary-number {
+  color: #bf360c;
+}
+
+/* 활성화 업체 수 카드 텍스트 색상 */
+.summary-card:nth-child(4) h3 {
+  color: #7b1fa2;
+}
+
+.summary-card:nth-child(4) .summary-number {
+  color: #4a148c;
+}
+
+.summary-number {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 로딩 상태 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* 매출 현황 그래프 섹션 */
+.revenue-charts-section {
+  margin-top: 10px;
+  padding: 0 10px;
+}
+
+.revenue-charts-section h2 {
+  margin: 0 0 30px 0;
+  font-size: 2.0rem;
+  font-weight: 800;
+  color: #2e7d32;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+/* 그래프 그리드 */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.charts-grid .chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  height: 430px;
+  min-height: 430px;
+}
+
+.charts-grid .chart-container h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.charts-grid .chart-container canvas {
+  max-height: 350px;
+}
+
+/* 월별 차트 컨테이너 */
+.monthly-chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  margin-bottom: 20px;
+}
+
+.monthly-chart-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.monthly-chart-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.monthly-year-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  right: 0;
+}
+
+.monthly-year-selector label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.monthly-year-selector select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.monthly-year-selector select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.monthly-chart-container canvas {
+  max-height: 400px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .revenue-status {
+    padding: 15px 20px;
+  }
+  
+  .revenue-header h1 {
+    font-size: 2rem;
+  }
+  
+  .chart-container {
+    height: 350px;
+    padding: 15px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .year-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .summary-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .summary-cards-grid {
+    order: 2;
+    height: auto;
+    gap: 5px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  
+  .summary-card {
+    height: 100px;
+    padding: 15px;
+  }
+  
+  .yearly-revenue-chart {
+    order: 1;
+    height: 350px;
+  }
+  
+  .charts-grid .chart-container {
+    min-height: 350px;
+    height: 350px;
+  }
+  
+  .monthly-chart-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .monthly-year-selector {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+
+/* 월별 업체 형태별 차트 */
+.monthly-company-type-chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.monthly-company-type-chart-container h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1976d2;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.monthly-company-type-chart-container .monthly-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.monthly-company-type-chart-container .monthly-year-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthly-company-type-chart-container .monthly-year-selector label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.monthly-company-type-chart-container .monthly-year-selector select {
+  padding: 8px 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.monthly-company-type-chart-container .monthly-year-selector select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.monthly-company-type-chart-container .monthly-year-selector select:hover {
+  border-color: #1976d2;
+}
+
+.monthly-company-type-chart-container canvas {
+  max-height: 400px;
+}
+
+/* 월별 매출 표 스타일 */
+.monthly-revenue-table-container {
+  margin-top: 30px;
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.monthly-revenue-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.monthly-revenue-table-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  flex: 1;
+}
+
+.monthly-revenue-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.monthly-revenue-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 600px;
+}
+
+.monthly-revenue-table th,
+.monthly-revenue-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+
+.monthly-revenue-table th {
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.monthly-revenue-table .category-header {
+  min-width: 100px;
+  text-align: left !important;
+  padding-left: 15px !important;
+}
+
+.monthly-revenue-table .month-header {
+  min-width: 60px;
+  font-size: 0.85rem;
+}
+
+.monthly-revenue-table tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.monthly-revenue-table tbody tr:hover {
+  background: #e3f2fd;
+}
+
+.monthly-revenue-table .category-cell {
+  text-align: left !important;
+  padding-left: 15px !important;
+  font-weight: 500;
+  color: #333;
+}
+
+.monthly-revenue-table .data-cell {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.monthly-revenue-table .total-row {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-top: 2px solid #667eea;
+}
+
+.monthly-revenue-table .total-label {
+  font-weight: 700 !important;
+  color: #333 !important;
+}
+
+.monthly-revenue-table .total-data {
+  font-weight: 700 !important;
+  color: #333 !important;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .monthly-revenue-table-container {
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  .monthly-revenue-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .year-selector {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

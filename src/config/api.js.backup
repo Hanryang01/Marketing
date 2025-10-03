@@ -1,0 +1,77 @@
+// API 설정
+// 개발 환경: localhost:3003, 프로덕션 환경: 상대 경로 사용 (Nginx 프록시)
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+
+export const API_ENDPOINTS = {
+  // 사용자 관련
+  USERS: `${API_BASE_URL}/api/users`,
+  USER_DETAIL: (id) => `${API_BASE_URL}/api/users/${id}`,
+  USER_APPROVAL_HISTORY: (userId) => `${API_BASE_URL}/api/user-approval-history/${userId}`,
+  
+  // 승인 이력 관련
+  COMPANY_HISTORY: `${API_BASE_URL}/api/company-history`,
+  COMPANY_HISTORY_LIST: `${API_BASE_URL}/api/company-history-list`,
+  HISTORY_USER: (userId) => `${API_BASE_URL}/api/history/user/${userId}`,
+  HISTORY_USER_DETAIL: `${API_BASE_URL}/api/history/user/detail`,
+  
+  // 매출 관련
+  REVENUE: `${API_BASE_URL}/api/revenue`,
+  REVENUE_DETAIL: (id) => `${API_BASE_URL}/api/revenue/${id}`,
+  
+  // 기타
+  END_DATE_CHECK: `${API_BASE_URL}/api/users/end-date-check`,
+};
+
+// API 호출 헬퍼 함수
+export const apiCall = async (url, options = {}) => {
+  console.log('🌐 apiCall 함수 시작:', { url, options, API_BASE_URL });
+  
+  let fullUrl;
+  if (url.startsWith('http')) {
+    fullUrl = url;
+    console.log('🌐 절대 URL 사용:', fullUrl);
+  } else if (url.startsWith('/api/')) {
+    // 이미 /api/로 시작하는 경우 중복 방지
+    fullUrl = `${API_BASE_URL}${url}`;
+    console.log('🌐 /api/로 시작하는 URL 처리:', fullUrl);
+  } else {
+    // /api/로 시작하지 않는 경우 추가
+    // API_BASE_URL이 빈 문자열인 경우를 대비해 상대 경로 사용
+    if (API_BASE_URL) {
+      fullUrl = `${API_BASE_URL}/api${url}`;
+    } else {
+      fullUrl = `/api${url}`;
+    }
+    console.log('🌐 일반 URL 처리:', fullUrl);
+  }
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  };
+  
+  try {
+    console.log('🌐 fetch 요청 시작:', fullUrl);
+    console.log('🌐 요청 옵션:', { ...defaultOptions, ...options });
+    
+    const response = await fetch(fullUrl, { ...defaultOptions, ...options });
+    console.log('🌐 fetch 응답 받음:', { status: response.status, ok: response.ok });
+    
+    if (!response.ok) {
+      console.error('🌐 HTTP 에러:', response.status, response.statusText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('🌐 JSON 파싱 완료:', fullUrl, data);
+    return data;
+  } catch (error) {
+    console.error('🌐 API 호출 오류:', fullUrl, error);
+    console.error('🌐 에러 상세:', { message: error.message, stack: error.stack });
+    throw error;
+  }
+};
+
+export default API_BASE_URL;

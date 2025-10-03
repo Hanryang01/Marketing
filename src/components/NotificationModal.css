@@ -1,0 +1,673 @@
+/* 알림 모달 오버레이 */
+.notification-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+/* 알림 모달 */
+.notification-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 모달 헤더 */
+.notification-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+
+.notification-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.notification-modal-header .close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-modal-header .close-button:hover {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+/* 탭 네비게이션 */
+.notification-tabs {
+  display: flex;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-button:hover {
+  color: #333;
+  background-color: #e9ecef;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: white;
+}
+
+.tab-badge {
+  background-color: #ff4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 탭 컨텐츠 */
+.notification-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 알림 리스트 탭 */
+.notification-list-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notification-actions {
+  padding: 16px 16px;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.mark-all-read-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mark-all-read-button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.mark-all-read-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.notification-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  gap: 12px;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+  font-weight: 500;
+}
+
+.notification-item.read {
+  background-color: #ffffff;
+  opacity: 0.8;
+}
+
+/* 상태 표시기 */
+.notification-status-indicator {
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.unread-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #ff4444;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.notification-item .notification-icon {
+  font-size: 20px;
+  margin-right: 5px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.notification-item .notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+  gap: 12px;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-item.unread .notification-title {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.notification-item.read .notification-title {
+  color: #666;
+}
+
+.notification-status {
+  flex-shrink: 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.unread-badge {
+  background-color: #ff4444;
+  color: white;
+}
+
+.read-badge {
+  background-color: #28a745;
+  color: white;
+}
+
+.notification-message {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 회사명 강조 스타일 - 녹색 계통 반투명 (테두리 없음) */
+.notification-message .company-name {
+  font-weight: 800;
+  color: rgba(27, 94, 32, 0.8);
+  background-color: rgba(200, 230, 201, 0.6);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: none;
+  display: inline-block;
+  margin: 0 3px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+.notification-item.unread .notification-message .company-name {
+  background-color: rgba(165, 214, 167, 0.7);
+  color: rgba(13, 62, 13, 0.9);
+  border: none;
+  font-weight: 900;
+  box-shadow: 0 3px 6px rgba(46, 125, 50, 0.3);
+}
+
+/* 모든 알림 타입 통일 스타일 - 중간 녹색, 굵은 폰트, 중간 그림자 */
+.notification-item[data-type="tax_invoice"] .notification-message .company-name,
+.notification-item[data-type="end_date_today"] .notification-message .company-name,
+.notification-item[data-type="end_date_7days"] .notification-message .company-name {
+  background-color: rgba(165, 214, 167, 0.7);
+  color: rgba(27, 94, 32, 0.8);
+  border: none;
+  font-weight: 900;
+  box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
+}
+
+.notification-time {
+  color: #999;
+  font-size: 12px;
+}
+
+.delete-notification-button {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.delete-notification-button:hover {
+  color: #ff4444;
+  background-color: #f8f9fa;
+}
+
+.empty-notifications {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* 알림 설정 탭 */
+.notification-settings-tab {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-section {
+  margin-bottom: 32px;
+}
+
+.settings-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.setting-item {
+  margin-bottom: 16px;
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.setting-item select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.setting-item select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.setting-item input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white !important;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  cursor: text;
+}
+
+/* 비활성화 상태 방지 */
+.setting-item input[type="text"]:not(:disabled) {
+  background-color: white !important;
+  color: #333 !important;
+}
+
+.setting-item input[type="text"]:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+  background-color: #fff !important;
+}
+
+/* 더 강력한 focus 스타일 */
+.tax-invoice-item .setting-item input[type="text"]:focus {
+  outline: none !important;
+  border: 2px solid #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3) !important;
+  background-color: #fff !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+.setting-item input[type="text"]::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* 체크박스 스타일 */
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 0 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  margin-right: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 설정 액션 버튼 */
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.cancel-button,
+.save-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #545b62;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #1e7e34;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .notification-modal {
+    max-width: 98%;
+    max-height: 90vh;
+    margin: 10px;
+  }
+  
+  .notification-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .notification-modal-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .notification-item {
+    padding: 12px 20px;
+  }
+  
+  .notification-settings-tab {
+    padding: 20px;
+  }
+  
+  .settings-actions {
+    flex-direction: column;
+  }
+  
+  .cancel-button,
+  .save-button {
+    width: 100%;
+  }
+  
+  .tax-invoice-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .tax-invoice-row .setting-item {
+    flex: none;
+  }
+  
+  .notification-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .notification-status {
+    align-self: flex-end;
+  }
+  
+  .status-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
+/* 세금계산서 설정 스타일 */
+.tax-invoice-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tax-invoice-item {
+  position: relative;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tax-invoice-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.tax-invoice-row .setting-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.tax-invoice-item .setting-item {
+  margin-bottom: 0;
+}
+
+.remove-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}
+
+.add-button {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed #007bff;
+  background-color: transparent;
+  color: #007bff;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.add-button:hover {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
