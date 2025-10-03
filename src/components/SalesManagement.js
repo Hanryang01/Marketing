@@ -284,7 +284,7 @@ const SalesManagement = () => {
     try {
       // 날짜 형식 변환 (8자리 숫자를 DATE 형식으로 변환)
       let formattedIssueDate = revenueData.issueDate || null;
-      let formattedPaymentDate = revenueData.paymentDate || null;
+      let formattedPaymentDate = revenueData.paymentDate && revenueData.paymentDate !== '-' ? revenueData.paymentDate : null; // '-'일 때 null로 처리
       
       // 콤마 제거하고 숫자로 변환
       const serverData = {
@@ -333,7 +333,7 @@ const SalesManagement = () => {
     const editingData = {
       ...revenue,
       issueDate: formatDate(revenue.issueDate),
-      paymentDate: formatDate(revenue.paymentDate),
+      paymentDate: revenue.paymentDate ? formatDate(revenue.paymentDate) : null, // null일 때는 null 유지
       companyType: revenue.companyType || '무료 사용자' // 기본값 설정
     };
     
@@ -387,7 +387,7 @@ const SalesManagement = () => {
         company_name: revenueData.companyName,
         business_license: revenueData.businessLicense || '',
         issue_date: revenueData.issueDate, // YYYY-MM-DD 형식 그대로 유지
-        payment_date: revenueData.paymentDate, // YYYY-MM-DD 형식 그대로 유지
+        payment_date: revenueData.paymentDate && revenueData.paymentDate !== '-' ? revenueData.paymentDate : null, // '-'일 때 null로 처리
         payment_method: revenueData.paymentMethod,
         company_type: revenueData.companyType, // company_type으로 저장
         item: revenueData.item,

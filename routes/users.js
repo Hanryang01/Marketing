@@ -131,7 +131,7 @@ router.get('/api/users/end-date-check', async (req, res) => {
       String(weekLater.getDate()).padStart(2, '0');
     
     
-    // 오늘 종료일인 사용자들
+    // 오늘 종료일인 사용자들 (한국 시간 기준)
     const [todayEndUsers] = await connection.execute(`
       SELECT id, company_name, user_id, end_date
       FROM users 
@@ -139,17 +139,17 @@ router.get('/api/users/end-date-check', async (req, res) => {
       AND company_type IN ('컨설팅 업체', '일반 업체')
       AND pricing_plan != '무료'
       AND end_date IS NOT NULL
-      AND DATE(end_date) = ?
+      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
     `, [todayString]);
     
-    // 7일 후 종료일인 사용자들 (요금제 조건 제거)
+    // 7일 후 종료일인 사용자들 (한국 시간 기준)
     const [weekEndUsers] = await connection.execute(`
       SELECT id, company_name, user_id, end_date
       FROM users 
       WHERE approval_status = '승인 완료'
       AND company_type IN ('컨설팅 업체', '일반 업체')
       AND end_date IS NOT NULL
-      AND DATE(end_date) = ?
+      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
     `, [weekLaterString]);
     
     
