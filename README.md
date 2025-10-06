@@ -89,7 +89,7 @@ mysql-schema.sql       # MySQL 데이터베이스 스키마
 
 ### 🔐 로그인 시스템
 - ID 기반 로그인 (현재는 확인 버튼만으로 로그인 가능)
-- SIHM 브랜드 로고 및 Admin 페이지 표시
+- SIHM 브랜드 로고 및 Marketing 페이지 표시
 - 반응형 디자인
 
 ### 👥 사용자 관리
@@ -154,19 +154,30 @@ pm2 start ecosystem.config.js --env production
 pm2 status
 
 # 로그 확인
-pm2 logs sihm-admin
+pm2 logs sihm-marketing
 
 # 모니터링
 pm2 monit
 ```
 
 ### 자동 배포 스크립트
+
+#### Linux/Mac
 ```bash
 # 실행 권한 부여
 chmod +x deploy.sh
 
 # 배포 실행
 ./deploy.sh
+```
+
+#### Windows
+```cmd
+# 배포 실행
+deploy-windows.bat
+
+# 앱 시작
+start-windows.bat
 ```
 
 ### SSL 인증서 설정

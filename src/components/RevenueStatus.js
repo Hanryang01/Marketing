@@ -17,6 +17,7 @@ import {
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { useCalendar } from '../hooks/useCalendar';
+import { useCurrentMonth } from '../hooks/useCurrentMonth';
 
 ChartJS.register(
   CategoryScale,
@@ -40,6 +41,12 @@ const RevenueStatus = () => {
   const { getKoreaYearMonth, isCurrentKoreaYearMonth } = useCalendar();
   const currentKorea = getKoreaYearMonth();
   const [selectedYear, setSelectedYear] = useState(currentKorea.year);
+  
+  // 현재 월 강조 훅 사용
+  const { 
+    isCurrentMonth, 
+    applyCurrentMonthHighlight
+  } = useCurrentMonth();
   const [monthlyRevenueTableData, setMonthlyRevenueTableData] = useState({
     consulting: Array(12).fill(0),
     general: Array(12).fill(0),
@@ -294,7 +301,7 @@ const RevenueStatus = () => {
   };
 
   const monthlyChartData = useMemo(() => {
-    return {
+    const baseData = {
       labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
       datasets: [
         {
@@ -336,7 +343,10 @@ const RevenueStatus = () => {
         },
       ],
     };
-  }, [revenueList, selectedYear]);
+    
+    // 현재 월 강조 적용
+    return applyCurrentMonthHighlight(baseData, selectedYear);
+  }, [revenueList, selectedYear, applyCurrentMonthHighlight]);
 
   // 연도별 매출 차트 데이터
   const getYearlyRevenueData = () => {
@@ -405,96 +415,130 @@ const RevenueStatus = () => {
 
   const yearlyRevenueChartData = getYearlyRevenueData();
 
-  // 연도별 매출 차트 옵션
-  const yearlyRevenueChartOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    aspectRatio: 2.7,
-    categoryPercentage: 0.6, // 카테고리(연도) 범위에서 막대가 차지하는 비율 (60%)
-    barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
-    layout: {
-      padding: {
-        top: 30,
-        right: 20,
-        bottom: 20,
-        left: 20
-      }
-    },
-    plugins: {
-      legend: {
-        display: false,
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + '원';
-          }
-        }
-      }
-    },
-    tooltip: {
-      enabled: false,
-      mode: null,
-      intersect: false,
-      events: []
-    },
-    hover: {
-      mode: null,
-      animationDuration: 0,
-      intersect: false,
-      events: []
-    }
+  // 동적 stepSize 계산 함수
+  const calculateStepSize = (maxValue) => {
+    if (maxValue <= 0) return 1;
+    
+    // 최대값을 5개 틱으로 나누어 적절한 stepSize 계산
+    const baseStep = maxValue / 5;
+    
+    // 10의 거듭제곱으로 반올림
+    const magnitude = Math.pow(10, Math.floor(Math.log10(baseStep)));
+    const normalizedStep = baseStep / magnitude;
+    
+    let stepSize;
+    if (normalizedStep <= 1) stepSize = 1 * magnitude;
+    else if (normalizedStep <= 2) stepSize = 2 * magnitude;
+    else if (normalizedStep <= 5) stepSize = 5 * magnitude;
+    else stepSize = 10 * magnitude;
+    
+    return Math.max(stepSize, 1);
   };
 
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    elements: {
-      bar: {
-        borderRadius: 4
-      }
-    },
-    categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
-    barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
-    plugins: {
-      legend: {
-        display: false,
-      }
-    },
-    tooltip: {
-      enabled: false,
-      mode: null,
-      intersect: false,
-      events: []
-    },
-    hover: {
-      mode: null,
-      animationDuration: 0,
-      intersect: false,
-      events: []
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + '원';
+  // 연도별 매출 차트 옵션
+  const yearlyRevenueChartOptions = useMemo(() => {
+    const maxValue = Math.max(...getYearlyRevenueData().datasets[0].data);
+    const stepSize = calculateStepSize(maxValue);
+    
+    return {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 2.7,
+      categoryPercentage: 0.6, // 카테고리(연도) 범위에서 막대가 차지하는 비율 (60%)
+      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
+      layout: {
+        padding: {
+          top: 30,
+          right: 20,
+          bottom: 20,
+          left: 20
+        }
+      },
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: stepSize, // 동적으로 계산된 간격
+            maxTicksLimit: 5, // 최대 5개만 표시
+            callback: function(value) {
+              return value.toLocaleString() + '원';
+            }
           }
         }
+      },
+      tooltip: {
+        enabled: false,
+        mode: null,
+        intersect: false,
+        events: []
+      },
+      hover: {
+        mode: null,
+        animationDuration: 0,
+        intersect: false,
+        events: []
       }
-    },
-    layout: {
-      padding: {
-        top: 30,
-        right: 20,
-        bottom: 20,
-        left: 20
+    };
+  }, [revenueList, getYearlyRevenueData]);
+
+  const barChartOptions = useMemo(() => {
+    const maxValue = Math.max(...monthlyChartData.datasets[0].data);
+    const stepSize = calculateStepSize(maxValue);
+    
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      elements: {
+        bar: {
+          borderRadius: 4
+        }
+      },
+      categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
+      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      tooltip: {
+        enabled: false,
+        mode: null,
+        intersect: false,
+        events: []
+      },
+      hover: {
+        mode: null,
+        animationDuration: 0,
+        intersect: false,
+        events: []
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: stepSize, // 동적으로 계산된 간격
+            maxTicksLimit: 5, // 최대 5개만 표시
+            callback: function(value) {
+              return value.toLocaleString() + '원';
+            }
+          }
+        }
+      },
+      layout: {
+        padding: {
+          top: 30,
+          right: 20,
+          bottom: 20,
+          left: 20
+        }
       }
-    }
-  };
+    };
+  }, [revenueList, monthlyChartData]);
 
   const doughnutChartOptions = {
     responsive: true,
@@ -532,65 +576,72 @@ const RevenueStatus = () => {
     }
   };
 
-  const monthlyChartOptions = {
-    responsive: true,
-    elements: {
-      bar: {
-        borderRadius: 4
-      }
-    },
-    categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
-    barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
-    plugins: {
-      legend: {
-        display: false,
+  const monthlyChartOptions = useMemo(() => {
+    const maxValue = Math.max(...monthlyChartData.datasets[0].data);
+    const stepSize = calculateStepSize(maxValue);
+    
+    return {
+      responsive: true,
+      elements: {
+        bar: {
+          borderRadius: 4
+        }
       },
-      tooltip: {
-        enabled: false,
-        mode: null,
-        intersect: false,
-        events: []
-      },
-      hover: {
-        mode: null,
-        animationDuration: 0,
-        intersect: false,
-        events: []
-      },
-      datalabels: {
-        display: true,
-        color: '#333',
-        font: {
-          weight: 'bold',
-          size: 12
+      categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
+      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
+      plugins: {
+        legend: {
+          display: false,
         },
-        formatter: function(value) {
-          return value > 0 ? value.toLocaleString() + '원' : '';
+        tooltip: {
+          enabled: false,
+          mode: null,
+          intersect: false,
+          events: []
         },
-        anchor: 'end',
-        align: 'top',
-        offset: 4
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + '원';
+        hover: {
+          mode: null,
+          animationDuration: 0,
+          intersect: false,
+          events: []
+        },
+        datalabels: {
+          display: true,
+          color: '#333',
+          font: {
+            weight: 'bold',
+            size: 12
+          },
+          formatter: function(value) {
+            return value > 0 ? value.toLocaleString() + '원' : '';
+          },
+          anchor: 'end',
+          align: 'top',
+          offset: 4
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: stepSize, // 동적으로 계산된 간격
+            maxTicksLimit: 5, // 최대 5개만 표시
+            callback: function(value) {
+              return value.toLocaleString() + '원';
+            }
           }
         }
+      },
+      layout: {
+        padding: {
+          top: 30,
+          right: 20,
+          bottom: 20,
+          left: 20
+        }
       }
-    },
-    layout: {
-      padding: {
-        top: 30,
-        right: 20,
-        bottom: 20,
-        left: 20
-      }
-    }
-  };
+    };
+  }, [revenueList, monthlyChartData]);
 
 
   // 연도 변경 시 차트 새로고침
@@ -715,53 +766,95 @@ const RevenueStatus = () => {
               <thead>
                 <tr>
                   <th className="category-header">구분</th>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <th key={i} className="month-header">
-                      {i + 1}월
-                    </th>
-                  ))}
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const month = i + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <th 
+                        key={i} 
+                        className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {month}월
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="category-cell">컨설팅 업체</td>
-                  {monthlyRevenueTableData.consulting.map((amount, index) => (
-                    <td key={index} className="data-cell">
-                      {amount.toLocaleString()}원
-                    </td>
-                  ))}
+                  {monthlyRevenueTableData.consulting.map((amount, index) => {
+                    const month = index + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <td 
+                        key={index} 
+                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {amount.toLocaleString()}원
+                      </td>
+                    );
+                  })}
                 </tr>
                 <tr>
                   <td className="category-cell">일반 업체</td>
-                  {monthlyRevenueTableData.general.map((amount, index) => (
-                    <td key={index} className="data-cell">
-                      {amount.toLocaleString()}원
-                    </td>
-                  ))}
+                  {monthlyRevenueTableData.general.map((amount, index) => {
+                    const month = index + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <td 
+                        key={index} 
+                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {amount.toLocaleString()}원
+                      </td>
+                    );
+                  })}
                 </tr>
                 <tr>
                   <td className="category-cell">기타</td>
-                  {monthlyRevenueTableData.other.map((amount, index) => (
-                    <td key={index} className="data-cell">
-                      {amount.toLocaleString()}원
-                    </td>
-                  ))}
+                  {monthlyRevenueTableData.other.map((amount, index) => {
+                    const month = index + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <td 
+                        key={index} 
+                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {amount.toLocaleString()}원
+                      </td>
+                    );
+                  })}
                 </tr>
                 <tr className="total-row">
                   <td className="category-cell total-label">매출 금액</td>
-                  {monthlyRevenueTableData.total.map((amount, index) => (
-                    <td key={index} className="data-cell total-data">
-                      {amount.toLocaleString()}원
-                    </td>
-                  ))}
+                  {monthlyRevenueTableData.total.map((amount, index) => {
+                    const month = index + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <td 
+                        key={index} 
+                        className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {amount.toLocaleString()}원
+                      </td>
+                    );
+                  })}
                 </tr>
                 <tr className="total-row">
                   <td className="category-cell total-label">누적 매출</td>
-                  {calculateCumulativeRevenue(monthlyRevenueTableData.total).map((amount, index) => (
-                    <td key={index} className="data-cell total-data">
-                      {amount.toLocaleString()}원
-                    </td>
-                  ))}
+                  {calculateCumulativeRevenue(monthlyRevenueTableData.total).map((amount, index) => {
+                    const month = index + 1;
+                    const isCurrent = isCurrentMonth(month, selectedYear);
+                    return (
+                      <td 
+                        key={index} 
+                        className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                      >
+                        {amount.toLocaleString()}원
+                      </td>
+                    );
+                  })}
                 </tr>
               </tbody>
             </table>

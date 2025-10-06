@@ -43,7 +43,7 @@ const NotificationModal = () => {
   const [tempSettings, setTempSettings] = useState({
     companyName: notificationSettings.companyName || '',
     taxInvoiceSettings: [],
-    endDateReminder7Days: notificationSettings.endDateReminder7Days || true,
+    endDateReminder14Days: notificationSettings.endDateReminder14Days || true,
     endDateReminderToday: notificationSettings.endDateReminderToday || true
   });
 
@@ -58,7 +58,7 @@ const NotificationModal = () => {
           'companyName' in setting && 'day' in setting &&
           !setting.title && !setting.content && !setting.type
         ),
-        endDateReminder7Days: notificationSettings.endDateReminder7Days || true,
+        endDateReminder14Days: notificationSettings.endDateReminder14Days || true,
         endDateReminderToday: notificationSettings.endDateReminderToday || true
       };
     
@@ -67,7 +67,7 @@ const NotificationModal = () => {
         const hasChanged = 
           prev.companyName !== currentSettings.companyName ||
           JSON.stringify(prev.taxInvoiceSettings) !== JSON.stringify(currentSettings.taxInvoiceSettings) ||
-          prev.endDateReminder7Days !== currentSettings.endDateReminder7Days ||
+          prev.endDateReminder14Days !== currentSettings.endDateReminder14Days ||
           prev.endDateReminderToday !== currentSettings.endDateReminderToday;
         
         return hasChanged ? currentSettings : prev;
@@ -329,14 +329,14 @@ const NotificationModal = () => {
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
-                      checked={tempSettings.endDateReminder7Days}
+                      checked={tempSettings.endDateReminder14Days}
                       onChange={(e) => setTempSettings({
                         ...tempSettings,
-                        endDateReminder7Days: e.target.checked
+                        endDateReminder14Days: e.target.checked
                       })}
                     />
                     <span className="checkmark"></span>
-                    종료일 7일전 알림
+                    종료일 14일전 알림
                   </label>
                 </div>
                 <div className="setting-item">

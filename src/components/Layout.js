@@ -8,7 +8,7 @@ const Layout = ({ children, userInfo, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 독립적인 Admin 로그아웃 처리
+  // 독립적인 Marketing 로그아웃 처리
   const handleLogout = () => {
     if (onLogout) {
       onLogout();

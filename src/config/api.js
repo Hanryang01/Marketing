@@ -1,8 +1,6 @@
 // API 설정
 // 개발 환경: localhost:3003, 프로덕션 환경: 상대 경로 사용 (Nginx 프록시)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 
-  (window.location.hostname === 'marketing.sihm.co.kr' ? '' : 
-   window.location.hostname === '43.201.198.165' ? '' : 'http://localhost:3003');
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003';
 
 export const API_ENDPOINTS = {
   // 사용자 관련
@@ -20,8 +18,18 @@ export const API_ENDPOINTS = {
   REVENUE: `${API_BASE_URL}/api/revenue`,
   REVENUE_DETAIL: (id) => `${API_BASE_URL}/api/revenue/${id}`,
   
+  // 대시보드 관련
+  DASHBOARD_STATS: `${API_BASE_URL}/api/dashboard/stats`,
+  DASHBOARD_ACTIVE_COMPANIES: `${API_BASE_URL}/api/dashboard/active-companies`,
+  
   // 기타
   END_DATE_CHECK: `${API_BASE_URL}/api/users/end-date-check`,
+  
+  // 알림 관련 (서버 기반)
+  NOTIFICATIONS: `${API_BASE_URL}/api/notifications`,
+  NOTIFICATION_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
+  NOTIFICATION_DELETE: (id) => `${API_BASE_URL}/api/notifications/${id}`,
+  CREATE_NOTIFICATIONS: `${API_BASE_URL}/api/create-notifications`,
 };
 
 // API 호출 헬퍼 함수

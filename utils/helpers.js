@@ -39,7 +39,9 @@ const DateUtils = {
     const year = koreaTime.getFullYear();
     const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
     const day = String(koreaTime.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const result = `${year}-${month}-${day}`;
+    console.log(`🇰🇷 한국 시간 기준 오늘 날짜: ${result}`);
+    return result;
   },
 
 };

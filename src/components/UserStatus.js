@@ -14,6 +14,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar } from 'react-chartjs-2';
 import { isUserActive } from '../utils/userUtils';
 import { useCalendar } from '../hooks/useCalendar';
+import { useCurrentMonth } from '../hooks/useCurrentMonth';
 
 ChartJS.register(
   CategoryScale,
@@ -43,6 +44,12 @@ const UserStatus = () => {
   const { getKoreaYearMonth, isCurrentKoreaYearMonth } = useCalendar();
   const currentKorea = getKoreaYearMonth();
   const [selectedYear, setSelectedYear] = useState(currentKorea.year);
+  
+  // 현재 월 강조 훅 사용
+  const { 
+    isCurrentMonth, 
+    applyCurrentMonthHighlight
+  } = useCurrentMonth();
   const [monthlyActiveCompanies, setMonthlyActiveCompanies] = useState([]);
   const [monthlyActiveTableData, setMonthlyActiveTableData] = useState({
     consulting: Array(12).fill(0),
@@ -245,7 +252,7 @@ const UserStatus = () => {
 
   // 월별 활성화 업체 수 그래프 데이터 (단순 막대 차트)
   const monthlyActiveCompaniesChartData = useMemo(() => {
-    return {
+    const baseData = {
       labels: monthlyActiveCompanies && monthlyActiveCompanies.length > 0 
         ? monthlyActiveCompanies.map(item => `${item.month}월`)
         : ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
@@ -278,11 +285,14 @@ const UserStatus = () => {
         }
       ]
     };
-  }, [monthlyActiveCompanies]);
+    
+    // 현재 월 강조 적용
+    return applyCurrentMonthHighlight(baseData, selectedYear);
+  }, [monthlyActiveCompanies, selectedYear, applyCurrentMonthHighlight]);
 
   // 월별 신규 가입자 수 그래프 데이터
   const monthlyNewUsersChartData = useMemo(() => {
-    return {
+    const baseData = {
       labels: monthlyNewUsers && monthlyNewUsers.length > 0 
         ? monthlyNewUsers.map(item => `${item.month}월`)
         : ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
@@ -315,7 +325,10 @@ const UserStatus = () => {
         }
       ]
     };
-  }, [monthlyNewUsers]);
+    
+    // 현재 월 강조 적용
+    return applyCurrentMonthHighlight(baseData, selectedYear);
+  }, [monthlyNewUsers, selectedYear, applyCurrentMonthHighlight]);
 
   // 업체 형태별 가입자 수 그래프 데이터
   const companyTypeUsersChartData = useMemo(() => {
@@ -488,7 +501,8 @@ const UserStatus = () => {
             weight: 'bold'
           },
           color: '#666',
-          stepSize: 1,
+          stepSize: 1, // 1씩 간격
+          maxTicksLimit: 5, // 최대 5개만 표시
           callback: function(value) {
             return value + '명';
           }
@@ -582,7 +596,8 @@ const UserStatus = () => {
             weight: 'bold'
           },
           color: '#666',
-          stepSize: 1,
+          stepSize: 1, // 1씩 간격
+          maxTicksLimit: 5, // 최대 5개만 표시
           callback: function(value) {
             return value + '개';
           }
@@ -700,37 +715,65 @@ const UserStatus = () => {
             <thead>
               <tr>
                 <th className="category-header">구분</th>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <th key={i} className="month-header">
-                    {i + 1}월
-                  </th>
-                ))}
+                {Array.from({ length: 12 }, (_, i) => {
+                  const month = i + 1;
+                  const isCurrent = isCurrentMonth(month, selectedYear);
+                  return (
+                    <th 
+                      key={i} 
+                      className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                    >
+                      {month}월
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td className="category-cell">컨설팅 업체</td>
-                {monthlyActiveTableData.consulting.map((count, index) => (
-                  <td key={index} className="data-cell">
-                    {count}
-                  </td>
-                ))}
+                {monthlyActiveTableData.consulting.map((count, index) => {
+                  const month = index + 1;
+                  const isCurrent = isCurrentMonth(month, selectedYear);
+                  return (
+                    <td 
+                      key={index} 
+                      className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                    >
+                      {count}
+                    </td>
+                  );
+                })}
               </tr>
               <tr>
                 <td className="category-cell">일반 업체</td>
-                {monthlyActiveTableData.general.map((count, index) => (
-                  <td key={index} className="data-cell">
-                    {count}
-                  </td>
-                ))}
+                {monthlyActiveTableData.general.map((count, index) => {
+                  const month = index + 1;
+                  const isCurrent = isCurrentMonth(month, selectedYear);
+                  return (
+                    <td 
+                      key={index} 
+                      className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                    >
+                      {count}
+                    </td>
+                  );
+                })}
               </tr>
               <tr className="total-row">
                 <td className="category-cell total-label">합계</td>
-                {monthlyActiveTableData.total.map((count, index) => (
-                  <td key={index} className="data-cell total-data">
-                    {count}
-                  </td>
-                ))}
+                {monthlyActiveTableData.total.map((count, index) => {
+                  const month = index + 1;
+                  const isCurrent = isCurrentMonth(month, selectedYear);
+                  return (
+                    <td 
+                      key={index} 
+                      className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                    >
+                      {count}
+                    </td>
+                  );
+                })}
               </tr>
             </tbody>
           </table>

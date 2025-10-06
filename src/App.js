@@ -21,14 +21,14 @@ function App() {
   useEffect(() => {
     const checkAuthStatus = () => {
       try {
-        const authData = localStorage.getItem('admin_auth');
+        const authData = localStorage.getItem('marketing_auth');
         if (authData) {
           const { user, sessionToken } = JSON.parse(authData);
           if (user && sessionToken) {
             setIsAuthenticated(true);
             setUserInfo(user);
             if (process.env.NODE_ENV === 'development') {
-              console.log('✅ ADMIN 독립 세션 확인:', user);
+              console.log('✅ Marketing 독립 세션 확인:', user);
             }
           }
         }
@@ -45,20 +45,20 @@ function App() {
   const handleLogin = (userData, sessionToken) => {
     setIsAuthenticated(true);
     setUserInfo(userData);
-    localStorage.setItem('admin_auth', JSON.stringify({ user: userData, sessionToken }));
+    localStorage.setItem('marketing_auth', JSON.stringify({ user: userData, sessionToken }));
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ ADMIN 독립 로그인 성공:', userData);
+      console.log('✅ Marketing 독립 로그인 성공:', userData);
     }
   };
 
   // 로그아웃 처리
   const handleLogout = () => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🚪 ADMIN 로그아웃');
+      console.log('🚪 Marketing 로그아웃');
     }
     setIsAuthenticated(false);
     setUserInfo(null);
-    localStorage.removeItem('admin_auth');
+    localStorage.removeItem('marketing_auth');
   };
 
   // 로딩 중일 때 표시

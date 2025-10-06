@@ -128,7 +128,7 @@ sudo netstat -tlnp | grep :80
 
 ### 2. PM2 로그 확인
 ```bash
-pm2 logs sihm-admin
+pm2 logs sihm-marketing
 pm2 monit
 ```
 
@@ -170,7 +170,7 @@ pm2 status
 pm2 monit
 
 # 로그 실시간 확인
-pm2 logs sihm-admin --lines 100
+pm2 logs sihm-marketing --lines 100
 ```
 
 ## 🔒 보안 체크리스트

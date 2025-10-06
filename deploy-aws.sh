@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# SIHM Admin AWS EC2 배포 스크립트
+# SIHM Marketing AWS EC2 배포 스크립트
 # 사용법: ./deploy-aws.sh
 
 set -e
 
-echo "🚀 SIHM Admin AWS EC2 배포 시작..."
+echo "🚀 SIHM Marketing AWS EC2 배포 시작..."
 
 # 색상 정의
 RED='\033[0;31m'
@@ -112,8 +112,8 @@ sudo chown -R www-data:www-data /var/www/marketing.sihm.co.kr
 
 # 5. PM2로 앱 중지
 log_info "기존 앱 중지 중..."
-pm2 stop sihm-admin || true
-pm2 delete sihm-admin || true
+pm2 stop sihm-marketing || true
+pm2 delete sihm-marketing || true
 
 # 6. PM2로 앱 시작
 log_info "PM2로 앱 시작 중..."
@@ -164,7 +164,7 @@ echo "MySQL 상태:"
 sudo systemctl status mysql --no-pager -l
 
 echo "PM2 상태:"
-pm2 status sihm-admin
+pm2 status sihm-marketing
 
 echo "Nginx 상태:"
 sudo systemctl status nginx --no-pager -l

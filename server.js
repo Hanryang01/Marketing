@@ -18,7 +18,7 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: 'Tech8123!',
+    password: process.env.DB_PASSWORD || 'Tech8123!',
     database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   const allowedOrigins = process.env.NODE_ENV === 'production' 
     ? [process.env.CORS_ORIGIN || 'https://your-domain.com']
-    : ['http://localhost:3000', 'http://localhost:3002'];
+    : ['http://localhost:3002'];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -116,6 +116,162 @@ app.post('/api/process-expired-approvals', async (req, res) => {
       details: error.message
     });
   }
+});
+
+// 알림 조회 API
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    
+    const [notifications] = await connection.execute(`
+      SELECT id, type, title, message, is_read, created_at, read_at, expires_at
+      FROM notifications 
+      WHERE expires_at > NOW()
+      ORDER BY created_at DESC
+    `);
+    
+    connection.release();
+    
+    res.json({
+      success: true,
+      notifications: notifications,
+      count: notifications.length
+    });
+  } catch (error) {
+    console.error('❌ 알림 조회 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '알림 조회 중 오류가 발생했습니다.',
+      details: error.message
+    });
+  }
+});
+
+// 알림 읽음 처리 API
+app.put('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await pool.getConnection();
+    
+    const [result] = await connection.execute(`
+      UPDATE notifications 
+      SET is_read = true, read_at = NOW()
+      WHERE id = ? AND expires_at > NOW()
+    `, [id]);
+    
+    connection.release();
+    
+    if (result.affectedRows > 0) {
+      res.json({
+        success: true,
+        message: '알림을 읽음 처리했습니다.'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: '알림을 찾을 수 없습니다.'
+      });
+    }
+  } catch (error) {
+    console.error('❌ 알림 읽음 처리 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '알림 읽음 처리 중 오류가 발생했습니다.',
+      details: error.message
+    });
+  }
+});
+
+// 알림 삭제 API
+app.delete('/api/notifications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await pool.getConnection();
+    
+    const [result] = await connection.execute(`
+      DELETE FROM notifications 
+      WHERE id = ?
+    `, [id]);
+    
+    connection.release();
+    
+    if (result.affectedRows > 0) {
+      res.json({
+        success: true,
+        message: '알림을 삭제했습니다.'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: '알림을 찾을 수 없습니다.'
+      });
+    }
+  } catch (error) {
+    console.error('❌ 알림 삭제 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '알림 삭제 중 오류가 발생했습니다.',
+      details: error.message
+    });
+  }
+});
+
+// 수동 알림 생성 API (테스트용)
+app.post('/api/create-notifications', async (req, res) => {
+  try {
+    await createNotifications();
+    res.json({
+      success: true,
+      message: '알림 생성이 완료되었습니다.',
+      timestamp: new Date().toISOString(),
+      koreaTime: new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"})
+    });
+  } catch (error) {
+    console.error('❌ 수동 알림 생성 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '알림 생성 중 오류가 발생했습니다.',
+      details: error.message
+    });
+  }
+});
+
+// 시간대 테스트 API
+app.get('/api/timezone-test', (req, res) => {
+  const now = new Date();
+  const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  
+  res.json({
+    success: true,
+    utc: now.toISOString(),
+    korea: koreaTime.toISOString(),
+    koreaString: koreaTime.toLocaleString("ko-KR", {timeZone: "Asia/Seoul"}),
+    todayString: require('./utils/helpers').DateUtils.getTodayString()
+  });
+});
+
+// favicon 요청 처리
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No Content 응답
+});
+
+// manifest.json 요청 처리
+app.get('/manifest.json', (req, res) => {
+  res.json({
+    "short_name": "SIHM",
+    "name": "SIHM 사용자 관리 시스템",
+    "icons": [
+      {
+        "src": "favicon.ico",
+        "sizes": "64x64 32x32 24x24 16x16",
+        "type": "image/x-icon"
+      }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  });
 });
 
 // 라우터 등록
@@ -376,24 +532,137 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
   }
 }
 
-// 자동 만료 처리 스케줄링 (자정에만 실행)
+// 알림 생성 함수 (한국 시간 기준)
+async function createNotifications() {
+  const connection = await pool.getConnection();
+  
+  try {
+    console.log('🔔 알림 생성 시작...');
+    
+    // 한국 시간 기준으로 현재 날짜 계산
+    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const todayString = koreaTime.getFullYear() + '-' + 
+      String(koreaTime.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(koreaTime.getDate()).padStart(2, '0');
+    
+    // 14일 후 날짜 계산 (한국 시간 기준)
+    const twoWeeksLater = new Date(koreaTime);
+    twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+    const twoWeeksLaterString = twoWeeksLater.getFullYear() + '-' + 
+      String(twoWeeksLater.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(twoWeeksLater.getDate()).padStart(2, '0');
+    
+    console.log(`🇰🇷 한국 시간 기준 오늘: ${todayString}`);
+    console.log(`🇰🇷 한국 시간 기준 14일 후: ${twoWeeksLaterString}`);
+    
+    // 오늘 종료일인 사용자들 (한국 시간 기준)
+    const [todayEndUsers] = await connection.execute(`
+      SELECT id, company_name, user_id, end_date
+      FROM users 
+      WHERE approval_status = '승인 완료'
+      AND company_type IN ('컨설팅 업체', '일반 업체')
+      AND end_date IS NOT NULL
+      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+    `, [todayString]);
+    
+    // 14일 후 종료일인 사용자들 (한국 시간 기준)
+    const [twoWeekEndUsers] = await connection.execute(`
+      SELECT id, company_name, user_id, end_date
+      FROM users 
+      WHERE approval_status = '승인 완료'
+      AND company_type IN ('컨설팅 업체', '일반 업체')
+      AND end_date IS NOT NULL
+      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+    `, [twoWeeksLaterString]);
+    
+    let notificationCount = 0;
+    
+    // 오늘 종료일 알림 생성
+    for (const user of todayEndUsers) {
+      try {
+        await connection.execute(`
+          INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
+          VALUES (?, 'end_date_today', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+        `, [
+          user.id,
+          '서비스 종료일 알림',
+          `${user.company_name}의 서비스가 오늘(${todayString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
+        ]);
+        notificationCount++;
+        console.log(`📢 오늘 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
+      } catch (error) {
+        console.error(`❌ 오늘 종료일 알림 생성 실패: ${user.company_name}`, error.message);
+      }
+    }
+    
+    // 14일 후 종료일 알림 생성
+    for (const user of twoWeekEndUsers) {
+      try {
+        await connection.execute(`
+          INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
+          VALUES (?, 'end_date_14days', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+        `, [
+          user.id,
+          '서비스 종료일 14일전 알림',
+          `${user.company_name}의 서비스가 14일 후(${twoWeeksLaterString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
+        ]);
+        notificationCount++;
+        console.log(`📢 14일 후 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
+      } catch (error) {
+        console.error(`❌ 14일 후 종료일 알림 생성 실패: ${user.company_name}`, error.message);
+      }
+    }
+    
+    console.log(`✅ 알림 생성 완료: ${notificationCount}개 생성`);
+    
+    // 만료된 알림 삭제 (7일 이상 된 알림)
+    const [deleteResult] = await connection.execute(`
+      DELETE FROM notifications 
+      WHERE expires_at < NOW()
+    `);
+    
+    if (deleteResult.affectedRows > 0) {
+      console.log(`🗑️ 만료된 알림 삭제: ${deleteResult.affectedRows}개`);
+    }
+    
+  } catch (error) {
+    console.error('❌ 알림 생성 실패:', error.message);
+  } finally {
+    connection.release();
+  }
+}
+
+// 자동 만료 처리 스케줄링 (한국 시간 자정에만 실행)
 const scheduleExpiredUserProcessing = () => {
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
   
-  const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+  // 한국 시간 기준으로 다음 자정 계산
+  const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  const tomorrowKorea = new Date(koreaTime);
+  tomorrowKorea.setDate(tomorrowKorea.getDate() + 1);
+  tomorrowKorea.setHours(0, 0, 0, 0);
+  
+  // 한국 시간 자정을 UTC로 변환
+  const utcMidnight = new Date(tomorrowKorea.toLocaleString("en-US", {timeZone: "UTC"}));
+  const timeUntilMidnight = utcMidnight.getTime() - now.getTime();
+  
+  console.log(`🇰🇷 한국 시간 기준 다음 자정: ${tomorrowKorea.toISOString()}`);
+  console.log(`🌍 UTC 기준 실행 시간: ${utcMidnight.toISOString()}`);
+  console.log(`⏰ 대기 시간: ${Math.round(timeUntilMidnight / 1000 / 60)}분`);
   
   setTimeout(() => {
+    console.log('🚀 한국 시간 자정 도달 - 만료 처리 및 알림 생성 시작');
     checkAndUpdateExpiredApprovals();
+    createNotifications();
     
     setInterval(() => {
+      console.log('🔄 24시간 주기 실행 - 만료 처리 및 알림 생성');
       checkAndUpdateExpiredApprovals();
+      createNotifications();
     }, 24 * 60 * 60 * 1000); // 24시간마다 반복
   }, timeUntilMidnight);
   
-  console.log(`⏰ 자동 만료 처리 스케줄링 완료 - 다음 실행: ${tomorrow.toISOString()}`);
+  console.log(`⏰ 자동 만료 처리 및 알림 생성 스케줄링 완료 - 다음 실행: ${tomorrowKorea.toISOString()}`);
 };
 
 // 누락된 만료 처리 복구 함수

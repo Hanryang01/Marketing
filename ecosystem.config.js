@@ -1,7 +1,8 @@
 module.exports = {
   apps: [{
-    name: 'sihm-admin',
+    name: 'sihm-marketing',
     script: 'server.js',
+    cwd: 'C:/Users/hchoi/Admin Project/Marketing',
     instances: process.env.PM2_INSTANCES || 1, // AWS EC2 인스턴스 CPU 코어 수에 맞게 조정
     exec_mode: 'cluster',
     env: {

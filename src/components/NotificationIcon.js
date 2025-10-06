@@ -15,7 +15,7 @@ const NotificationIcon = () => {
     { name: '기업은행', url: 'https://www.ibk.co.kr/' },
     { name: '홈택스', url: 'https://hometax.go.kr/' },
     { name: 'SIHM', url: 'https://work.sihm.co.kr' },
-    { name: '토스 Admin', url: 'https://app.tosspayments.com' }
+    { name: '토스 Marketing', url: 'https://app.tosspayments.com' }
   ];
 
   // 드롭다운 위치 계산

@@ -19,15 +19,15 @@ const Login = ({ onLogin }) => {
     
     if (isDevelopment) {
       // 개발 버전: 빈 값이어도 로그인 허용 (기본값: herlab)
-      const userEmail = email.trim() || 'herlab@admin.com';
+      const userEmail = email.trim() || 'herlab@marketing.com';
       const userName = email.trim() || 'herlab';
       
       onLogin({ 
         id: 1, 
         username: userName, 
         email: userEmail,
-        role: 'admin' 
-      }, `admin-session-${Date.now()}`);
+        role: 'marketing' 
+      }, `marketing-session-${Date.now()}`);
       
       navigate('/dashboard');
     } else {
@@ -36,18 +36,18 @@ const Login = ({ onLogin }) => {
         onLogin({ 
           id: 1, 
           username: 'herlab', 
-          email: 'herlab@admin.com',
-          role: 'admin' 
-        }, `admin-session-${Date.now()}`);
+          email: 'herlab@marketing.com',
+          role: 'marketing' 
+        }, `marketing-session-${Date.now()}`);
         
         navigate('/dashboard');
       } else if (email.trim() === 'technonia' && password === 'nonia8123') {
         onLogin({ 
           id: 2, 
           username: 'technonia', 
-          email: 'technonia@admin.com',
-          role: 'admin' 
-        }, `admin-session-${Date.now()}`);
+          email: 'technonia@marketing.com',
+          role: 'marketing' 
+        }, `marketing-session-${Date.now()}`);
         
         navigate('/dashboard');
       } else {
