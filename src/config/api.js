@@ -1,6 +1,6 @@
 // API 설정
 // 개발 환경: localhost:3003, 프로덕션 환경: 상대 경로 사용 (Nginx 프록시)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://marketing.sihm.co.kr';
 
 export const API_ENDPOINTS = {
   // 사용자 관련

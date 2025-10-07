@@ -319,7 +319,8 @@
 /* 모든 알림 타입 통일 스타일 - 중간 녹색, 굵은 폰트, 중간 그림자 */
 .notification-item[data-type="tax_invoice"] .notification-message .company-name,
 .notification-item[data-type="end_date_today"] .notification-message .company-name,
-.notification-item[data-type="end_date_7days"] .notification-message .company-name {
+.notification-item[data-type="end_date_7days"] .notification-message .company-name,
+.notification-item[data-type="end_date_14days"] .notification-message .company-name {
   background-color: rgba(165, 214, 167, 0.7);
   color: rgba(27, 94, 32, 0.8);
   border: none;

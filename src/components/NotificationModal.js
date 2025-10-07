@@ -115,7 +115,7 @@ const NotificationModal = () => {
   // 알림 메시지에서 회사명 강조 처리 (XSS 방지)
   const formatNotificationMessage = (content, type) => {
     // 모든 알림 타입에서 동일한 스타일로 회사명 강조 (언더스코어 포함)
-    if (type === 'tax_invoice' || type === 'end_date_today' || type === 'end_date_7days') {
+    if (type === 'tax_invoice' || type === 'end_date_today' || type === 'end_date_7days' || type === 'end_date_14days') {
       // XSS 방지를 위해 HTML 이스케이프 처리
       const escapeHtml = (text) => {
         const div = document.createElement('div');
@@ -123,11 +123,12 @@ const NotificationModal = () => {
         return div.innerHTML;
       };
       
-      const companyRegex = /^([가-힣a-zA-Z0-9\s_]+)는/g;
+      // 【회사명】패턴 매칭
+      const companyRegex = /【([^】]+)】/g;
       return content.replace(companyRegex, (match, companyName) => {
         const trimmedCompanyName = companyName.trim();
         const escapedCompanyName = escapeHtml(trimmedCompanyName);
-        return `<span class="company-name">${escapedCompanyName}</span>는`;
+        return `【<span class="company-name">${escapedCompanyName}</span>】`;
       });
     }
     
