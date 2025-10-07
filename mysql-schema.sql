@@ -118,6 +118,21 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   KEY `idx_is_read` (`is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 세금계산서 알림 설정 테이블
+CREATE TABLE IF NOT EXISTS `tax_invoice_notification_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `day_of_month` int NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_company_day` (`company_name`, `day_of_month`),
+  KEY `idx_company_name` (`company_name`),
+  KEY `idx_day_of_month` (`day_of_month`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 에러 로그 테이블
 CREATE TABLE IF NOT EXISTS `error_logs` (
   `id` int NOT NULL AUTO_INCREMENT,

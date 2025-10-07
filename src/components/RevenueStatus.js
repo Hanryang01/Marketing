@@ -349,7 +349,7 @@ const RevenueStatus = () => {
   }, [revenueList, selectedYear, applyCurrentMonthHighlight]);
 
   // 연도별 매출 차트 데이터
-  const getYearlyRevenueData = () => {
+  const getYearlyRevenueData = useCallback(() => {
     const startYear = 2024;
     
     // 실제 데이터에서 존재하는 모든 연도 추출
@@ -411,7 +411,7 @@ const RevenueStatus = () => {
         }
       }]
     };
-  };
+  }, [revenueList]);
 
   const yearlyRevenueChartData = getYearlyRevenueData();
 
@@ -484,7 +484,7 @@ const RevenueStatus = () => {
         events: []
       }
     };
-  }, [revenueList, getYearlyRevenueData]);
+  }, [getYearlyRevenueData]);
 
   const barChartOptions = useMemo(() => {
     const maxValue = Math.max(...monthlyChartData.datasets[0].data);
@@ -538,7 +538,7 @@ const RevenueStatus = () => {
         }
       }
     };
-  }, [revenueList, monthlyChartData]);
+  }, [monthlyChartData]);
 
   const doughnutChartOptions = {
     responsive: true,
@@ -641,7 +641,7 @@ const RevenueStatus = () => {
         }
       }
     };
-  }, [revenueList, monthlyChartData]);
+  }, [monthlyChartData]);
 
 
   // 연도 변경 시 차트 새로고침

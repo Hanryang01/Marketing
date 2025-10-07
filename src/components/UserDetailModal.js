@@ -176,7 +176,7 @@ const UserDetailModal = ({
       return;
     }
     
-    // 사업자 등록번호 특별 처리
+    // 사업자등록번호 특별 처리
     if (field === 'businessLicense') {
       const processedValue = handleBusinessLicenseInput(value);
       setEditedUser(prev => ({
@@ -243,15 +243,15 @@ const UserDetailModal = ({
   const handleSave = async () => {
     if (onSave && editedUser) {
       
-      // 사업자 등록번호 유효성 검사 (승인 관리 모드가 아닐 때만)
+      // 사업자등록번호 유효성 검사 (승인 관리 모드가 아닐 때만)
       if (!isApprovalMode && editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
         if (parentShowMessage) {
-          parentShowMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.', {
+          parentShowMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
             showCancel: false,
             confirmText: '확인'
           });
         } else {
-          alert('사업자 등록번호는 숫자 10자리여야 합니다.');
+          alert('사업자등록번호는 숫자 10자리여야 합니다.');
         }
         return;
       }
@@ -725,7 +725,7 @@ const UserDetailModal = ({
                 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>사업자 등록 번호</label>
+                    <label>사업자등록번호</label>
                     <input 
                       type="text" 
                       value={formatBusinessLicense(editedUser?.businessLicense || '')} 

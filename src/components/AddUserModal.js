@@ -13,7 +13,7 @@ const AddUserModal = ({
 
   // 새 사용자 입력 처리
   const handleInputChange = (field, value) => {
-    // 사업자 등록번호 특별 처리
+    // 사업자등록번호 특별 처리
     if (field === 'businessLicense') {
       const processedValue = handleBusinessLicenseInput(value);
       setNewUser(prev => ({
@@ -46,15 +46,15 @@ const AddUserModal = ({
       return;
     }
 
-    // 사업자 등록번호 유효성 검사
+    // 사업자등록번호 유효성 검사
     if (newUser.businessLicense && !isValidBusinessLicense(newUser.businessLicense)) {
       if (showMessage) {
-        showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.', {
+        showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
           showCancel: false,
           confirmText: '확인'
         });
       } else {
-        alert('사업자 등록번호는 숫자 10자리여야 합니다.');
+        alert('사업자등록번호는 숫자 10자리여야 합니다.');
       }
       return;
     }
@@ -147,7 +147,7 @@ const AddUserModal = ({
               />
             </div>
             <div className="form-group">
-              <label>사업자 등록 번호</label>
+              <label>사업자등록번호</label>
               <input
                 type="text"
                 value={formatBusinessLicense(newUser.businessLicense || '')}

@@ -88,7 +88,7 @@ const RevenueModal = ({
     setRevenueData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // 사업자 등록번호 특별 처리
+      // 사업자등록번호 특별 처리
       if (field === 'businessLicense') {
         const processedValue = handleBusinessLicenseInput(value);
         newData[field] = processedValue;
@@ -195,7 +195,7 @@ const RevenueModal = ({
               />
             </div>
             <div className="form-group">
-              <label>사업자 등록 번호<span className="required-asterisk">*</span></label>
+              <label>사업자등록번호<span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 value={formatBusinessLicense(revenueData.businessLicense)}

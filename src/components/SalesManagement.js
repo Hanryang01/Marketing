@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './SalesManagement.css';
 import { apiCall, API_ENDPOINTS } from '../config/api';
 import * as XLSX from 'xlsx';
@@ -38,6 +38,39 @@ const SalesManagement = () => {
   // 업체별 현황 관련 상태
   const [currentView, setCurrentView] = useState('list'); // 'list' 또는 'company'
   const [expandedCompanies, setExpandedCompanies] = useState(new Set());
+  
+  // 필터링된 매출 데이터 계산 (발행일 기준 내림차순 정렬)
+  const filteredRevenueData = useMemo(() => {
+    return revenueData
+      .filter(item => {
+        const matchesCompanyName = !searchFilters.companyName || 
+          item.companyName?.toLowerCase().includes(searchFilters.companyName.toLowerCase());
+        const matchesBusinessLicense = !searchFilters.businessLicense || 
+          item.businessLicense?.toLowerCase().includes(searchFilters.businessLicense.toLowerCase());
+        const matchesCompanyType = !searchFilters.companyType || 
+          item.companyType?.toLowerCase().includes(searchFilters.companyType.toLowerCase());
+        
+        return matchesCompanyName && matchesBusinessLicense && matchesCompanyType;
+      })
+      .sort((a, b) => {
+        // 발행일 기준으로 내림차순 정렬 (최신순)
+        const getDateValue = (revenue) => {
+          if (!revenue.issueDate) return 0;
+          // 날짜를 8자리 숫자로 변환 (YYYYMMDD)
+          const date = new Date(revenue.issueDate);
+          if (isNaN(date.getTime())) return 0;
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return parseInt(`${year}${month}${day}`);
+        };
+        
+        const dateA = getDateValue(a);
+        const dateB = getDateValue(b);
+        
+        return dateB - dateA; // 내림차순 (최신순)
+      });
+  }, [revenueData, searchFilters]);
   
   // 메시지 관련 로직을 useMessage 훅으로 분리
   const messageProps = useMessage();
@@ -97,27 +130,7 @@ const SalesManagement = () => {
     }));
   };
 
-  // 필터링된 매출 데이터 (발행일 기준 내림차순 정렬)
-  const filteredRevenueData = revenueData
-    .filter(revenue => {
-      return (
-        revenue.companyName?.toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
-        revenue.businessLicense?.toLowerCase().includes(searchFilters.businessLicense.toLowerCase()) &&
-        revenue.companyType?.toLowerCase().includes(searchFilters.companyType.toLowerCase())
-      );
-    })
-    .sort((a, b) => {
-      // 발행일 기준으로 내림차순 정렬 (최신순)
-      const getDateValue = (revenue) => {
-        if (!revenue.issueDate) return 0;
-        return convertTo8Digit(revenue.issueDate) || 0;
-      };
-      
-      const dateA = getDateValue(a);
-      const dateB = getDateValue(b);
-      
-      return dateB - dateA; // 내림차순 (최신순)
-    });
+  // 필터링된 매출 데이터 (발행일 기준 내림차순 정렬) - useMemo 버전으로 교체됨
 
   // 엑셀 파일로 매출 데이터 추출
   const exportToExcel = useCallback(() => {
@@ -269,9 +282,9 @@ const SalesManagement = () => {
 
   // 새 매출 추가
   const handleAddRevenue = async (revenueData) => {
-    // 사업자 등록번호 유효성 검사
+    // 사업자등록번호 유효성 검사
     if (revenueData.businessLicense && !isValidBusinessLicense(revenueData.businessLicense)) {
-      showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.');
+      showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.');
       return;
     }
     
@@ -346,9 +359,9 @@ const SalesManagement = () => {
   // 매출 수정 제출
   const handleEditRevenueSubmit = async (revenueData) => {
     try {
-      // 사업자 등록번호 유효성 검사
+      // 사업자등록번호 유효성 검사
       if (revenueData.businessLicense && !isValidBusinessLicense(revenueData.businessLicense)) {
-        showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.');
+        showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.');
         return;
       }
       
@@ -359,7 +372,7 @@ const SalesManagement = () => {
         missingFields.push('회사명');
       }
       if (!revenueData.businessLicense || revenueData.businessLicense.trim() === '') {
-        missingFields.push('사업자 등록 번호');
+        missingFields.push('사업자등록번호');
       }
       if (!revenueData.issueDate) {
         missingFields.push('발행일');
@@ -482,7 +495,7 @@ const SalesManagement = () => {
             className={`view-tab ${currentView === 'list' ? 'active' : ''}`}
             onClick={() => setCurrentView('list')}
           >
-            📋 매출 리스트
+            📋 매출 리스트 ({filteredRevenueData.length}건)
           </button>
           <button 
             className={`view-tab ${currentView === 'company' ? 'active' : ''}`}
@@ -543,7 +556,7 @@ const SalesManagement = () => {
             <thead>
               <tr>
                 <th>회사명</th>
-                <th>사업자 등록번호</th>
+                <th>사업자등록번호</th>
                 <th>발행일</th>
                 <th>입금일</th>
                 <th>항목</th>

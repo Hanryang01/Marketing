@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   const allowedOrigins = process.env.NODE_ENV === 'production' 
     ? [process.env.CORS_ORIGIN || 'https://your-domain.com']
-    : ['http://localhost:3002'];
+    : ['http://localhost:3003'];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -233,6 +233,82 @@ app.post('/api/create-notifications', async (req, res) => {
       error: '알림 생성 중 오류가 발생했습니다.',
       details: error.message
     });
+  }
+});
+
+// 세금계산서 알림 설정 조회 API
+app.get('/api/tax-invoice-settings', async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    const [settings] = await connection.execute(`
+      SELECT id, company_name, day_of_month, is_active, created_at, updated_at
+      FROM tax_invoice_notification_settings
+      WHERE is_active = 1
+      ORDER BY company_name, day_of_month
+    `);
+    
+    res.json({
+      success: true,
+      data: settings
+    });
+  } catch (error) {
+    console.error('❌ 세금계산서 설정 조회 실패:', error);
+    res.status(500).json({
+      success: false,
+      message: '세금계산서 설정 조회 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+// 세금계산서 알림 설정 저장 API
+app.post('/api/tax-invoice-settings', async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    const { settings } = req.body;
+    
+    if (!Array.isArray(settings)) {
+      return res.status(400).json({
+        success: false,
+        message: '설정 데이터가 올바르지 않습니다.'
+      });
+    }
+    
+    // 기존 설정 비활성화
+    await connection.execute(`
+      UPDATE tax_invoice_notification_settings 
+      SET is_active = 0 
+      WHERE is_active = 1
+    `);
+    
+    // 새 설정 추가
+    for (const setting of settings) {
+      if (setting.companyName && setting.day) {
+        await connection.execute(`
+          INSERT INTO tax_invoice_notification_settings (company_name, day_of_month, is_active)
+          VALUES (?, ?, 1)
+          ON DUPLICATE KEY UPDATE is_active = 1, updated_at = CURRENT_TIMESTAMP
+        `, [setting.companyName, parseInt(setting.day)]);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: '세금계산서 알림 설정이 저장되었습니다.'
+    });
+  } catch (error) {
+    console.error('❌ 세금계산서 설정 저장 실패:', error);
+    res.status(500).json({
+      success: false,
+      message: '세금계산서 설정 저장 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  } finally {
+    connection.release();
   }
 });
 
@@ -555,6 +631,55 @@ async function createNotifications() {
     console.log(`🇰🇷 한국 시간 기준 오늘: ${todayString}`);
     console.log(`🇰🇷 한국 시간 기준 14일 후: ${twoWeeksLaterString}`);
     
+    // 오늘 날짜 (일) 추출
+    const todayDay = koreaTime.getDate();
+    console.log(`📅 오늘 날짜: ${todayDay}일`);
+    
+    // 세금계산서 발행 알림 생성 (오늘 날짜에 해당하는 설정이 있는 경우)
+    const [taxInvoiceSettings] = await connection.execute(`
+      SELECT company_name, day_of_month
+      FROM tax_invoice_notification_settings
+      WHERE is_active = 1 AND day_of_month = ?
+    `, [todayDay]);
+    
+    for (const setting of taxInvoiceSettings) {
+      try {
+        // 해당 회사명과 일치하는 사용자 찾기
+        const [users] = await connection.execute(`
+          SELECT id, company_name, user_id
+          FROM users 
+          WHERE approval_status = '승인 완료'
+          AND company_name = ?
+          AND company_type IN ('컨설팅 업체', '일반 업체')
+        `, [setting.company_name]);
+        
+        for (const user of users) {
+          // 이미 오늘 세금계산서 알림이 생성되었는지 확인
+          const [existingNotification] = await connection.execute(`
+            SELECT id FROM notifications 
+            WHERE user_id = ? 
+            AND type = 'tax_invoice' 
+            AND DATE(created_at) = CURDATE()
+          `, [user.id]);
+          
+          if (existingNotification.length === 0) {
+            await connection.execute(`
+              INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
+              VALUES (?, 'tax_invoice', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+            `, [
+              user.id,
+              '세금계산서 발행 알림',
+              `${setting.company_name}의 세금계산서 발행일입니다. (매월 ${setting.day_of_month}일)`
+            ]);
+            notificationCount++;
+            console.log(`📢 세금계산서 발행 알림 생성: ${setting.company_name} (ID: ${user.id})`);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ 세금계산서 알림 생성 실패: ${setting.company_name}`, error.message);
+      }
+    }
+    
     // 오늘 종료일인 사용자들 (한국 시간 기준)
     const [todayEndUsers] = await connection.execute(`
       SELECT id, company_name, user_id, end_date
@@ -586,7 +711,7 @@ async function createNotifications() {
         `, [
           user.id,
           '서비스 종료일 알림',
-          `${user.company_name}의 서비스가 오늘(${todayString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
+          `${user.company_name}의 서비스가 오늘(${todayString}) 종료됩니다.`
         ]);
         notificationCount++;
         console.log(`📢 오늘 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
@@ -604,7 +729,7 @@ async function createNotifications() {
         `, [
           user.id,
           '서비스 종료일 14일전 알림',
-          `${user.company_name}의 서비스가 14일 후(${twoWeeksLaterString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
+          `${user.company_name}의 서비스가 14일 후(${twoWeeksLaterString}) 종료됩니다.`
         ]);
         notificationCount++;
         console.log(`📢 14일 후 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
@@ -690,6 +815,16 @@ const recoverMissedProcessing = async () => {
     console.error('❌ 누락 복구 실패:', error.message);
   }
 };
+
+// SPA 라우팅을 위한 fallback 설정 (모든 경로를 index.html로 리다이렉트)
+app.use((req, res, next) => {
+  // API 경로는 제외
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  // 정적 파일이 아닌 경우 index.html로 리다이렉트
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 // 서버 초기화 및 시작
 const startServer = async () => {

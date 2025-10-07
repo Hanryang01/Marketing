@@ -1,9 +1,9 @@
-// 사업자 등록번호 유틸리티 함수들
+// 사업자등록번호 유틸리티 함수들
 
 /**
- * 사업자 등록번호를 XXX-XX-XXXXX 형식으로 포맷팅
- * @param {string} businessLicense - 사업자 등록번호 (다양한 형식 가능)
- * @returns {string} - 포맷팅된 사업자 등록번호 (XXX-XX-XXXXX) 또는 원본 데이터
+ * 사업자등록번호를 XXX-XX-XXXXX 형식으로 포맷팅
+ * @param {string} businessLicense - 사업자등록번호 (다양한 형식 가능)
+ * @returns {string} - 포맷팅된 사업자등록번호 (XXX-XX-XXXXX) 또는 원본 데이터
  */
 export const formatBusinessLicense = (businessLicense) => {
   if (!businessLicense) return '';
@@ -19,8 +19,8 @@ export const formatBusinessLicense = (businessLicense) => {
 };
 
 /**
- * 사업자 등록번호에서 숫자만 추출
- * @param {string} businessLicense - 사업자 등록번호
+ * 사업자등록번호에서 숫자만 추출
+ * @param {string} businessLicense - 사업자등록번호
  * @returns {string} - 숫자만 추출된 문자열
  */
 export const extractNumbersFromBusinessLicense = (businessLicense) => {
@@ -29,9 +29,9 @@ export const extractNumbersFromBusinessLicense = (businessLicense) => {
 };
 
 /**
- * 사업자 등록번호 유효성 검사
- * @param {string} businessLicense - 사업자 등록번호
- * @returns {boolean} - 유효한 사업자 등록번호인지 여부
+ * 사업자등록번호 유효성 검사
+ * @param {string} businessLicense - 사업자등록번호
+ * @returns {boolean} - 유효한 사업자등록번호인지 여부
  */
 export const isValidBusinessLicense = (businessLicense) => {
   if (!businessLicense) return true; // null 값 허용
@@ -41,7 +41,7 @@ export const isValidBusinessLicense = (businessLicense) => {
 };
 
 /**
- * 사업자 등록번호 입력 처리 (숫자만 입력 허용, 정확히 10자리)
+ * 사업자등록번호 입력 처리 (숫자만 입력 허용, 정확히 10자리)
  * @param {string} value - 입력된 값
  * @returns {string} - 처리된 값
  */
@@ -54,7 +54,7 @@ export const handleBusinessLicenseInput = (value) => {
 };
 
 /**
- * 사업자 등록번호 입력 시 실시간 유효성 검사 및 피드백
+ * 사업자등록번호 입력 시 실시간 유효성 검사 및 피드백
  * @param {string} value - 입력된 값
  * @returns {object} - { value: string, isValid: boolean, message: string }
  */

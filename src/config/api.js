@@ -30,6 +30,9 @@ export const API_ENDPOINTS = {
   NOTIFICATION_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
   NOTIFICATION_DELETE: (id) => `${API_BASE_URL}/api/notifications/${id}`,
   CREATE_NOTIFICATIONS: `${API_BASE_URL}/api/create-notifications`,
+  
+  // 세금계산서 알림 설정 관련
+  TAX_INVOICE_SETTINGS: `${API_BASE_URL}/api/tax-invoice-settings`,
 };
 
 // API 호출 헬퍼 함수

@@ -124,7 +124,7 @@ input:focus::placeholder {
 
 .form-row .form-group {
   margin-bottom: 0 !important;
-  flex: 0 0 45%;
+  flex: 1;
 }
 
 /* 사용자 정보 섹션의 행 간격 더 줄이기 */
@@ -194,9 +194,9 @@ input:focus::placeholder {
   color: #333;
   font-size: 14px;
   min-height: 20px;
-  width: 100px;
+  width: 70px;
   text-align: left;
-  margin-right: 12px;
+  margin-right: 5px;
   vertical-align: top;
   padding-top: 12px;
   flex-shrink: 0;
@@ -205,8 +205,8 @@ input:focus::placeholder {
 .form-group input,
 .form-group textarea {
   flex: 1;
-  min-width: 130px;
-  max-width: 220px;
+  min-width: 100px;
+  max-width: 280px;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -245,7 +245,7 @@ input:focus::placeholder {
 
 .form-row-single .form-group input[type="text"] {
   width: 100% !important;
-  max-width: calc(91% - 30px) !important;
+  max-width: 280px !important;
 }
 
 .date-input-container {
@@ -253,7 +253,7 @@ input:focus::placeholder {
   display: flex;
   align-items: center;
   flex: 1;
-  min-width: 130px;
+  min-width: 100px;
   max-width: 180px;
 }
 
@@ -342,7 +342,7 @@ input:focus::placeholder {
   }
   
   .form-group label {
-    width: 100px;
+    width: 70px;
   }
   
   .modal-header,
@@ -675,7 +675,7 @@ input:focus::placeholder {
 }
 
 .add-history-modal .form-group label {
-  width: 100px;
+  width: 70px;
   font-size: 13px;
 }
 

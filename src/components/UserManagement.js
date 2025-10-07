@@ -289,9 +289,9 @@ const UserManagement = () => {
   // 사용자 추가
   const handleAddUser = async (userData) => {
     try {
-      // 사업자 등록번호 유효성 검사 (추가 보안)
+      // 사업자등록번호 유효성 검사 (추가 보안)
       if (userData.businessLicense && !isValidBusinessLicense(userData.businessLicense)) {
-        showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.', {
+        showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
           showCancel: false,
           confirmText: '확인'
         });
@@ -404,9 +404,9 @@ const UserManagement = () => {
   // 사용자 상세 저장
   const handleDetailSave = async (userData) => {
     try {
-      // 사업자 등록번호 유효성 검사
+      // 사업자등록번호 유효성 검사
       if (userData.business_license && !isValidBusinessLicense(userData.business_license)) {
-        showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.', {
+        showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
           showCancel: false,
           confirmText: '확인'
         });
@@ -526,9 +526,9 @@ const UserManagement = () => {
 
   // 매출 저장
   const handleRevenueSave = async (revenueData) => {
-    // 사업자 등록번호 유효성 검사
+    // 사업자등록번호 유효성 검사
     if (revenueData.businessLicense && !isValidBusinessLicense(revenueData.businessLicense)) {
-      messageProps.showMessage('error', '사업자 등록번호 오류', '사업자 등록번호는 숫자 10자리여야 합니다.', {
+      messageProps.showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
         showCancel: false,
         confirmText: '확인'
       });
@@ -592,8 +592,8 @@ const UserManagement = () => {
   // 승인 저장
   const handleApprovalSave = async (approvalData) => {
     try {
-      // 승인 관리 모드에서는 사업자 등록번호 검증을 하지 않음
-      // (승인 관리 모달에는 사업자 등록번호 입력창이 없음)
+      // 승인 관리 모드에서는 사업자등록번호 검증을 하지 않음
+      // (승인 관리 모달에는 사업자등록번호 입력창이 없음)
       
       // 프론트엔드 필드명을 서버 필드명으로 변환
       const serverData = {
