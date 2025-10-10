@@ -1,5 +1,8 @@
 const express = require('express');
-const { DateUtils, QueryBuilder, handleError, Response } = require('../utils/helpers');
+const { DateUtils, QueryBuilder, handleApiError, Response } = require('../utils/helpers');
+
+// handleError는 handleApiError의 별칭
+const handleError = handleApiError;
 
 const router = express.Router();
 
@@ -82,7 +85,10 @@ router.get('/api/users', async (req, res) => {
         u.id, u.company_name, u.user_id, u.email, u.user_name, u.department,
         u.mobile_phone, u.phone_number, u.fax_number, u.address, u.business_license,
         u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan,
-        u.start_date, u.end_date, u.registration_date, u.created_at, u.updated_at,
+        DATE_FORMAT(u.start_date, '%Y-%m-%d') as start_date,
+        DATE_FORMAT(u.end_date, '%Y-%m-%d') as end_date,
+        DATE_FORMAT(u.registration_date, '%Y-%m-%d') as registration_date,
+        u.created_at, u.updated_at,
         u.manager_position,
         u.accountant_name, u.accountant_position, u.accountant_mobile, u.accountant_email,
         u.representative, u.industry, u.msds_limit, u.ai_image_limit, u.ai_report_limit
@@ -96,11 +102,11 @@ router.get('/api/users', async (req, res) => {
     // 날짜는 이미 YYYY-MM-DD 형식으로 저장되어 있으므로 변환 불필요
     const formattedRows = rows.map(user => ({
       ...user,
-      start_date: user.start_date ? DateUtils.formatDate(user.start_date) : null,
-      end_date: user.end_date ? DateUtils.formatDate(user.end_date) : null,
-      registration_date: user.registration_date ? DateUtils.formatDate(user.registration_date) : null,
-      created_at: user.created_at ? DateUtils.formatDate(user.created_at) : null,
-      updated_at: user.updated_at ? DateUtils.formatDate(user.updated_at) : null
+      start_date: user.start_date,
+      end_date: user.end_date,
+      registration_date: user.registration_date,
+      created_at: user.created_at,
+      updated_at: user.updated_at
     }));
     
     res.json({
@@ -185,7 +191,10 @@ router.get('/api/users/:id', async (req, res) => {
         u.id, u.company_name, u.user_id, u.email, u.user_name, u.department,
         u.mobile_phone, u.phone_number, u.fax_number, u.address, u.business_license,
         u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan,
-        u.start_date, u.end_date, u.registration_date, u.created_at, u.updated_at,
+        DATE_FORMAT(u.start_date, '%Y-%m-%d') as start_date,
+        DATE_FORMAT(u.end_date, '%Y-%m-%d') as end_date,
+        DATE_FORMAT(u.registration_date, '%Y-%m-%d') as registration_date,
+        u.created_at, u.updated_at,
         u.manager_position,
         u.accountant_name, u.accountant_position, u.accountant_mobile, u.accountant_email,
         u.representative, u.industry, u.msds_limit, u.ai_image_limit, u.ai_report_limit
@@ -203,11 +212,11 @@ router.get('/api/users/:id', async (req, res) => {
     const user = rows[0];
     const formattedUser = {
       ...user,
-      start_date: user.start_date ? DateUtils.formatDate(user.start_date) : null,
-      end_date: user.end_date ? DateUtils.formatDate(user.end_date) : null,
-      registration_date: user.registration_date ? DateUtils.formatDate(user.registration_date) : null,
-      created_at: user.created_at ? DateUtils.formatDate(user.created_at) : null,
-      updated_at: user.updated_at ? DateUtils.formatDate(user.updated_at) : null
+      start_date: user.start_date,
+      end_date: user.end_date,
+      registration_date: user.registration_date,
+      created_at: user.created_at,
+      updated_at: user.updated_at
     };
     
     res.json({
@@ -460,7 +469,7 @@ router.put('/api/users/:id', async (req, res) => {
       const today = new Date();
       const todayString = DateUtils.getTodayString();
       
-      const endDateString = DateUtils.formatDate(end_date);
+      const endDateString = end_date;
       
       const endDateObj = new Date(endDateString);
       const todayObj = new Date(todayString);
@@ -536,7 +545,7 @@ router.put('/api/users/:id', async (req, res) => {
       try {
         // 종료일이 오늘보다 이전인지 확인
         const todayString = DateUtils.getTodayString();
-        const endDateString = DateUtils.formatDate(endDateValue);
+        const endDateString = endDateValue;
         
         if (endDateString && endDateString < todayString) {
           // 기존 승인 상태 확인

@@ -6,13 +6,11 @@ import { useState, useEffect, useCallback } from 'react';
  */
 export const useCurrentMonth = () => {
   const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return now.getMonth() + 1; // 1-12
+    return new Date().getMonth() + 1; // 1-12
   });
   
   const [currentYear, setCurrentYear] = useState(() => {
-    const now = new Date();
-    return now.getFullYear();
+    return new Date().getFullYear();
   });
 
   // 현재 월이 특정 월과 일치하는지 확인

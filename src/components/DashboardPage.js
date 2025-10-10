@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './DashboardPage.css';
 import { apiCall } from '../config/api';
+import { transformUserData, transformRevenueData, calculateUserStats, calculateRevenueStats } from '../utils/dashboardUtils';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState({
@@ -18,7 +19,6 @@ const DashboardPage = () => {
   });
   const [loading, setLoading] = useState(true);
 
-
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
@@ -27,131 +27,30 @@ const DashboardPage = () => {
       const usersResult = await apiCall('/api/users');
       let users = [];
       if (usersResult && usersResult.success && Array.isArray(usersResult.data)) {
-        // DB 데이터를 프론트엔드 형식으로 변환
-        users = usersResult.data.map(user => ({
-          id: user.id,
-          companyName: user.company_name,
-          userId: user.user_id,
-          userName: user.user_name || user.user_id,
-          email: user.email,
-          companyType: user.company_type,
-                     registrationDate: user.registration_date,
-           endDate: user.end_date,
-           department: user.department || '',
-           mobilePhone: user.mobile_phone || '',
-           startDate: user.start_date || user.registration_date || '',
-          msdsUsage: { current: 0, total: user.msds_limit || 0 },
-          aiImageUsage: { current: 0, total: user.ai_image_limit || 0 },
-          aiReportUsage: { current: 0, total: user.ai_report_limit || 0 },
-          businessLicense: user.business_license || '',
-          phoneNumber: user.phone_number || '',
-          faxNumber: user.fax_number || '',
-          address: user.address || '',
-          notes: user.notes || '',
-            position: user.manager_position || '',
-          approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정'))
-        }));
+        users = transformUserData(usersResult.data);
       }
 
       // 매출 데이터 가져오기
-      console.log('🔍 매출 데이터 요청 중...');
       let revenueResult;
       try {
         revenueResult = await apiCall('/api/revenue');
-        console.log('📥 매출 데이터 응답:', revenueResult);
-        console.log('📥 매출 데이터 success:', revenueResult?.success);
-        console.log('📥 매출 데이터 data 타입:', typeof revenueResult?.data);
-        console.log('📥 매출 데이터 data 길이:', Array.isArray(revenueResult?.data) ? revenueResult.data.length : 'not array');
       } catch (error) {
-        console.error('❌ 매출 데이터 API 호출 실패:', error);
+        console.error('매출 데이터 API 호출 실패:', error);
         revenueResult = null;
       }
       
       let revenueData = [];
       if (revenueResult && revenueResult.success && Array.isArray(revenueResult.data)) {
-        // DB 데이터를 프론트엔드 형식으로 변환 (snake_case → camelCase)
-        revenueData = revenueResult.data.map(revenue => ({
-          id: revenue.id,
-          issueDate: revenue.issue_date,
-          companyName: revenue.company_name,
-          businessLicense: revenue.business_license,
-          paymentDate: revenue.payment_date || '', // null이면 빈 문자열로 변환
-          paymentMethod: revenue.payment_method,
-          companyType: revenue.company_type, // userPermission 대신 companyType 사용
-          item: revenue.item,
-          supplyAmount: Number(revenue.supply_amount) || 0, // 명시적으로 숫자로 변환
-          vat: Number(revenue.vat) || 0,                   // 명시적으로 숫자로 변환
-          totalAmount: Number(revenue.total_amount) || 0,   // 명시적으로 숫자로 변환
-          createdAt: revenue.created_at,
-          updatedAt: revenue.updated_at
-        }));
-        console.log('📊 변환된 매출 데이터:', revenueData);
-        console.log('📊 매출 데이터 개수:', revenueData.length);
-      } else {
-        console.log('❌ 매출 데이터 로딩 실패:', revenueResult);
+        revenueData = transformRevenueData(revenueResult.data);
       }
 
       // 통계 계산
-      const totalUsers = users.length;
-      const pendingUsers = users.filter(user => user.approvalStatus === '승인 예정').length;
-      const approvedUsers = users.filter(user => user.approvalStatus === '승인 완료').length;
-      
-      // 공통 isUserActive 함수 사용 (import된 함수) - 활성화 업체 수 계산에 사용됨
-
-      // 무료 사용자 계산 (무료 탭과 동일한 조건)
-      const totalFreeUsers = users.filter(user => 
-        // 업체 형태와 상관없이 승인 예정 상태인 모든 사용자
-        user.approvalStatus === '승인 예정'
-      ).length;
-      
-      // 컨설팅 업체 (무료 요금제 포함)
-      const consultingUsers = users.filter(user => 
-        user.companyType === '컨설팅 업체' &&
-        user.approvalStatus === '승인 완료'
-      ).length;
-      
-      // 일반 업체 (무료 요금제 포함)
-      const generalUsers = users.filter(user => 
-        user.companyType === '일반 업체' &&
-        user.approvalStatus === '승인 완료'
-      ).length;
-      
-      // 탈퇴 사용자 (업체 형태가 '탈퇴 사용자'인 사용자)
-      const withdrawnUsers = users.filter(user => 
-        user.companyType === '탈퇴 사용자'
-      ).length;
-      
-      const totalRevenue = revenueData.reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
-      console.log('💰 총 매출 계산:', totalRevenue);
-      
-      // 업체 형태별 매출 계산 (공급가액 기준)
-      const consultingRevenue = revenueData
-        .filter(item => item.companyType === '컨설팅 업체')
-        .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
-      console.log('🏢 컨설팅 업체 매출:', consultingRevenue);
-      
-      const generalRevenue = revenueData
-        .filter(item => item.companyType === '일반 업체')
-        .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
-      console.log('🏭 일반 업체 매출:', generalRevenue);
-      
-      const otherRevenue = revenueData
-        .filter(item => item.companyType === '기타')
-        .reduce((sum, item) => sum + (item.supplyAmount || 0), 0);
-      console.log('📊 기타 매출:', otherRevenue);
+      const userStats = calculateUserStats(users);
+      const revenueStats = calculateRevenueStats(revenueData);
       
       setStats({
-        totalUsers,
-        pendingUsers,
-        approvedUsers,
-        totalFreeUsers,
-        consultingUsers,
-        generalUsers,
-        withdrawnUsers,
-        totalRevenue,
-        consultingRevenue,
-        generalRevenue,
-        otherRevenue
+        ...userStats,
+        ...revenueStats
       });
 
     } catch (error) {
@@ -171,8 +70,7 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-page">
-
-             {/* 윗부분 - 사용자 현황 */}
+      {/* 윗부분 - 사용자 현황 */}
        <div className="dashboard-section user-stats-section">
          <h2>사용자 현황</h2>
                   <div className="stats-grid user-stats-grid">

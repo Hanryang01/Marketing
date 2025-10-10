@@ -1,6 +1,6 @@
 // API 설정
 // 개발 환경: localhost:3003, 프로덕션 환경: 상대 경로 사용 (Nginx 프록시)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://marketing.sihm.co.kr';
+const API_BASE_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003').trim();
 
 export const API_ENDPOINTS = {
   // 사용자 관련
@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   COMPANY_HISTORY_LIST: `${API_BASE_URL}/api/company-history-list`,
   HISTORY_USER: (userId) => `${API_BASE_URL}/api/history/user/${userId}`,
   HISTORY_USER_DETAIL: `${API_BASE_URL}/api/history/user/detail`,
+  HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/user/${id}`,
   
   // 매출 관련
   REVENUE: `${API_BASE_URL}/api/revenue`,
@@ -39,17 +40,21 @@ export const API_ENDPOINTS = {
 export const apiCall = async (url, options = {}) => {
   console.log('🌐 apiCall 입력:', { url, API_BASE_URL });
   
+  // API_BASE_URL에서 공백 제거
+  const cleanApiBaseUrl = API_BASE_URL.trim();
+  
   let fullUrl;
   if (url.startsWith('http')) {
     fullUrl = url;
     console.log('🌐 절대 URL 사용:', fullUrl);
   } else if (url.startsWith('/api/')) {
-    // 이미 /api/로 시작하는 경우 중복 방지
-    fullUrl = `${API_BASE_URL}${url}`;
+    // 이미 /api/로 시작하는 경우 중복 방지 - /api/ 제거 후 처리
+    const cleanUrl = url.replace(/^\/api/, '');
+    fullUrl = `${cleanApiBaseUrl}/api${cleanUrl}`;
     console.log('🌐 /api/로 시작하는 URL 처리:', fullUrl);
   } else {
     // /api/로 시작하지 않는 경우 추가
-    fullUrl = `${API_BASE_URL}/api${url}`;
+    fullUrl = `${cleanApiBaseUrl}/api${url}`;
     console.log('🌐 일반 URL 처리:', fullUrl);
   }
   
@@ -61,16 +66,21 @@ export const apiCall = async (url, options = {}) => {
   };
   
   try {
+    console.log('🌐 API 요청 시작:', fullUrl);
     const response = await fetch(fullUrl, { ...defaultOptions, ...options });
+    console.log('🌐 API 응답 상태:', response.status, response.ok);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('🌐 HTTP 에러 상세:', { status: response.status, statusText: response.statusText, body: errorText });
+      throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
     }
     
     const data = await response.json();
+    console.log('🌐 API 응답 성공:', fullUrl, data);
     return data;
   } catch (error) {
-    console.error('API 호출 실패:', error);
+    console.error('🌐 API 호출 실패:', { url: fullUrl, error: error.message, stack: error.stack });
     throw error;
   }
 };

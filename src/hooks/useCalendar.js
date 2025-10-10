@@ -10,9 +10,10 @@ export const useCalendar = () => {
   const [showDetailEndDatePicker, setShowDetailEndDatePicker] = useState(false);
   const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
 
-  // 현재 날짜 초기화 (이미 한국 시간대이므로 단순화)
+  // 현재 날짜 초기화 (한국 시간대로 강제 변환)
   const getCurrentKoreaDate = () => {
-    return new Date();
+    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    return new Date(koreaTime.getFullYear(), koreaTime.getMonth(), koreaTime.getDate());
   };
 
   const [startDatePickerDate, setStartDatePickerDate] = useState(getCurrentKoreaDate());
@@ -237,13 +238,15 @@ export const useCalendar = () => {
     // 한국 시간 기준으로 오늘 날짜 생성 (이미 한국 시간으로 초기화됨)
     const today = getCurrentKoreaDate();
     
-    // 선택된 날짜를 Date 객체로 변환
+    // 선택된 날짜를 Date 객체로 변환 (한국 시간대 기준)
     let selectedDateObj = null;
     if (selectedDate) {
       if (typeof selectedDate === 'string' && selectedDate.includes('-')) {
         // YYYY-MM-DD 형식
         const [year, month, day] = selectedDate.split('-').map(Number);
-        selectedDateObj = new Date(year, month - 1, day);
+        const tempDate = new Date(year, month - 1, day);
+        const koreaTime = new Date(tempDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+        selectedDateObj = new Date(koreaTime.getFullYear(), koreaTime.getMonth(), koreaTime.getDate());
       } else if (typeof selectedDate === 'number') {
         // YYYYMMDD 형식
         const dateStr = selectedDate.toString();
@@ -251,7 +254,9 @@ export const useCalendar = () => {
           const year = parseInt(dateStr.substring(0, 4));
           const month = parseInt(dateStr.substring(4, 6));
           const day = parseInt(dateStr.substring(6, 8));
-          selectedDateObj = new Date(year, month - 1, day);
+          const tempDate = new Date(year, month - 1, day);
+          const koreaTime = new Date(tempDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+          selectedDateObj = new Date(koreaTime.getFullYear(), koreaTime.getMonth(), koreaTime.getDate());
         }
       }
     }
@@ -317,20 +322,19 @@ export const useCalendar = () => {
         const dateStr = dateValue.toString();
         return `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
       } 
-      // 이미 YYYY-MM-DD 형식인 경우
+      // 이미 YYYY-MM-DD 형식인 경우 - 그대로 반환
       else if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         return dateValue;
       } 
-      // ISO 날짜 형식 또는 다른 형식 - 한국 시간대 사용
+      // ISO 날짜 형식 또는 다른 형식 - 단순 변환
       else {
         const date = new Date(dateValue);
         if (isNaN(date.getTime())) return '-';
         
-        // 한국 시간대에서 날짜 추출 (정확한 시간대 처리)
-        const koreaTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-        const year = koreaTime.getFullYear();
-        const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
-        const day = String(koreaTime.getDate()).padStart(2, '0');
+        // 단순 날짜 추출 (시간대 변환 없음)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       }
     } catch (error) {
@@ -339,24 +343,23 @@ export const useCalendar = () => {
     }
   };
 
-  // 한국 시간대 기준 현재 날짜 반환
+  // 현재 날짜 반환
   const getKoreaDate = () => {
-    const now = new Date();
-    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    return new Date();
   };
 
-  // 한국 시간대 기준 현재 년월 반환
+  // 현재 년월 반환
   const getKoreaYearMonth = () => {
-    const koreaDate = getKoreaDate();
+    const date = new Date();
     return {
-      year: koreaDate.getFullYear(),
-      month: koreaDate.getMonth() + 1
+      year: date.getFullYear(),
+      month: date.getMonth() + 1
     };
   };
 
-  // 한국 시간대 기준으로 날짜를 Date 객체로 변환
+  // 날짜를 Date 객체로 변환
   const parseKoreaDate = (dateValue) => {
-    if (!dateValue) return null;
+    if (!dateValue || dateValue === null || dateValue === undefined) return null;
     
     try {
       if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
@@ -369,13 +372,18 @@ export const useCalendar = () => {
         const year = parseInt(dateStr.substring(0, 4));
         const month = parseInt(dateStr.substring(4, 6));
         return new Date(year, month - 1);
-      } else {
-        // Date 객체나 다른 형식 - 한국 시간대로 변환
+      } else if (typeof dateValue === 'string' && dateValue.length > 0) {
+        // 다른 문자열 형식 - 안전한 변환
         const date = new Date(dateValue);
         if (isNaN(date.getTime())) return null;
-        
-        const koreaTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-        return new Date(koreaTime.getFullYear(), koreaTime.getMonth(), koreaTime.getDate());
+        return date;
+      } else if (dateValue instanceof Date) {
+        // Date 객체
+        return dateValue;
+      } else {
+        // 예상하지 못한 타입
+        console.warn('예상하지 못한 날짜 타입:', typeof dateValue, dateValue);
+        return null;
       }
     } catch (error) {
       console.error('날짜 파싱 오류:', error, dateValue);
@@ -383,25 +391,25 @@ export const useCalendar = () => {
     }
   };
 
-  // 한국 시간대 기준으로 두 날짜가 같은 년월인지 확인
+  // 두 날짜가 같은 년월인지 확인
   const isSameKoreaYearMonth = (date1, date2) => {
-    const koreaDate1 = parseKoreaDate(date1);
-    const koreaDate2 = parseKoreaDate(date2);
+    const date1Obj = parseKoreaDate(date1);
+    const date2Obj = parseKoreaDate(date2);
     
-    if (!koreaDate1 || !koreaDate2) return false;
+    if (!date1Obj || !date2Obj) return false;
     
-    return koreaDate1.getFullYear() === koreaDate2.getFullYear() && 
-           koreaDate1.getMonth() === koreaDate2.getMonth();
+    return date1Obj.getFullYear() === date2Obj.getFullYear() && 
+           date1Obj.getMonth() === date2Obj.getMonth();
   };
 
-  // 한국 시간대 기준으로 현재 년월과 같은지 확인
+  // 현재 년월과 같은지 확인
   const isCurrentKoreaYearMonth = (dateValue) => {
-    const koreaDate = parseKoreaDate(dateValue);
-    if (!koreaDate) return false;
+    const dateObj = parseKoreaDate(dateValue);
+    if (!dateObj) return false;
     
-    const currentKorea = getKoreaYearMonth();
-    return koreaDate.getFullYear() === currentKorea.year && 
-           koreaDate.getMonth() + 1 === currentKorea.month;
+    const current = getKoreaYearMonth();
+    return dateObj.getFullYear() === current.year && 
+           dateObj.getMonth() + 1 === current.month;
   };
 
 

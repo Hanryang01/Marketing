@@ -26,7 +26,7 @@ export const NotificationProvider = ({ children }) => {
     companyName: '', // 업체명
     taxInvoiceSettings: [], // 여러 회사의 세금계산서 발행일 설정 [{companyName: '', day: ''}, ...]
     endDateReminder14Days: true, // 종료일 14일전 알림
-    endDateReminderToday: true, // 종료일 당일 알림
+    endDateReminder1Day: true, // 종료일 1일 전 알림
   });
 
 
@@ -41,21 +41,21 @@ export const NotificationProvider = ({ children }) => {
     }, 5 * 60 * 1000); // 5분마다
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 서버 기반 알림 시스템 - 로컬 알림 생성 로직 제거
   // 알림은 서버에서 자동으로 생성되므로 프론트엔드에서는 조회만 수행
 
 
   // 알림 데이터 로드 (서버에서)
-  const loadNotifications = async () => {
+  const loadNotifications = React.useCallback(async () => {
     try {
-      console.log('📡 서버에서 알림 조회 중...');
-      const data = await apiCall(API_ENDPOINTS.NOTIFICATIONS);
+      const response = await apiCall(API_ENDPOINTS.NOTIFICATIONS);
       
-      if (data && data.success) {
+      if (response && response.success && response.data && Array.isArray(response.data)) {
+        console.log('📋 원본 알림 데이터:', response.data);
         // 서버 데이터를 프론트엔드 형식으로 변환
-        const serverNotifications = data.notifications.map(notification => ({
+        const serverNotifications = response.data.map(notification => ({
           id: notification.id.toString(),
           title: notification.title,
           content: notification.message,
@@ -66,18 +66,27 @@ export const NotificationProvider = ({ children }) => {
           expiresAt: notification.expires_at
         }));
         
+        console.log('🔄 변환된 알림 데이터:', serverNotifications);
         setNotifications(serverNotifications);
         console.log(`✅ 서버에서 ${serverNotifications.length}개 알림 로드 완료`);
       } else {
         console.log('📝 서버에 알림이 없습니다.');
+        console.log('🔍 데이터 구조:', { 
+          success: response?.success, 
+          hasData: !!response?.data, 
+          isArray: Array.isArray(response?.data),
+          dataType: typeof response?.data,
+          dataValue: response?.data
+        });
         setNotifications([]);
       }
     } catch (error) {
       console.error('❌ 서버 알림 로드 실패:', error);
+      console.error('❌ 에러 상세:', error.message, error.stack);
       // 서버 로드 실패 시 빈 배열로 설정
       setNotifications([]);
     }
-  };
+  }, []); // 빈 의존성 배열로 함수가 재생성되지 않도록 함
 
   // 알림 설정 로드 (로컬 스토리지에서)
   const loadNotificationSettings = () => {
@@ -211,7 +220,7 @@ export const NotificationProvider = ({ children }) => {
       companyName: newSettings.companyName || '',
       taxInvoiceSettings: newSettings.taxInvoiceSettings || [],
       endDateReminder14Days: newSettings.endDateReminder14Days || true,
-      endDateReminderToday: newSettings.endDateReminderToday || true
+      endDateReminder1Day: newSettings.endDateReminder1Day || true
     };
     
     setNotificationSettings(updatedSettings);

@@ -192,25 +192,24 @@ const RevenueStatus = () => {
     }
   }, [calculateMonthlyRevenueTableData, revenueList.length]);
 
-  // 업체 형태별 매출 계산 (공급가액 기준)
-  const getCompanyTypeRevenue = useCallback(() => {
-    const companyTypeData = {};
+  // 업체 형태별 매출 계산 (공급가액 기준) - 메모이제이션 개선
+  const companyTypeData = useMemo(() => {
+    const data = {};
     
     revenueList.forEach(revenue => {
       const companyType = revenue.companyType || '기타';
-      if (!companyTypeData[companyType]) {
-        companyTypeData[companyType] = 0;
+      if (!data[companyType]) {
+        data[companyType] = 0;
       }
-      companyTypeData[companyType] += revenue.supplyAmount;
+      data[companyType] += revenue.supplyAmount;
     });
     
-    return companyTypeData;
+    return data;
   }, [revenueList]);
 
 
   // 그래프 데이터 준비
   const barChartData = useMemo(() => {
-    const companyTypeData = getCompanyTypeRevenue();
     return {
       labels: ['컨설팅 업체', '일반 업체', '기타'],
       datasets: [
@@ -249,56 +248,55 @@ const RevenueStatus = () => {
         },
       ],
     };
-  }, [getCompanyTypeRevenue]);
+  }, [companyTypeData]);
 
-  const doughnutChartData = {
-    labels: ['컨설팅 업체', '일반 업체', '기타'],
-    datasets: [
-      {
-        data: (() => {
-          const companyTypeData = getCompanyTypeRevenue();
-          return [
+  const doughnutChartData = useMemo(() => {
+    return {
+      labels: ['컨설팅 업체', '일반 업체', '기타'],
+      datasets: [
+        {
+          data: [
             companyTypeData['컨설팅 업체'] || 0,
             companyTypeData['일반 업체'] || 0,
             companyTypeData['기타'] || 0
-          ];
-        })(),
-        backgroundColor: [
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(255, 205, 86, 0.8)',
-        ],
-        borderColor: [
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 99, 132, 1)',
-          'rgba(255, 205, 86, 1)',
-        ],
-        borderWidth: 2,
-        datalabels: {
-          display: true,
-          color: '#333',
-          font: {
-            weight: 'bold',
-            size: 12
-          },
-          formatter: function(value, context) {
-            const label = context.chart.data.labels[context.dataIndex];
-            if (value > 0) {
-              // 전체 매출 계산
-              const totalRevenue = context.chart.data.datasets[0].data.reduce((sum, val) => sum + val, 0);
-              // 비율 계산 (소수점 첫째 자리까지)
-              const percentage = ((value / totalRevenue) * 100).toFixed(1);
-              return [label, percentage + '%'];
-            }
-            return '';
-          },
-          anchor: 'center',
-          align: 'center',
-          offset: 0
-        }
-      },
-    ],
-  };
+          ],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(255, 205, 86, 1)',
+          ],
+          borderWidth: 2,
+          datalabels: {
+            display: true,
+            color: '#333',
+            font: {
+              weight: 'bold',
+              size: 12
+            },
+            formatter: function(value, context) {
+              const label = context.chart.data.labels[context.dataIndex];
+              if (value > 0) {
+                // 전체 매출 계산
+                const totalRevenue = context.chart.data.datasets[0].data.reduce((sum, val) => sum + val, 0);
+                // 비율 계산 (소수점 첫째 자리까지)
+                const percentage = ((value / totalRevenue) * 100).toFixed(1);
+                return [label, percentage + '%'];
+              }
+              return '';
+            },
+            anchor: 'center',
+            align: 'center',
+            offset: 0
+          }
+        },
+      ],
+    };
+  }, [companyTypeData]);
 
   const monthlyChartData = useMemo(() => {
     const baseData = {
@@ -416,7 +414,7 @@ const RevenueStatus = () => {
   const yearlyRevenueChartData = getYearlyRevenueData();
 
   // 동적 stepSize 계산 함수
-  const calculateStepSize = (maxValue) => {
+  const calculateStepSize = useCallback((maxValue) => {
     if (maxValue <= 0) return 1;
     
     // 최대값을 5개 틱으로 나누어 적절한 stepSize 계산
@@ -433,112 +431,95 @@ const RevenueStatus = () => {
     else stepSize = 10 * magnitude;
     
     return Math.max(stepSize, 1);
-  };
+  }, []);
+
+  // 공통 차트 옵션 생성 함수
+  const createChartOptions = useCallback((maxValue, chartType = 'bar') => {
+    const stepSize = calculateStepSize(maxValue);
+    
+    const commonOptions = {
+      responsive: true,
+      tooltip: {
+        enabled: false,
+        mode: null,
+        intersect: false,
+        events: []
+      },
+      hover: {
+        mode: null,
+        animationDuration: 0,
+        intersect: false,
+        events: []
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: stepSize,
+            maxTicksLimit: 5,
+            callback: function(value) {
+              return value.toLocaleString() + '원';
+            }
+          }
+        }
+      },
+      layout: {
+        padding: {
+          top: 30,
+          right: 20,
+          bottom: 20,
+          left: 20
+        }
+      }
+    };
+
+    if (chartType === 'bar') {
+      return {
+        ...commonOptions,
+        maintainAspectRatio: false,
+        elements: {
+          bar: {
+            borderRadius: 4
+          }
+        },
+        categoryPercentage: 0.6,
+        barPercentage: 0.9,
+        plugins: {
+          legend: {
+            display: false,
+          }
+        }
+      };
+    }
+
+    if (chartType === 'yearly') {
+      return {
+        ...commonOptions,
+        maintainAspectRatio: true,
+        aspectRatio: 2.7,
+        categoryPercentage: 0.6,
+        barPercentage: 0.9,
+        plugins: {
+          legend: {
+            display: false,
+          }
+        }
+      };
+    }
+
+    return commonOptions;
+  }, [calculateStepSize]);
 
   // 연도별 매출 차트 옵션
   const yearlyRevenueChartOptions = useMemo(() => {
     const maxValue = Math.max(...getYearlyRevenueData().datasets[0].data);
-    const stepSize = calculateStepSize(maxValue);
-    
-    return {
-      responsive: true,
-      maintainAspectRatio: true,
-      aspectRatio: 2.7,
-      categoryPercentage: 0.6, // 카테고리(연도) 범위에서 막대가 차지하는 비율 (60%)
-      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
-      layout: {
-        padding: {
-          top: 30,
-          right: 20,
-          bottom: 20,
-          left: 20
-        }
-      },
-      plugins: {
-        legend: {
-          display: false,
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: stepSize, // 동적으로 계산된 간격
-            maxTicksLimit: 5, // 최대 5개만 표시
-            callback: function(value) {
-              return value.toLocaleString() + '원';
-            }
-          }
-        }
-      },
-      tooltip: {
-        enabled: false,
-        mode: null,
-        intersect: false,
-        events: []
-      },
-      hover: {
-        mode: null,
-        animationDuration: 0,
-        intersect: false,
-        events: []
-      }
-    };
-  }, [getYearlyRevenueData]);
+    return createChartOptions(maxValue, 'yearly');
+  }, [getYearlyRevenueData, createChartOptions]);
 
   const barChartOptions = useMemo(() => {
     const maxValue = Math.max(...monthlyChartData.datasets[0].data);
-    const stepSize = calculateStepSize(maxValue);
-    
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      elements: {
-        bar: {
-          borderRadius: 4
-        }
-      },
-      categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
-      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
-      plugins: {
-        legend: {
-          display: false,
-        }
-      },
-      tooltip: {
-        enabled: false,
-        mode: null,
-        intersect: false,
-        events: []
-      },
-      hover: {
-        mode: null,
-        animationDuration: 0,
-        intersect: false,
-        events: []
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: stepSize, // 동적으로 계산된 간격
-            maxTicksLimit: 5, // 최대 5개만 표시
-            callback: function(value) {
-              return value.toLocaleString() + '원';
-            }
-          }
-        }
-      },
-      layout: {
-        padding: {
-          top: 30,
-          right: 20,
-          bottom: 20,
-          left: 20
-        }
-      }
-    };
-  }, [monthlyChartData]);
+    return createChartOptions(maxValue, 'bar');
+  }, [monthlyChartData, createChartOptions]);
 
   const doughnutChartOptions = {
     responsive: true,
@@ -578,33 +559,12 @@ const RevenueStatus = () => {
 
   const monthlyChartOptions = useMemo(() => {
     const maxValue = Math.max(...monthlyChartData.datasets[0].data);
-    const stepSize = calculateStepSize(maxValue);
+    const baseOptions = createChartOptions(maxValue, 'bar');
     
     return {
-      responsive: true,
-      elements: {
-        bar: {
-          borderRadius: 4
-        }
-      },
-      categoryPercentage: 0.6, // 카테고리(월) 범위에서 막대가 차지하는 비율 (60%)
-      barPercentage: 0.9, // 카테고리 내에서 막대가 차지하는 비율 (90%)
+      ...baseOptions,
       plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          enabled: false,
-          mode: null,
-          intersect: false,
-          events: []
-        },
-        hover: {
-          mode: null,
-          animationDuration: 0,
-          intersect: false,
-          events: []
-        },
+        ...baseOptions.plugins,
         datalabels: {
           display: true,
           color: '#333',
@@ -619,30 +579,27 @@ const RevenueStatus = () => {
           align: 'top',
           offset: 4
         }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: stepSize, // 동적으로 계산된 간격
-            maxTicksLimit: 5, // 최대 5개만 표시
-            callback: function(value) {
-              return value.toLocaleString() + '원';
-            }
-          }
-        }
-      },
-      layout: {
-        padding: {
-          top: 30,
-          right: 20,
-          bottom: 20,
-          left: 20
-        }
       }
     };
-  }, [monthlyChartData]);
+  }, [monthlyChartData, createChartOptions]);
 
+
+  // 연도 선택 컴포넌트
+  const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
+    return (
+      <select 
+        value={selectedYear} 
+        onChange={(e) => onYearChange(parseInt(e.target.value))}
+        className={className}
+      >
+        {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+          <option key={year} value={year}>
+            {year}년
+          </option>
+        ))}
+      </select>
+    );
+  };
 
   // 연도 변경 시 차트 새로고침
 
@@ -725,16 +682,10 @@ const RevenueStatus = () => {
             <h3>월별 매출</h3>
             <div className="monthly-year-selector">
               <label>연도 선택:</label>
-              <select 
-                value={selectedYear} 
-                onChange={(e) => handleYearChange(parseInt(e.target.value))}
-              >
-                {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
-                  <option key={year} value={year}>
-                    {year}년
-                  </option>
-                ))}
-              </select>
+              <YearSelector 
+                selectedYear={selectedYear} 
+                onYearChange={handleYearChange} 
+              />
             </div>
           </div>
           <Bar data={monthlyChartData} options={monthlyChartOptions} />
@@ -746,18 +697,11 @@ const RevenueStatus = () => {
             <h3>월별 매출 (표)</h3>
             <div className="year-selector">
               <label htmlFor="revenue-year-select">연도 선택:</label>
-              <select 
-                id="revenue-year-select" 
-                value={selectedYear} 
-                onChange={(e) => handleYearChange(parseInt(e.target.value))}
+              <YearSelector 
+                selectedYear={selectedYear} 
+                onYearChange={handleYearChange}
                 className="year-select"
-              >
-                {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
-                  <option key={year} value={year}>
-                    {year}년
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
           

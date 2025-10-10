@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `revenue` (
 CREATE TABLE IF NOT EXISTS `notifications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
-  `type` enum('end_date_today','end_date_14days','tax_invoice') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('end_date_14days','end_date_1day','tax_invoice') COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_read` tinyint(1) DEFAULT '0',

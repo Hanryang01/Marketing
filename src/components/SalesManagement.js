@@ -7,6 +7,7 @@ import { useCalendar } from '../hooks/useCalendar';
 import { useMessage } from '../hooks/useMessage';
 import MessageModal from './MessageModal';
 import RevenueModal from './RevenueModal';
+import SearchFilters from './common/SearchFilters';
 import { formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 
 const SalesManagement = () => {
@@ -20,6 +21,13 @@ const SalesManagement = () => {
     businessLicense: '',
     companyType: ''
   });
+
+  // 필터 필드 설정
+  const salesFilterFields = [
+    { name: 'companyName', placeholder: '회사명 검색' },
+    { name: 'businessLicense', placeholder: '사업자등록번호 검색' },
+    { name: 'companyType', placeholder: '업체 형태 검색' }
+  ];
 
   // useCalendar 훅 사용
   const {
@@ -522,32 +530,11 @@ const SalesManagement = () => {
       </div>
 
       {/* 검색 필터 */}
-      <div className="search-filters">
-        <div className="filter-group">
-          <input
-            type="text"
-            placeholder="회사명 검색"
-            value={searchFilters.companyName}
-            onChange={(e) => handleFilterChange('companyName', e.target.value)}
-          />
-        </div>
-        <div className="filter-group">
-          <input
-            type="text"
-            placeholder="사업자등록번호 검색"
-            value={searchFilters.businessLicense}
-            onChange={(e) => handleFilterChange('businessLicense', e.target.value)}
-          />
-        </div>
-        <div className="filter-group">
-          <input
-            type="text"
-            placeholder="업체 형태 검색"
-            value={searchFilters.companyType}
-            onChange={(e) => handleFilterChange('companyType', e.target.value)}
-          />
-        </div>
-      </div>
+      <SearchFilters 
+        filters={searchFilters}
+        onFilterChange={handleFilterChange}
+        fields={salesFilterFields}
+      />
 
       {/* 매출 목록 테이블 또는 업체별 현황 */}
       {currentView === 'list' ? (

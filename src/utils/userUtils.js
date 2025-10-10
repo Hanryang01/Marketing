@@ -25,22 +25,25 @@ export const isUserActive = (user, targetDate = new Date()) => {
     return false;
   }
   
-  // 날짜 비교를 위한 준비
-  const targetDateOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  // 날짜 비교를 위한 준비 (한국 시간대 기준)
+  const koreaTargetDate = new Date(targetDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  const targetDateOnly = new Date(koreaTargetDate.getFullYear(), koreaTargetDate.getMonth(), koreaTargetDate.getDate());
   
-  // 시작일 체크: 시작일이 없거나 시작일 <= 기준일자
+  // 시작일 체크: 시작일이 없거나 시작일 <= 기준일자 (한국 시간대 기준)
   if (user.startDate) {
     const startDate = new Date(user.startDate);
-    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const koreaStartDate = new Date(startDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const startDateOnly = new Date(koreaStartDate.getFullYear(), koreaStartDate.getMonth(), koreaStartDate.getDate());
     if (startDateOnly > targetDateOnly) {
       return false;
     }
   }
   
-  // 종료일 체크: 종료일이 없거나 기준일자 <= 종료일
+  // 종료일 체크: 종료일이 없거나 기준일자 <= 종료일 (한국 시간대 기준)
   if (user.endDate) {
     const endDate = new Date(user.endDate);
-    const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    const koreaEndDate = new Date(endDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const endDateOnly = new Date(koreaEndDate.getFullYear(), koreaEndDate.getMonth(), koreaEndDate.getDate());
     if (targetDateOnly > endDateOnly) {
       return false;
     }
@@ -57,7 +60,8 @@ export const isUserActive = (user, targetDate = new Date()) => {
  * @returns {boolean} 활성화 여부
  */
 export const isUserActiveAtMonthEnd = (user, year, month) => {
-  // 해당 월의 마지막 날짜 계산
+  // 해당 월의 마지막 날짜 계산 (한국 시간대 기준)
   const monthEnd = new Date(year, month, 0); // month는 0-based이므로 month+1의 0일 = 이전 달의 마지막 날
-  return isUserActive(user, monthEnd);
+  const koreaMonthEnd = new Date(monthEnd.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  return isUserActive(user, koreaMonthEnd);
 };

@@ -44,7 +44,7 @@ const NotificationModal = () => {
     companyName: notificationSettings.companyName || '',
     taxInvoiceSettings: [],
     endDateReminder14Days: notificationSettings.endDateReminder14Days || true,
-    endDateReminderToday: notificationSettings.endDateReminderToday || true
+    endDateReminder1Day: notificationSettings.endDateReminder1Day || true
   });
 
   // 모달이 열릴 때 설정값을 임시 상태로 복사 (최적화)
@@ -59,7 +59,7 @@ const NotificationModal = () => {
           !setting.title && !setting.content && !setting.type
         ),
         endDateReminder14Days: notificationSettings.endDateReminder14Days || true,
-        endDateReminderToday: notificationSettings.endDateReminderToday || true
+        endDateReminder1Day: notificationSettings.endDateReminder1Day || true
       };
     
       // 이전 설정과 비교하여 변경된 경우에만 업데이트
@@ -68,7 +68,7 @@ const NotificationModal = () => {
           prev.companyName !== currentSettings.companyName ||
           JSON.stringify(prev.taxInvoiceSettings) !== JSON.stringify(currentSettings.taxInvoiceSettings) ||
           prev.endDateReminder14Days !== currentSettings.endDateReminder14Days ||
-          prev.endDateReminderToday !== currentSettings.endDateReminderToday;
+          prev.endDateReminder1Day !== currentSettings.endDateReminder1Day;
         
         return hasChanged ? currentSettings : prev;
       });
@@ -115,7 +115,7 @@ const NotificationModal = () => {
   // 알림 메시지에서 회사명 강조 처리 (XSS 방지)
   const formatNotificationMessage = (content, type) => {
     // 모든 알림 타입에서 동일한 스타일로 회사명 강조 (언더스코어 포함)
-    if (type === 'tax_invoice' || type === 'end_date_today' || type === 'end_date_7days' || type === 'end_date_14days') {
+    if (type === 'tax_invoice' || type === 'end_date_1day' || type === 'end_date_14days') {
       // XSS 방지를 위해 HTML 이스케이프 처리
       const escapeHtml = (text) => {
         const div = document.createElement('div');
@@ -154,10 +154,10 @@ const NotificationModal = () => {
         return '⚙️';
       case 'tax_invoice':
         return '📄';
-      case 'end_date_7days':
-        return '⚠️';
-      case 'end_date_today':
+      case 'end_date_1day':
         return '🚨';
+      case 'end_date_14days':
+        return '⚠️';
       default:
         return '📢';
     }
@@ -338,20 +338,22 @@ const NotificationModal = () => {
                     />
                     <span className="checkmark"></span>
                     종료일 14일전 알림
+                    <span className="setting-description">서비스 종료 14일 전에 연장 안내 알림을 발송합니다.</span>
                   </label>
                 </div>
                 <div className="setting-item">
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
-                      checked={tempSettings.endDateReminderToday}
+                      checked={tempSettings.endDateReminder1Day}
                       onChange={(e) => setTempSettings({
                         ...tempSettings,
-                        endDateReminderToday: e.target.checked
+                        endDateReminder1Day: e.target.checked
                       })}
                     />
                     <span className="checkmark"></span>
-                    종료일 당일 알림
+                    종료일 1일전 알림
+                    <span className="setting-description">서비스 종료 1일 전에 긴급 연장 안내 알림을 발송합니다.</span>
                   </label>
                 </div>
               </div>

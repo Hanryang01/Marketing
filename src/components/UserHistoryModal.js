@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall, API_ENDPOINTS } from '../config/api';
+import { useCalendar } from '../hooks/useCalendar';
 import './UserHistoryModal.css';
 
 const UserHistoryModal = ({ user, onClose }) => {
   const [historyData, setHistoryData] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // useCalendar 훅 사용
+  const { formatDate } = useCalendar();
 
   // 상세 이력 조회
   const fetchDetailedHistory = async () => {
@@ -49,12 +53,12 @@ const UserHistoryModal = ({ user, onClose }) => {
     }
   };
 
-  // 날짜 비교 유틸리티 함수
+  // 날짜 비교 유틸리티 함수 (한국 시간대 기준)
   const isDateBeforeToday = (dateString) => {
     if (!dateString) return false;
     
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const todayString = koreaTime.toISOString().split('T')[0];
     const targetDateString = dateString.toString().split('T')[0];
     
     return targetDateString < todayString;
@@ -164,8 +168,8 @@ const UserHistoryModal = ({ user, onClose }) => {
                               {getStatusIcon(item.approval_status)} {item.approval_status}
                             </span>
                           </td>
-                          <td>{item.start_date || '-'}</td>
-                          <td>{item.end_date || '-'}</td>
+                          <td>{item.start_date ? formatDate(item.start_date) : '-'}</td>
+                          <td>{item.end_date ? formatDate(item.end_date) : '-'}</td>
                           <td>{item.company_type || '-'}</td>
                           <td>{item.pricing_plan || '-'}</td>
                           <td>

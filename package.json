@@ -19,15 +19,17 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "set PORT=3002 && react-scripts start",
-    "start:3002": "set PORT=3002 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
+    "start": "set PORT=3003 && set REACT_APP_API_BASE_URL=http://localhost:3003 && react-scripts start",
+    "start:3000": "set PORT=3000 && set REACT_APP_API_BASE_URL=http://localhost:3003 && set NODE_OPTIONS=--no-deprecation --no-warnings && craco start",
     "build": "set NODE_OPTIONS=--no-deprecation --no-warnings && set GENERATE_SOURCEMAP=false && set INLINE_RUNTIME_CHUNK=false && craco build",
+    "build:dev": "set REACT_APP_API_BASE_URL=http://localhost:3003 && set NODE_OPTIONS=--no-deprecation --no-warnings && set GENERATE_SOURCEMAP=false && set INLINE_RUNTIME_CHUNK=false && craco build",
+    "build:prod": "set REACT_APP_API_BASE_URL=https://marketing.sihm.co.kr && set NODE_OPTIONS=--no-deprecation --no-warnings && set GENERATE_SOURCEMAP=false && set INLINE_RUNTIME_CHUNK=false && craco build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "server:mysql": "set DB_PASSWORD=Tech8123!& set PORT=3003& node --no-deprecation --no-warnings server.js",
     "server:dev": "set DB_NAME=sihm_local& set DB_PASSWORD=8123& set PORT=3003& node --no-deprecation --no-warnings server.js",
-    "dev": "concurrently \"npm run server:dev\" \"npm run start:3002\"",
-    "prod": "npm run build && npm run server:mysql"
+    "dev": "concurrently \"npm run server:dev\" \"npm run start:3000\"",
+    "prod": "npm run build:prod && npm run server:mysql"
   },
   "eslintConfig": {
     "extends": [

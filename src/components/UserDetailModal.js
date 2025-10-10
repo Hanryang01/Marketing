@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import './UserDetailModal.css';
 import { useCalendar } from '../hooks/useCalendar';
-import { handleBusinessLicenseInput, formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
+import { handleBusinessLicenseInput, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 import { apiCall, API_ENDPOINTS } from '../config/api';
+import DatePicker from './DatePicker';
+import ApprovalModeView from './UserDetailModal/ApprovalModeView';
+import DetailModeView from './UserDetailModal/DetailModeView';
 
 const UserDetailModal = ({ 
   isOpen, 
@@ -50,51 +53,24 @@ const UserDetailModal = ({
     cancelText: '취소'
   });
 
-  // JSX 최적화 함수들
-  const renderInputField = (label, name, value, onChange, options = {}) => (
-    <div className="form-group">
-      <label>{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        readOnly={!isEditable}
-        className={!isEditable ? 'readonly-input' : ''}
-        {...options}
-      />
-    </div>
-  );
+  // 필드 값 처리 유틸리티 함수
+  const getFieldValue = (fieldName) => {
+    return editedUser?.[fieldName] !== undefined ? editedUser[fieldName] : (user[fieldName] || '');
+  };
 
+  // input 속성 공통 함수
+  const getInputProps = (isReadOnly = false) => ({
+    readOnly: !isEditable || isReadOnly,
+    className: (!isEditable || isReadOnly) ? 'readonly-input' : ''
+  });
 
-  const renderDateField = (label, value, onChange, options = {}) => (
-    <div className="form-group">
-      <label>{label}</label>
-      <div className="date-input-container">
-        <input
-          type="text"
-          value={value}
-          onChange={onChange}
-          readOnly
-          className="readonly-input"
-          {...options}
-        />
-      </div>
-    </div>
-  );
-
-  const renderFormRow = (leftField, rightField) => (
-    <div className="form-row">
-      {leftField}
-      {rightField}
-    </div>
-  );
 
 
   // 모달이 열릴 때마다 사용자 데이터 복사
   React.useEffect(() => {
     
     // 모달이 열릴 때마다 editedUser 초기화 (취소 후 재진입 시에도 원본 데이터로 복원)
-    if (isOpen && user) {
+    if (isOpen && user && user.id) {
       // editedUser에 모든 필드를 포함하여 설정
       const userWithAdditionalFields = {
         ...user,
@@ -135,25 +111,8 @@ const UserDetailModal = ({
         fetchUserHistory(user.userId || user.user_id);
       }
     }
-  }, [isOpen, user, isApprovalMode]);
+  }, [isOpen, user?.id, isApprovalMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 강제 상태 업데이트를 위한 useEffect
-  React.useEffect(() => {
-    if (editedUser) {
-          }
-  }, [editedUser]);
-
-  // startDate 변경 감지를 위한 useEffect
-  React.useEffect(() => {
-    if (editedUser?.startDate !== undefined) {
-          }
-  }, [editedUser]);
-
-  // 승인 완료 상태에서 날짜 필드 보호
-  React.useEffect(() => {
-    if (editedUser?.approvalStatus === '승인 완료') {
-                }
-  }, [editedUser?.approvalStatus, editedUser?.companyType, editedUser?.startDate, editedUser?.endDate, isApprovalMode]);
 
   // 무료 사용자/탈퇴 사용자일 때 날짜 필드 강제 초기화 (승인 상태와 상관없이)
   React.useEffect(() => {
@@ -220,15 +179,6 @@ const UserDetailModal = ({
       return;
     }
       
-    // 회계 담당자 필드 특별 처리 (스페이스 허용)
-    if (field === 'accountantMobile' || field === 'accountantEmail') {
-      const cleanValue = value === undefined || value === null ? '' : value.toString();
-      setEditedUser(prev => ({
-        ...prev,
-        [field]: cleanValue
-      }));
-      return;
-    }
       
     // 일반 필드 처리 - 빈 문자열도 허용
     const cleanValue = value === undefined || value === null ? '' : value.toString();
@@ -245,14 +195,7 @@ const UserDetailModal = ({
       
       // 사업자등록번호 유효성 검사 (승인 관리 모드가 아닐 때만)
       if (!isApprovalMode && editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
-        if (parentShowMessage) {
-          parentShowMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', {
-            showCancel: false,
-            confirmText: '확인'
-          });
-        } else {
-          alert('사업자등록번호는 숫자 10자리여야 합니다.');
-        }
+        showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', '확인', false);
         return;
       }
       
@@ -344,7 +287,7 @@ const UserDetailModal = ({
   // 실제 삭제 실행 함수
   const executeDelete = async (historyId) => {
         try {
-      const data = await apiCall(API_ENDPOINTS.HISTORY_USER(historyId), {
+      const data = await apiCall(API_ENDPOINTS.HISTORY_DELETE(historyId), {
         method: 'DELETE'
       });
       
@@ -354,6 +297,8 @@ const UserDetailModal = ({
         if (userId) {
           await fetchUserHistory(userId);
         }
+        // 승인 이력 탭 새로고침을 위한 이벤트 발생
+        window.dispatchEvent(new CustomEvent('historyDeleted'));
         // 삭제 성공 메시지 표시
         showMessage('success', '삭제 완료', '이력이 성공적으로 삭제되었습니다.', '확인', false);
       } else {
@@ -407,462 +352,27 @@ const UserDetailModal = ({
         
         <div className="modal-body">
           {isApprovalMode ? (
-            // 승인 관리 모드 - 기존 전체 사용자 승인 상태 팝업창과 동일한 필드들
-            <>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>사용자 ID</label>
-                  <input
-                    type="text"
-                    value={editedUser?.userId || ''}
-                    readOnly
-                    className="readonly-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>회사명</label>
-                  <input
-                    type="text"
-                    value={editedUser?.companyName !== undefined ? editedUser.companyName : (user.companyName || '')}
-                    onChange={(e) => handleInputChange('companyName', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>업체 형태</label>
-                  <select
-                    value={editedUser?.companyType || '무료 사용자'} 
-                    onChange={(e) => handleInputChange('companyType', e.target.value)}
-                  >
-                    <option value="무료 사용자">무료 사용자</option>
-                    <option value="컨설팅 업체">컨설팅 업체</option>
-                    <option value="일반 업체">일반 업체</option>
-                    <option value="탈퇴 사용자">탈퇴 사용자</option>
-                    <option value="기타">기타</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>요금제</label>
-                  <select
-                    value={editedUser?.pricingPlan || '무료'} 
-                    onChange={(e) => handleInputChange('pricingPlan', e.target.value)}
-                    disabled={editedUser?.companyType === '무료 사용자' || editedUser?.companyType === '탈퇴 사용자'}
-                    style={(editedUser?.companyType === '무료 사용자' || editedUser?.companyType === '탈퇴 사용자') ? { backgroundColor: '#f5f5f5', color: '#666', cursor: 'not-allowed' } : {}}
-                  >
-                    <option value="무료">무료</option>
-                    <option value="스탠다드">스탠다드</option>
-                    <option value="프리미엄">프리미엄</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>시작일</label>
-                  <div className="date-input-container">
-                    <input
-                      type="text"
-                      value={editedUser?.startDate || ''}
-                      onChange={(e) => {
-                        handleDateInputChange('startDate', e.target.value, setEditedUser);
-                      }}
-                      onFocus={(e) => {
-                        // startDate 포커스
-                      }}
-                      placeholder="YYYY-MM-DD"
-                      maxLength="10"
-                      disabled={editedUser?.companyType === '무료 사용자'}
-                      style={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #ccc'
-                      }}
-                    />
-                    <div 
-                      className="calendar-icon" 
-                      onClick={(e) => {
-                        const currentCompanyType = editedUser?.companyType || user?.companyType;
-                        if (currentCompanyType === '무료 사용자') {
-                          return; // 무료 사용자일 때는 달력 클릭 무시
-                        }
-                        const inputElement = e.target.previousElementSibling;
-                        const currentStartDate = editedUser?.startDate || user?.startDate;
-                        handleOpenCalendar('start', inputElement, currentStartDate);
-                      }}
-                      style={(() => {
-                        const currentCompanyType = editedUser?.companyType || user?.companyType;
-                        const isDisabled = currentCompanyType === '무료 사용자';
-                        return isDisabled ? { opacity: 0.3, cursor: 'not-allowed' } : {};
-                      })()}
-                    >
-                      📅
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>종료일</label>
-                  <div className="date-input-container">
-                    <input
-                      type="text"
-                      value={editedUser?.endDate || ''}
-                      onChange={(e) => {
-                        handleDateInputChange('endDate', e.target.value, setEditedUser);
-                      }}
-                      onFocus={(e) => {
-                        // endDate 포커스
-                      }}
-                      placeholder="YYYY-MM-DD"
-                      maxLength="10"
-                      disabled={editedUser?.companyType === '무료 사용자'}
-                      style={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #ccc'
-                      }}
-                    />
-                    <div 
-                      className="calendar-icon" 
-                      onClick={(e) => {
-                        const currentCompanyType = editedUser?.companyType || user?.companyType;
-                        if (currentCompanyType === '무료 사용자') {
-                          return; // 무료 사용자일 때는 달력 클릭 무시
-                        }
-                        const inputElement = e.target.previousElementSibling;
-                        const currentEndDate = editedUser?.endDate || user?.endDate;
-                        handleOpenCalendar('end', inputElement, currentEndDate);
-                      }}
-                      style={(() => {
-                        const currentCompanyType = editedUser?.companyType || user?.companyType;
-                        const isDisabled = currentCompanyType === '무료 사용자';
-                        return isDisabled ? { opacity: 0.3, cursor: 'not-allowed' } : {};
-                      })()}
-                    >
-                      📅
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>승인 상태</label>
-                                     <select
-                     value={editedUser?.approvalStatus || ''}
-                     onChange={(e) => handleInputChange('approvalStatus', e.target.value)}
-                     disabled={editedUser?.companyType === '무료 사용자'}
-                     style={editedUser?.companyType === '무료 사용자' ? { backgroundColor: '#f5f5f5', color: '#666', cursor: 'not-allowed' } : {}}
-                   >
-                     <option value="승인 예정">승인 예정</option>
-                     <option value="승인 완료">승인 완료</option>
-                     <option value="탈퇴">탈퇴</option>
-                   </select>
-                </div>
-              </div>
-
-              {/* 승인 완료 이력 테이블 */}
-              <div className="approval-history-section">
-                <h3 className="section-title">승인 완료 이력</h3>
-                <div className="history-table-container">
-                  <table className="history-table">
-                    <thead>
-                      <tr>
-                        <th>상태</th>
-                        <th>시작일</th>
-                        <th>종료일</th>
-                        <th>업체 형태</th>
-                        <th>요금제</th>
-                        <th>활성화 기간</th>
-                        <th>삭제</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {userHistory
-                        .filter(history => {
-                          // 승인 완료 이력만 표시 (승인 이력 탭과 동일)
-                          return history.status_type === '승인 완료';
-                        })
-                        .map((history, index) => (
-                        <tr key={index}>
-                          <td>
-                            <span className="status-badge approved">
-                              ✓ {history.status_type}
-                            </span>
-                          </td>
-                          <td>{formatDate(history.start_date)}</td>
-                          <td>{formatDate(history.end_date)}</td>
-                          <td>{history.company_type || '-'}</td>
-                          <td>{history.pricing_plan || '-'}</td>
-                          <td>
-                            {history.active_days ? 
-                              `${Math.round(history.active_days / 30)}개월` : 
-                              '-'
-                            }
-                          </td>
-                          <td>
-                            <button 
-                              className="status-button delete-red"
-                              onClick={() => {
-                                                                                                                                // ID가 없으면 index를 사용
-                                const deleteId = history.id || index;
-                                handleDeleteHistory(deleteId);
-                              }}
-                            >
-                              삭제
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {userHistory.filter(history => {
-                        // status_type이 '승인 완료'인 경우만 표시 (승인 이력 탭과 동일)
-                        return history.status_type === '승인 완료';
-                      }).length === 0 && (
-                        <tr>
-                          <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
-                            등록된 승인 완료 이력이 없습니다.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
+            <ApprovalModeView
+              editedUser={editedUser}
+              user={user}
+              handleInputChange={handleInputChange}
+              handleDateInputChange={handleDateInputChange}
+              handleOpenCalendar={handleOpenCalendar}
+              formatDate={formatDate}
+              userHistory={userHistory}
+              handleDeleteHistory={handleDeleteHistory}
+              showMessage={showMessage}
+            />
           ) : (
-            // 일반 상세 정보 모드 - 요청하신 레이아웃으로 수정
-            <>
-              {/* 사용자 정보 섹션 */}
-              <div className="form-section user-info-section">
-                <h3 className="section-title">사용자 정보</h3>
-                
-                {renderFormRow(
-                  renderInputField('사용자 ID', 'userId', editedUser?.userId || '', () => {}, { readOnly: true, className: 'readonly-input' }),
-                  renderInputField('이름', 'userName', editedUser?.userName || '', (e) => handleInputChange('userName', e.target.value))
-                )}
-                
-                {renderFormRow(
-                  renderInputField('부서', 'department', editedUser?.department !== undefined ? editedUser.department : (user.department || ''), (e) => handleInputChange('department', e.target.value)),
-                  renderInputField('직책', 'position', editedUser?.position !== undefined ? editedUser.position : (user.manager_position || ''), (e) => handleInputChange('position', e.target.value))
-                )}
-                
-                {renderFormRow(
-                  renderInputField('휴대전화', 'mobilePhone', editedUser?.mobilePhone || '', (e) => handleInputChange('mobilePhone', e.target.value)),
-                  renderInputField('이메일', 'email', editedUser?.email !== undefined ? editedUser.email : (user.email || ''), (e) => handleInputChange('email', e.target.value), { type: 'email' })
-                )}
-              </div>
-
-              {/* 승인 정보 섹션 */}
-              <div className="form-section approval-info-section">
-                <h3 className="section-title">승인 정보</h3>
-                
-                {renderFormRow(
-                  renderDateField('시작일', formatDate(editedUser?.startDate || user.startDate || user.start_date || '')),
-                  renderDateField('종료일', formatDate(editedUser?.endDate || user.endDate || user.end_date || ''))
-                )}
-                
-                {renderFormRow(
-                  renderInputField('업체 형태', 'companyType', editedUser?.companyType || '무료 사용자', () => {}, { readOnly: true, className: 'readonly-input' }),
-                  renderInputField('요금제', 'pricingPlan', editedUser?.pricingPlan || '무료', () => {}, { readOnly: true, className: 'readonly-input' })
-                )}
-                
-                {renderFormRow(
-                  renderInputField('승인 상태', 'approvalStatus', editedUser?.approvalStatus || '승인 예정', () => {}, { readOnly: true, className: 'readonly-input' }),
-                  <div className="form-group"><label></label><div></div></div>
-                )}
-              </div>
-
-              {/* 사용량 정보 섹션 */}
-              <div className="form-section usage-info-section">
-                <h3 className="section-title">사용량 정보</h3>
-                
-                {renderFormRow(
-                  renderInputField('MSDS', 'msdsLimit', editedUser?.msdsLimit || 0, () => {}, { readOnly: true, className: 'readonly-input' }),
-                  renderInputField('영상분석', 'aiImageLimit', editedUser?.aiImageLimit || 0, () => {}, { readOnly: true, className: 'readonly-input' })
-                )}
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>AI 보고서</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.aiReportLimit || 0} 
-                      readOnly 
-                      className="readonly-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label></label>
-                    <div></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 회사 정보 섹션 */}
-              <div className="form-section company-info-section">
-                <h3 className="section-title">회사 정보</h3>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>회사명</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.companyName || ''} 
-                      onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                                                       <div className="form-group">
-                    <label>대표자</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.representative !== undefined ? editedUser.representative : (user.representative || '')} 
-                      onChange={(e) => handleInputChange('representative', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>사업자등록번호</label>
-                    <input 
-                      type="text" 
-                      value={formatBusinessLicense(editedUser?.businessLicense || '')} 
-                      onChange={(e) => handleInputChange('businessLicense', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                      maxLength="12"
-                    />
-                  </div>
-                                                       <div className="form-group">
-                    <label>업종</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.industry !== undefined ? editedUser.industry : (user.industry || '')} 
-                      onChange={(e) => handleInputChange('industry', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>전화번호</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.phoneNumber !== undefined ? editedUser.phoneNumber : (user.phoneNumber || '')} 
-                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>팩스번호</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.faxNumber !== undefined ? editedUser.faxNumber : (user.faxNumber || '')} 
-                      onChange={(e) => handleInputChange('faxNumber', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row-single">
-                  <div className="form-group">
-                    <label>주소</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.address !== undefined ? editedUser.address : (user.address || '')} 
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row-single">
-                  <div className="form-group">
-                    <label>계좌 정보</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.accountInfo !== undefined ? editedUser.accountInfo : (user.accountInfo || user.account_info || '')} 
-                      onChange={(e) => handleInputChange('accountInfo', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row-single">
-                  <div className="form-group">
-                    <label>메모</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.notes !== undefined ? editedUser.notes : (user.notes || '')} 
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 회계 담당자 정보 섹션 */}
-              <div className="form-section accountant-info-section">
-                <h3 className="section-title">회계 담당자 정보</h3>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>이름</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.accountantName !== undefined ? editedUser.accountantName : (user.accountantName || user.accountant_name || '')} 
-                      onChange={(e) => handleInputChange('accountantName', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>직책</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.accountantPosition !== undefined ? editedUser.accountantPosition : (user.accountantPosition || user.accountant_position || '')} 
-                      onChange={(e) => handleInputChange('accountantPosition', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>휴대전화</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.accountantMobile !== undefined ? editedUser.accountantMobile : (user.accountantMobile || user.accountant_mobile || '')} 
-                      onChange={(e) => handleInputChange('accountantMobile', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                      maxLength="20"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>이메일</label>
-                    <input 
-                      type="text" 
-                      value={editedUser?.accountantEmail !== undefined ? editedUser.accountantEmail : (user.accountantEmail || user.accountant_email || '')} 
-                      onChange={(e) => handleInputChange('accountantEmail', e.target.value)}
-                      readOnly={!isEditable}
-                      className={!isEditable ? 'readonly-input' : ''}
-                      maxLength="100"
-                    />
-                  </div>
-                </div>
-                             </div>
-             </>
+            <DetailModeView
+              editedUser={editedUser}
+              user={user}
+              handleInputChange={handleInputChange}
+              getFieldValue={getFieldValue}
+              getInputProps={getInputProps}
+              isEditable={isEditable}
+              formatDate={formatDate}
+            />
           )}
         </div>
         
@@ -884,105 +394,47 @@ const UserDetailModal = ({
       </div>
 
       {/* 달력 팝업창들 */}
-      {/* 시작일 달력 팝업창 */}
-      {showStartDatePicker && (
-        <div className="date-picker-overlay" onClick={() => setShowStartDatePicker(false)}>
-          <div 
-            className="date-picker" 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: `${calendarPosition.top}px`,
-              left: `${calendarPosition.left}px`,
-              zIndex: 9999
-            }}
-          >
-            <div className="date-picker-header">
-              <button className="today-button" onClick={() => goToToday('start')}>오늘</button>
-              <button className="close-button" onClick={() => setShowStartDatePicker(false)}>×</button>
-            </div>
-            <div className="date-picker-body">
-              <div className="calendar-grid">
-                <div className="calendar-header">
-                  <button onClick={() => handleMonthChange('start', -1)}>&lt;</button>
-                  <span>{getCurrentMonthYear('start')}</span>
-                  <button onClick={() => handleMonthChange('start', 1)}>&gt;</button>
-                </div>
-                <div className="calendar-weekdays">
-                  <div>일</div>
-                  <div>월</div>
-                  <div>화</div>
-                  <div>수</div>
-                  <div>목</div>
-                  <div>금</div>
-                  <div>토</div>
-                </div>
-                <div className="calendar-days">
-                  {getCalendarDays('start', editedUser?.startDate || user?.startDate).map((day, index) => (
-                    <div
-                      key={index}
-                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'start', handleUserDateSelect)}
-                    >
-                      {day.day}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DatePicker
+        isOpen={showStartDatePicker}
+        onClose={() => setShowStartDatePicker(false)}
+        onDateSelect={handleUserDateSelect}
+        selectedDate={editedUser?.startDate || user?.startDate}
+        type="start"
+        calendarPosition={calendarPosition}
+        showStartDatePicker={showStartDatePicker}
+        showEndDatePicker={showEndDatePicker}
+        setShowStartDatePicker={setShowStartDatePicker}
+        setShowEndDatePicker={setShowEndDatePicker}
+        handleOpenCalendar={handleOpenCalendar}
+        handleDateSelect={handleDateSelect}
+        handleMonthChange={handleMonthChange}
+        getCurrentMonthYear={getCurrentMonthYear}
+        getCalendarDays={getCalendarDays}
+        goToToday={goToToday}
+        editedUser={editedUser}
+        user={user}
+      />
 
-      {/* 종료일 달력 팝업창 */}
-      {showEndDatePicker && (
-        <div className="date-picker-overlay" onClick={() => setShowEndDatePicker(false)}>
-          <div 
-            className="date-picker" 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: `${calendarPosition.top}px`,
-              left: `${calendarPosition.left}px`,
-              zIndex: 9999
-            }}
-          >
-            <div className="date-picker-header">
-              <button className="today-button" onClick={() => goToToday('end')}>오늘</button>
-              <button className="close-button" onClick={() => setShowEndDatePicker(false)}>×</button>
-            </div>
-            <div className="date-picker-body">
-              <div className="calendar-grid">
-                <div className="calendar-header">
-                  <button onClick={() => handleMonthChange('end', -1)}>&lt;</button>
-                  <span>{getCurrentMonthYear('end')}</span>
-                  <button onClick={() => handleMonthChange('end', 1)}>&gt;</button>
-                </div>
-                <div className="calendar-weekdays">
-                  <div>일</div>
-                  <div>월</div>
-                  <div>화</div>
-                  <div>수</div>
-                  <div>목</div>
-                  <div>금</div>
-                  <div>토</div>
-                </div>
-                <div className="calendar-days">
-                  {getCalendarDays('end', editedUser?.endDate || user?.endDate).map((day, index) => (
-                    <div
-                      key={index}
-                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'end', handleUserDateSelect)}
-                    >
-                      {day.day}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DatePicker
+        isOpen={showEndDatePicker}
+        onClose={() => setShowEndDatePicker(false)}
+        onDateSelect={handleUserDateSelect}
+        selectedDate={editedUser?.endDate || user?.endDate}
+        type="end"
+        calendarPosition={calendarPosition}
+        showStartDatePicker={showStartDatePicker}
+        showEndDatePicker={showEndDatePicker}
+        setShowStartDatePicker={setShowStartDatePicker}
+        setShowEndDatePicker={setShowEndDatePicker}
+        handleOpenCalendar={handleOpenCalendar}
+        handleDateSelect={handleDateSelect}
+        handleMonthChange={handleMonthChange}
+        getCurrentMonthYear={getCurrentMonthYear}
+        getCalendarDays={getCalendarDays}
+        goToToday={goToToday}
+        editedUser={editedUser}
+        user={user}
+      />
 
       {/* 통일된 메시지 팝업창 */}
       {showMessageModal && (

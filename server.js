@@ -3,6 +3,15 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 require('dotenv').config();
 
+// 알림 관련 모듈들
+const notificationRoutes = require('./routes/notifications');
+const NotificationService = require('./services/notificationService');
+const NotificationScheduler = require('./utils/scheduler');
+
+// 세금계산서 관련 모듈들
+const taxInvoiceRoutes = require('./routes/taxInvoice');
+const TaxInvoiceService = require('./services/taxInvoiceService');
+
 // 한국 시간대 설정
 process.env.TZ = 'Asia/Seoul';
 
@@ -18,7 +27,7 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: 'Tech8123!',
+    password: process.env.DB_PASSWORD || '8123',
     database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
@@ -32,19 +41,32 @@ const config = {
 
 const app = express();
 
+// 유틸리티 함수들은 utils/logger.js, utils/helpers.js로 이동됨
+const { logger } = require('./utils/logger');
+const { withDatabase, handleApiError, DateUtils } = require('./utils/helpers');
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// CORS 설정
+// 알림 라우트 연결
+app.use('/api/notifications', notificationRoutes);
+
+// 세금계산서 라우트 연결
+app.use('/api/tax-invoice-settings', taxInvoiceRoutes);
+
+// CORS 설정 - 개발 환경에서 모든 origin 허용
 app.use((req, res, next) => {
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? [process.env.CORS_ORIGIN || 'http://marketing.sihm.co.kr']
-    : ['http://localhost:3002'];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+  // 개발 환경에서는 모든 origin 허용
+  if (process.env.NODE_ENV !== 'production') {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else {
+    // 프로덕션 환경에서는 특정 origin만 허용
+    const allowedOrigins = [process.env.CORS_ORIGIN || 'http://marketing.sihm.co.kr'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -64,9 +86,11 @@ app.use(express.static('build'));
 // Create connection pool
 const pool = mysql.createPool(config.database);
 
-// 유틸리티 함수들 설정
-const { setPool } = require('./utils/helpers');
-setPool(pool);
+// NotificationService에 pool 설정
+NotificationService.setPool(pool);
+
+// TaxInvoiceService에 pool 설정
+TaxInvoiceService.setPool(pool);
 
 // 라우터들 설정
 const { router: usersRouter, setPool: setUsersPool } = require('./routes/users');
@@ -109,280 +133,46 @@ app.post('/api/process-expired-approvals', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ 수동 만료 처리 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '만료 처리 중 오류가 발생했습니다.',
-      details: error.message
-    });
+    handleApiError(res, error, '수동 만료 처리 실패');
   }
 });
 
-// 알림 조회 API
-app.get('/api/notifications', async (req, res) => {
+// 알림 API들은 routes/notifications.js로 이동됨
+
+// 수동 알림 생성 API (방법 2 - 간단한 배치 처리)
+app.get('/api/admin/check-notifications', async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    
-    const [notifications] = await connection.execute(`
-      SELECT id, type, title, message, is_read, created_at, read_at, expires_at
-      FROM notifications 
-      WHERE expires_at > NOW()
-      ORDER BY created_at DESC
-    `);
-    
-    connection.release();
-    
+    const result = await NotificationService.createNotifications();
     res.json({
-      success: true,
-      notifications: notifications,
-      count: notifications.length
-    });
-  } catch (error) {
-    console.error('❌ 알림 조회 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '알림 조회 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
-
-// 알림 읽음 처리 API
-app.put('/api/notifications/:id/read', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(`
-      UPDATE notifications 
-      SET is_read = true, read_at = NOW()
-      WHERE id = ? AND expires_at > NOW()
-    `, [id]);
-    
-    connection.release();
-    
-    if (result.affectedRows > 0) {
-      res.json({
-        success: true,
-        message: '알림을 읽음 처리했습니다.'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: '알림을 찾을 수 없습니다.'
-      });
-    }
-  } catch (error) {
-    console.error('❌ 알림 읽음 처리 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '알림 읽음 처리 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
-
-// 알림 삭제 API
-app.delete('/api/notifications/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(`
-      DELETE FROM notifications 
-      WHERE id = ?
-    `, [id]);
-    
-    connection.release();
-    
-    if (result.affectedRows > 0) {
-      res.json({
-        success: true,
-        message: '알림을 삭제했습니다.'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: '알림을 찾을 수 없습니다.'
-      });
-    }
-  } catch (error) {
-    console.error('❌ 알림 삭제 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '알림 삭제 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
-
-// 수동 알림 생성 API (테스트용)
-app.post('/api/create-notifications', async (req, res) => {
-  try {
-    await createNotifications();
-    res.json({
-      success: true,
-      message: '알림 생성이 완료되었습니다.',
+      success: result.success,
+      message: result.message,
+      count: result.count || 0,
       timestamp: new Date().toISOString(),
       koreaTime: new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"})
     });
   } catch (error) {
-    console.error('❌ 수동 알림 생성 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '알림 생성 중 오류가 발생했습니다.',
-      details: error.message
-    });
+    handleApiError(res, error, '알림 생성 실패');
   }
 });
 
-// 세금계산서 알림 설정 조회 API
-app.get('/api/tax-invoice-settings', async (req, res) => {
+// 기존 API 호환성을 위한 엔드포인트 (deprecated)
+app.post('/api/create-notifications', async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    
-    const [settings] = await connection.execute(`
-      SELECT id, company_name, day_of_month, is_active, created_at, updated_at
-      FROM tax_invoice_notification_settings
-      ORDER BY company_name, day_of_month
-    `);
-    
-    connection.release();
-    
+    const result = await NotificationService.createNotifications();
     res.json({
-      success: true,
-      settings: settings
+      success: result.success,
+      message: result.message,
+      count: result.count || 0,
+      timestamp: new Date().toISOString(),
+      koreaTime: new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"})
     });
   } catch (error) {
-    console.error('❌ 세금계산서 설정 조회 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '세금계산서 설정 조회 중 오류가 발생했습니다.',
-      details: error.message
-    });
+    handleApiError(res, error, '수동 알림 생성 실패');
   }
 });
 
-// 세금계산서 알림 설정 추가 API
-app.post('/api/tax-invoice-settings', async (req, res) => {
-  try {
-    const { company_name, day_of_month } = req.body;
-    
-    if (!company_name || !day_of_month) {
-      return res.status(400).json({
-        success: false,
-        error: '회사명과 발행일을 모두 입력해주세요.'
-      });
-    }
-    
-    const connection = await pool.getConnection();
-    
-    // 중복 체크
-    const [existing] = await connection.execute(`
-      SELECT id FROM tax_invoice_notification_settings
-      WHERE company_name = ? AND day_of_month = ?
-    `, [company_name, day_of_month]);
-    
-    if (existing.length > 0) {
-      connection.release();
-      return res.status(400).json({
-        success: false,
-        error: '이미 동일한 회사명과 발행일로 설정된 항목이 있습니다.'
-      });
-    }
-    
-    const [result] = await connection.execute(`
-      INSERT INTO tax_invoice_notification_settings (company_name, day_of_month, is_active)
-      VALUES (?, ?, 1)
-    `, [company_name, day_of_month]);
-    
-    connection.release();
-    
-    res.json({
-      success: true,
-      message: '세금계산서 알림 설정이 추가되었습니다.',
-      id: result.insertId
-    });
-  } catch (error) {
-    console.error('❌ 세금계산서 설정 추가 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '세금계산서 설정 추가 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
+// 세금계산서 API들은 routes/taxInvoice.js로 이동됨
 
-// 세금계산서 알림 설정 수정 API
-app.put('/api/tax-invoice-settings/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { company_name, day_of_month, is_active } = req.body;
-    
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(`
-      UPDATE tax_invoice_notification_settings
-      SET company_name = ?, day_of_month = ?, is_active = ?, updated_at = NOW()
-      WHERE id = ?
-    `, [company_name, day_of_month, is_active ? 1 : 0, id]);
-    
-    connection.release();
-    
-    if (result.affectedRows > 0) {
-      res.json({
-        success: true,
-        message: '세금계산서 알림 설정이 수정되었습니다.'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: '설정을 찾을 수 없습니다.'
-      });
-    }
-  } catch (error) {
-    console.error('❌ 세금계산서 설정 수정 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '세금계산서 설정 수정 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
-
-// 세금계산서 알림 설정 삭제 API
-app.delete('/api/tax-invoice-settings/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(`
-      DELETE FROM tax_invoice_notification_settings
-      WHERE id = ?
-    `, [id]);
-    
-    connection.release();
-    
-    if (result.affectedRows > 0) {
-      res.json({
-        success: true,
-        message: '세금계산서 알림 설정이 삭제되었습니다.'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: '설정을 찾을 수 없습니다.'
-      });
-    }
-  } catch (error) {
-    console.error('❌ 세금계산서 설정 삭제 실패:', error);
-    res.status(500).json({
-      success: false,
-      error: '세금계산서 설정 삭제 중 오류가 발생했습니다.',
-      details: error.message
-    });
-  }
-});
 
 // 시간대 테스트 API
 app.get('/api/timezone-test', (req, res) => {
@@ -427,13 +217,21 @@ app.use('/', usersRouter);
 app.use('/', revenueRouter);
 app.use('/', historyRouter);
 
+// SPA fallback 라우팅 - 모든 React Router 경로를 index.html로 리다이렉트
+app.use((req, res, next) => {
+  // API 경로가 아닌 경우에만 SPA fallback 적용
+  if (!req.path.startsWith('/api/') && !req.path.startsWith('/health') && 
+      !req.path.startsWith('/favicon.ico') && !req.path.startsWith('/manifest.json')) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  } else {
+    next();
+  }
+});
+
 // 중복 실행 방지를 위한 상태
 let isProcessingExpiredApprovals = false;
 let lastProcessTime = 0;
-let isCreatingNotifications = false;
-let lastNotificationTime = 0;
-let scheduledTimeout = null;
-let scheduledInterval = null;
+// 알림 관련 변수들은 services/notificationService.js로 이동됨
 
 // 에러 로깅 함수
 async function logError(connection, errorInfo) {
@@ -451,7 +249,7 @@ async function logError(connection, errorInfo) {
       errorInfo.processingDate || null,
       JSON.stringify(errorInfo.details || {})
     ]);
-    console.log(`📝 에러 로그 기록 완료: ${errorInfo.type}`);
+    logger.info(`에러 로그 기록 완료: ${errorInfo.type}`);
   } catch (logError) {
     console.error('❌ 에러 로그 기록 실패:', logError.message);
   }
@@ -473,7 +271,7 @@ async function scheduleErrorNotification(errorInfo) {
     const utcNotificationTime = new Date(notificationTime.getTime() - (9 * 60 * 60 * 1000));
     const delayMs = utcNotificationTime.getTime() - now.getTime();
     
-    console.log(`⏰ 에러 알림 스케줄링: ${koreaTime.toISOString()} (${delayMs}ms 후)`);
+    logger.info(`에러 알림 스케줄링: ${koreaTime.toISOString()} (${delayMs}ms 후)`);
     
     setTimeout(async () => {
       await sendErrorNotification(errorInfo);
@@ -534,7 +332,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     const today = new Date();
     const todayString = require('./utils/helpers').DateUtils.getTodayString();
     
-    console.log('🔍 자동 만료 체크 시작 (한국 시간):', { today, todayString });
+    logger.info('자동 만료 체크 시작 (한국 시간):', { today, todayString });
     
     
     
@@ -601,7 +399,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
             user.manager_position || null,
             activeDays
           ]);
-          console.log(`📝 ${user.user_id} (${user.company_name}) - 기간 경과로 승인 완료 이력 기록`);
+          logger.info(`${user.user_id} (${user.company_name}) - 기간 경과로 승인 완료 이력 기록`);
         } catch (historyError) {
           console.error(`❌ ${user.user_id} 이력 기록 실패:`, historyError.message);
           processingErrors.push({
@@ -642,7 +440,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
         });
       }
     } else {
-      console.log('📝 만료된 승인 완료 상태가 없습니다.');
+      logger.info('만료된 승인 완료 상태가 없습니다.');
     }
     
     console.log(`🔢 총 변경된 사용자 수: ${totalUpdatedCount}`);
@@ -684,249 +482,20 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
   }
 }
 
-// 알림 생성 함수 (한국 시간 기준)
-async function createNotifications() {
-  // 중복 실행 방지
-  const now = Date.now();
-  if (isCreatingNotifications || (now - lastNotificationTime) < 30000) { // 30초 내 중복 실행 방지
-    console.log('⏭️ 알림 생성이 이미 진행 중이거나 최근에 실행되었습니다.');
-    return;
-  }
-  
-  isCreatingNotifications = true;
-  lastNotificationTime = now;
-  
-  const connection = await pool.getConnection();
-  
-  try {
-    console.log('🔔 알림 생성 시작...');
-    
-    // 한국 시간 기준으로 현재 날짜 계산
-    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-    const todayString = koreaTime.getFullYear() + '-' + 
-      String(koreaTime.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(koreaTime.getDate()).padStart(2, '0');
-    
-    // 14일 후 날짜 계산 (한국 시간 기준)
-    const twoWeeksLater = new Date(koreaTime);
-    twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
-    const twoWeeksLaterString = twoWeeksLater.getFullYear() + '-' + 
-      String(twoWeeksLater.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(twoWeeksLater.getDate()).padStart(2, '0');
-    
-    console.log(`🇰🇷 한국 시간 기준 오늘: ${todayString}`);
-    console.log(`🇰🇷 한국 시간 기준 14일 후: ${twoWeeksLaterString}`);
-    
-    // 오늘 종료일인 사용자들 (한국 시간 기준)
-    const [todayEndUsers] = await connection.execute(`
-      SELECT id, company_name, user_id, end_date
-      FROM users 
-      WHERE approval_status = '승인 완료'
-      AND company_type IN ('컨설팅 업체', '일반 업체')
-      AND end_date IS NOT NULL
-      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
-    `, [todayString]);
-    
-    // 14일 후 종료일인 사용자들 (한국 시간 기준)
-    const [twoWeekEndUsers] = await connection.execute(`
-      SELECT id, company_name, user_id, end_date
-      FROM users 
-      WHERE approval_status = '승인 완료'
-      AND company_type IN ('컨설팅 업체', '일반 업체')
-      AND end_date IS NOT NULL
-      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
-    `, [twoWeeksLaterString]);
-    
-    let notificationCount = 0;
-    
-    // 오늘 종료일 알림 생성 (중복 방지)
-    for (const user of todayEndUsers) {
-      try {
-        // 중복 알림 체크
-        const [existingNotifications] = await connection.execute(`
-          SELECT COUNT(*) as count FROM notifications 
-          WHERE user_id = ? AND type = 'end_date_today' 
-          AND DATE(created_at) = ?
-        `, [user.id, todayString]);
-        
-        if (existingNotifications[0].count > 0) {
-          console.log(`⏭️ 중복 방지: ${user.company_name} (ID: ${user.id}) - 오늘 종료일 알림이 이미 존재합니다.`);
-          continue;
-        }
-        
-        await connection.execute(`
-          INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-          VALUES (?, 'end_date_today', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
-        `, [
-          user.id,
-          '서비스 종료일 알림',
-          `【${user.company_name}】의 서비스가 오늘(${todayString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
-        ]);
-        notificationCount++;
-        console.log(`📢 오늘 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
-      } catch (error) {
-        console.error(`❌ 오늘 종료일 알림 생성 실패: ${user.company_name}`, error.message);
-      }
-    }
-    
-    // 14일 후 종료일 알림 생성 (중복 방지)
-    for (const user of twoWeekEndUsers) {
-      try {
-        // 중복 알림 체크
-        const [existingNotifications] = await connection.execute(`
-          SELECT COUNT(*) as count FROM notifications 
-          WHERE user_id = ? AND type = 'end_date_14days' 
-          AND DATE(created_at) = ?
-        `, [user.id, todayString]);
-        
-        if (existingNotifications[0].count > 0) {
-          console.log(`⏭️ 중복 방지: ${user.company_name} (ID: ${user.id}) - 14일 후 종료일 알림이 이미 존재합니다.`);
-          continue;
-        }
-        
-        await connection.execute(`
-          INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-          VALUES (?, 'end_date_14days', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
-        `, [
-          user.id,
-          '서비스 종료일 14일전 알림',
-          `【${user.company_name}】의 서비스가 14일 후(${twoWeeksLaterString}) 종료됩니다. 연장을 원하시면 관리자에게 문의해주세요.`
-        ]);
-        notificationCount++;
-        console.log(`📢 14일 후 종료일 알림 생성: ${user.company_name} (ID: ${user.id})`);
-      } catch (error) {
-        console.error(`❌ 14일 후 종료일 알림 생성 실패: ${user.company_name}`, error.message);
-      }
-    }
-    
-    // 세금계산서 알림 생성 (중복 방지)
-    try {
-      const todayDay = koreaTime.getDate();
-      console.log(`📄 세금계산서 알림 체크 - 오늘 날짜: ${todayDay}일`);
-      
-      // 세금계산서 알림 설정 조회
-      let taxInvoiceSettings = [];
-      try {
-        const [result] = await connection.execute(`
-          SELECT company_name, day_of_month
-          FROM tax_invoice_notification_settings
-          WHERE is_active = 1 AND day_of_month = ?
-        `, [todayDay]);
-        taxInvoiceSettings = result;
-      } catch (error) {
-        console.log('📝 세금계산서 알림 설정 테이블이 아직 준비되지 않았습니다.');
-      }
-      
-      // 세금계산서 알림 생성
-      for (const setting of taxInvoiceSettings) {
-        try {
-          // 중복 알림 체크 (회사명과 발행일 기준) - 한국 시간 기준으로 날짜 변환
-          const [existingNotifications] = await connection.execute(`
-            SELECT COUNT(*) as count FROM notifications 
-            WHERE type = 'tax_invoice' 
-            AND message LIKE ?
-            AND DATE(CONVERT_TZ(created_at, '+00:00', '+09:00')) = ?
-          `, [`%【${setting.company_name}】%`, todayString]);
-          
-          console.log(`🔍 중복 체크: ${setting.company_name} - 기존 알림 ${existingNotifications[0].count}개`);
-          
-          if (existingNotifications[0].count > 0) {
-            console.log(`⏭️ 중복 방지: ${setting.company_name} - 세금계산서 알림이 이미 존재합니다. (기존 알림 ${existingNotifications[0].count}개)`);
-            continue;
-          }
-          
-          await connection.execute(`
-            INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-            VALUES (?, 'tax_invoice', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
-          `, [
-            0, // 시스템 알림이므로 user_id는 0
-            '세금계산서 발행 알림',
-            `【${setting.company_name}】의 세금계산서 발행일입니다`
-          ]);
-          notificationCount++;
-          console.log(`📄 세금계산서 알림 생성: ${setting.company_name}`);
-        } catch (error) {
-          console.error(`❌ 세금계산서 알림 생성 실패: ${setting.company_name}`, error.message);
-        }
-      }
-    } catch (error) {
-      console.error('❌ 세금계산서 알림 처리 실패:', error.message);
-    }
-    
-    console.log(`✅ 알림 생성 완료: ${notificationCount}개 생성`);
-    
-    // 만료된 알림 삭제 (7일 이상 된 알림)
-    const [deleteResult] = await connection.execute(`
-      DELETE FROM notifications 
-      WHERE expires_at < NOW()
-    `);
-    
-    if (deleteResult.affectedRows > 0) {
-      console.log(`🗑️ 만료된 알림 삭제: ${deleteResult.affectedRows}개`);
-    }
-    
-  } catch (error) {
-    console.error('❌ 알림 생성 실패:', error.message);
-  } finally {
-    isCreatingNotifications = false;
-    connection.release();
-  }
-}
 
-// 자동 만료 처리 스케줄링 (한국 시간 자정에만 실행)
-const scheduleExpiredUserProcessing = () => {
-  // 기존 스케줄링 정리
-  if (scheduledTimeout) {
-    clearTimeout(scheduledTimeout);
-    scheduledTimeout = null;
-  }
-  if (scheduledInterval) {
-    clearInterval(scheduledInterval);
-    scheduledInterval = null;
-  }
-  
-  const now = new Date();
-  
-  // 한국 시간 기준으로 다음 자정 계산
-  const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-  const tomorrowKorea = new Date(koreaTime);
-  tomorrowKorea.setDate(tomorrowKorea.getDate() + 1);
-  tomorrowKorea.setHours(0, 0, 0, 0);
-  
-  // 한국 시간 자정을 UTC로 변환
-  const utcMidnight = new Date(tomorrowKorea.toLocaleString("en-US", {timeZone: "UTC"}));
-  const timeUntilMidnight = utcMidnight.getTime() - now.getTime();
-  
-  console.log(`🇰🇷 한국 시간 기준 다음 자정: ${tomorrowKorea.toISOString()}`);
-  console.log(`🌍 UTC 기준 실행 시간: ${utcMidnight.toISOString()}`);
-  console.log(`⏰ 대기 시간: ${Math.round(timeUntilMidnight / 1000 / 60)}분`);
-  
-  scheduledTimeout = setTimeout(() => {
-    console.log('🚀 한국 시간 자정 도달 - 만료 처리 및 알림 생성 시작');
-    checkAndUpdateExpiredApprovals();
-    createNotifications();
-    
-    scheduledInterval = setInterval(() => {
-      console.log('🔄 24시간 주기 실행 - 만료 처리 및 알림 생성');
-      checkAndUpdateExpiredApprovals();
-      createNotifications();
-    }, 24 * 60 * 60 * 1000); // 24시간마다 반복
-  }, timeUntilMidnight);
-  
-  console.log(`⏰ 자동 만료 처리 및 알림 생성 스케줄링 완료 - 다음 실행: ${tomorrowKorea.toISOString()}`);
-};
+// checkAndCreateNotifications 함수는 services/notificationService.js로 이동됨
 
 // 누락된 만료 처리 복구 함수
 const recoverMissedProcessing = async () => {
   try {
-    console.log('🔍 누락된 만료 처리 복구 시작...');
+    logger.info('누락된 만료 처리 복구 시작...');
     
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = require('./utils/helpers').DateUtils.getTodayString();
+    const yesterdayString = DateUtils.getTodayString();
     
-    console.log(`📅 어제 날짜 확인: ${yesterdayString}`);
+    logger.info(`어제 날짜 확인: ${yesterdayString}`);
     
     // 어제 처리되지 않은 만료 사용자 확인 및 처리
     const recoveredCount = await checkAndUpdateExpiredApprovals();
@@ -934,13 +503,15 @@ const recoverMissedProcessing = async () => {
     if (recoveredCount > 0) {
       console.log(`✅ 누락된 만료 처리 복구 완료: ${recoveredCount}명 처리`);
     } else {
-      console.log('📝 복구할 만료된 사용자가 없습니다.');
+      logger.info('복구할 만료된 사용자가 없습니다.');
     }
     
   } catch (error) {
     console.error('❌ 누락 복구 실패:', error.message);
   }
 };
+
+// scheduleNotificationBatch 함수는 utils/scheduler.js로 이동됨
 
 // 서버 초기화 및 시작
 const startServer = async () => {
@@ -954,8 +525,14 @@ const startServer = async () => {
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();
       
-      // 정상 스케줄링 시작
-      scheduleExpiredUserProcessing();
+      // 정기 배치 알림 시스템 시작
+      const scheduler = new NotificationScheduler();
+      scheduler.startScheduledNotifications();
+      
+      // 방법 2: 간단한 배치 처리 시스템으로 변경
+      console.log('✅ 간단한 알림 시스템이 준비되었습니다.');
+      console.log('📋 수동 실행: GET /api/admin/check-notifications');
+      console.log('⏰ 자동 실행: 매일 오전 9시 (한국 시간)');
     });
     
   } catch (error) {
