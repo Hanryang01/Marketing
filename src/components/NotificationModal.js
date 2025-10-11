@@ -36,6 +36,9 @@ const NotificationModal = () => {
     updateNotificationSettings,
     closeModal,
     changeTab,
+    addTaxInvoiceSetting,
+    updateTaxInvoiceSetting,
+    removeTaxInvoiceSetting,
   } = useNotification();
   
   const { formatDate } = useCalendar();
@@ -76,15 +79,16 @@ const NotificationModal = () => {
   }, [isModalOpen, notificationSettings]);
 
 
-  // 세금계산서 설정 추가
-  const handleAddTaxInvoiceSetting = () => {
+  // 세금계산서 설정 추가 (서버 API 호출)
+  const handleAddTaxInvoiceSetting = async () => {
+    const newSetting = { companyName: '', day: '' };
     setTempSettings(prev => ({
       ...prev,
-      taxInvoiceSettings: [...prev.taxInvoiceSettings, { companyName: '', day: '' }]
+      taxInvoiceSettings: [...prev.taxInvoiceSettings, newSetting]
     }));
   };
 
-  // 세금계산서 설정 수정
+  // 세금계산서 설정 수정 (로컬 상태만 업데이트)
   const handleUpdateTaxInvoiceSetting = (index, field, value) => {
     // 빈 문자열도 허용하도록 처리
     const cleanValue = value === undefined || value === null ? '' : value.toString();
@@ -97,18 +101,58 @@ const NotificationModal = () => {
     }));
   };
 
-  // 세금계산서 설정 삭제
-  const handleRemoveTaxInvoiceSetting = (index) => {
+  // 세금계산서 설정 삭제 (서버 API 호출)
+  const handleRemoveTaxInvoiceSetting = async (index) => {
+    const setting = tempSettings.taxInvoiceSettings[index];
+    
+    // 기존 설정이 서버에 저장되어 있다면 삭제 API 호출
+    if (setting && setting.id) {
+      try {
+        await removeTaxInvoiceSetting(setting.id);
+      } catch (error) {
+        console.error('세금계산서 설정 삭제 실패:', error);
+        return; // 삭제 실패 시 UI에서도 제거하지 않음
+      }
+    }
+    
+    // 로컬 상태에서 제거
     setTempSettings(prev => ({
       ...prev,
       taxInvoiceSettings: prev.taxInvoiceSettings.filter((_, i) => i !== index)
     }));
   };
 
-  // 설정 저장
-  const handleSaveSettings = () => {
-    updateNotificationSettings(tempSettings);
-    closeModal();
+  // 설정 저장 (서버 API 호출 포함)
+  const handleSaveSettings = async () => {
+    try {
+      // 세금계산서 설정을 서버에 저장
+      for (let i = 0; i < tempSettings.taxInvoiceSettings.length; i++) {
+        const setting = tempSettings.taxInvoiceSettings[i];
+        
+        // 회사명과 날짜가 모두 입력된 경우에만 저장
+        if (setting.companyName && setting.day) {
+          if (setting.id) {
+            // 기존 설정 수정
+            await updateTaxInvoiceSetting(setting.id, setting.companyName, setting.day);
+          } else {
+            // 새 설정 추가
+            await addTaxInvoiceSetting(setting.companyName, setting.day);
+          }
+        }
+      }
+      
+      // 기타 설정 저장 (로컬 스토리지)
+      const settingsToSave = {
+        ...tempSettings,
+        taxInvoiceSettings: [] // 세금계산서 설정은 서버에서 관리
+      };
+      updateNotificationSettings(settingsToSave);
+      
+      closeModal();
+    } catch (error) {
+      console.error('설정 저장 실패:', error);
+      alert('설정 저장에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
 

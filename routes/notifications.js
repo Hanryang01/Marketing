@@ -18,23 +18,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 알림 생성 (수동)
-router.post('/create', async (req, res) => {
-  try {
-    const result = await NotificationService.createNotifications();
-    res.json({
-      success: result.success,
-      message: result.message,
-      count: result.count || 0,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+// 수동 알림 생성 API 제거됨 (중복 방지를 위해)
+// 알림 생성은 스케줄러만 사용
 
 
 // 알림 읽음 처리

@@ -362,6 +362,7 @@ const UserDetailModal = ({
               userHistory={userHistory}
               handleDeleteHistory={handleDeleteHistory}
               showMessage={showMessage}
+              setEditedUser={setEditedUser}
             />
           ) : (
             <DetailModeView

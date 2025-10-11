@@ -35,12 +35,19 @@ export const NotificationProvider = ({ children }) => {
     loadNotifications();
     loadNotificationSettings();
     
-    // 서버에서 알림 주기적 조회 (5분마다)
-    const intervalId = setInterval(() => {
-      loadNotifications();
-    }, 5 * 60 * 1000); // 5분마다
+    // 알림은 하루에 한번만 생성되므로 주기적 조회 불필요
+    // 필요시에만 수동으로 조회 (사이트 접속 시, 알림 아이콘 클릭 시)
     
-    return () => clearInterval(intervalId);
+    // 페이지 포커스 시에만 알림 조회 (사용자가 사이트를 다시 볼 때)
+    const handleFocus = () => {
+      loadNotifications();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 서버 기반 알림 시스템 - 로컬 알림 생성 로직 제거
@@ -88,22 +95,20 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []); // 빈 의존성 배열로 함수가 재생성되지 않도록 함
 
-  // 알림 설정 로드 (로컬 스토리지에서)
-  const loadNotificationSettings = () => {
+  // 알림 설정 로드 (서버 우선, 로컬 스토리지 보조)
+  const loadNotificationSettings = async () => {
     try {
+      // 로컬 스토리지에서 기본 설정 로드 (세금계산서 제외)
       const savedSettings = localStorage.getItem('notificationSettings');
+      let localSettings = {};
       
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings);
         
-        // 기존 taxInvoiceDay가 있으면 taxInvoiceSettings로 변환
-        if (parsedSettings.taxInvoiceDay && !parsedSettings.taxInvoiceSettings) {
-          parsedSettings.taxInvoiceSettings = [{
-            companyName: parsedSettings.companyName || '',
-            day: parsedSettings.taxInvoiceDay
-          }];
-          delete parsedSettings.taxInvoiceDay;
-        }
+        // 세금계산서 설정은 서버에서 불러올 예정이므로 제거
+        delete parsedSettings.taxInvoiceSettings;
+        delete parsedSettings.taxInvoiceDay;
+        delete parsedSettings.companyName;
         
         // 기존 endDateReminder7Days가 있으면 endDateReminder14Days로 변환
         if (parsedSettings.endDateReminder7Days !== undefined && parsedSettings.endDateReminder14Days === undefined) {
@@ -111,28 +116,40 @@ export const NotificationProvider = ({ children }) => {
           delete parsedSettings.endDateReminder7Days;
         }
         
-        setNotificationSettings(parsedSettings);
+        localSettings = parsedSettings;
+        
+        // 로컬 스토리지에서도 세금계산서 설정 제거
+        localStorage.setItem('notificationSettings', JSON.stringify(parsedSettings));
       } else {
-        // 로컬 스토리지에 설정이 없으면 기본값으로 저장
+        // 로컬 스토리지에 설정이 없으면 기본값으로 저장 (세금계산서 제외)
         const defaultSettings = {
-          companyName: '',
-          taxInvoiceSettings: [],
           endDateReminder14Days: true,
           endDateReminderToday: true,
         };
-        setNotificationSettings(defaultSettings);
+        localSettings = defaultSettings;
         localStorage.setItem('notificationSettings', JSON.stringify(defaultSettings));
       }
+      
+      // 로컬 설정을 먼저 적용
+      setNotificationSettings(prev => ({
+        ...prev,
+        ...localSettings
+      }));
+      
+      // 그 다음 서버에서 세금계산서 설정 조회 (덮어쓰기 방지)
+      await loadTaxInvoiceSettings();
+      
     } catch (error) {
       console.error('알림 설정 로드 실패:', error);
       // 에러 발생 시 기본값 설정
       const defaultSettings = {
-        companyName: '',
-        taxInvoiceSettings: [],
         endDateReminder14Days: true,
         endDateReminderToday: true,
       };
-      setNotificationSettings(defaultSettings);
+      setNotificationSettings(prev => ({
+        ...prev,
+        ...defaultSettings
+      }));
     }
   };
 
@@ -232,42 +249,27 @@ export const NotificationProvider = ({ children }) => {
     }, 100);
   };
 
-  // 수동 알림 생성 (서버 API 호출)
-  const createTestNotification = async () => {
-    try {
-      console.log('🧪 서버에서 테스트 알림 생성 중...');
-      await apiCall(API_ENDPOINTS.CREATE_NOTIFICATIONS, {
-        method: 'POST'
-      });
-      console.log('✅ 서버 알림 생성 완료');
-      // 알림 목록 새로고침
-      await loadNotifications();
-    } catch (error) {
-      console.error('❌ 서버 알림 생성 실패:', error);
-    }
-  };
-
-  // 종료일 알림 강제 생성 (서버 API 호출)
-  const createEndDateNotification = async () => {
-    try {
-      console.log('🔔 서버에서 종료일 알림 강제 생성 중...');
-      await apiCall(API_ENDPOINTS.CREATE_NOTIFICATIONS, {
-        method: 'POST'
-      });
-      console.log('✅ 서버 종료일 알림 생성 완료');
-      // 알림 목록 새로고침
-      await loadNotifications();
-    } catch (error) {
-      console.error('❌ 서버 종료일 알림 생성 실패:', error);
-    }
-  };
+  // 디버깅용 함수들 제거됨 (중복 방지를 위해)
+  // 알림 생성은 스케줄러만 사용
 
   // 서버 기반에서는 세금계산서 알림도 서버에서 처리
   // 프론트엔드에서는 설정만 저장하고 알림 조회만 수행
 
 
-  // 모달 열기/닫기
-  const openModal = () => setIsModalOpen(true);
+  // 모달 열기/닫기 (알림 조회만)
+  const openModal = async () => {
+    setIsModalOpen(true);
+    
+    try {
+      // 1. 최신 알림 조회
+      await loadNotifications();
+      
+      // 2. 알림 설정도 함께 로드 (모달에서 설정 표시를 위해)
+      await loadNotificationSettings();
+    } catch (error) {
+      console.error('❌ 알림 로드 실패:', error);
+    }
+  };
   const closeModal = () => setIsModalOpen(false);
 
   // 탭 변경
@@ -276,30 +278,103 @@ export const NotificationProvider = ({ children }) => {
   // 서버 기반에서는 세금계산서 알림도 서버에서 처리
   // 프론트엔드에서는 설정만 저장하고 알림 조회만 수행
 
-  // 세금계산서 설정 추가
-  const addTaxInvoiceSetting = (companyName, day) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      taxInvoiceSettings: [...prev.taxInvoiceSettings, { companyName, day }]
-    }));
+  // 세금계산서 설정 추가 (서버 API 호출)
+  const addTaxInvoiceSetting = async (companyName, day) => {
+    try {
+      console.log('🔄 세금계산서 설정 추가:', { companyName, day });
+      const response = await apiCall(API_ENDPOINTS.TAX_INVOICE_SETTINGS, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          company_name: companyName, 
+          day_of_month: day 
+        })
+      });
+      
+      if (response.success) {
+        console.log('✅ 세금계산서 설정 추가 성공:', response);
+        // 서버에서 설정 조회하여 로컬 상태 업데이트
+        await loadTaxInvoiceSettings();
+      } else {
+        console.error('❌ 세금계산서 설정 추가 실패:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ 세금계산서 설정 추가 API 호출 실패:', error);
+    }
   };
 
-  // 세금계산서 설정 수정
-  const updateTaxInvoiceSetting = (index, companyName, day) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      taxInvoiceSettings: prev.taxInvoiceSettings.map((setting, i) => 
-        i === index ? { companyName, day } : setting
-      )
-    }));
+  // 세금계산서 설정 수정 (서버 API 호출)
+  const updateTaxInvoiceSetting = async (id, companyName, day) => {
+    try {
+      console.log('🔄 세금계산서 설정 수정:', { id, companyName, day });
+      const response = await apiCall(`${API_ENDPOINTS.TAX_INVOICE_SETTINGS}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          company_name: companyName, 
+          day_of_month: day,
+          is_active: 1
+        })
+      });
+      
+      if (response.success) {
+        console.log('✅ 세금계산서 설정 수정 성공:', response);
+        // 서버에서 설정 조회하여 로컬 상태 업데이트
+        await loadTaxInvoiceSettings();
+      } else {
+        console.error('❌ 세금계산서 설정 수정 실패:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ 세금계산서 설정 수정 API 호출 실패:', error);
+    }
   };
 
-  // 세금계산서 설정 삭제
-  const removeTaxInvoiceSetting = (index) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      taxInvoiceSettings: prev.taxInvoiceSettings.filter((_, i) => i !== index)
-    }));
+  // 세금계산서 설정 삭제 (서버 API 호출)
+  const removeTaxInvoiceSetting = async (id) => {
+    try {
+      console.log('🔄 세금계산서 설정 삭제:', { id });
+      const response = await apiCall(`${API_ENDPOINTS.TAX_INVOICE_SETTINGS}/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.success) {
+        console.log('✅ 세금계산서 설정 삭제 성공:', response);
+        // 서버에서 설정 조회하여 로컬 상태 업데이트
+        await loadTaxInvoiceSettings();
+      } else {
+        console.error('❌ 세금계산서 설정 삭제 실패:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ 세금계산서 설정 삭제 API 호출 실패:', error);
+    }
+  };
+
+  // 세금계산서 설정 조회 (서버에서)
+  const loadTaxInvoiceSettings = async () => {
+    try {
+      console.log('🔄 세금계산서 설정 조회...');
+      const response = await apiCall(API_ENDPOINTS.TAX_INVOICE_SETTINGS);
+      
+      if (response.success && response.settings) {
+        console.log('✅ 세금계산서 설정 조회 성공:', response.settings);
+        setNotificationSettings(prev => ({
+          ...prev,
+          taxInvoiceSettings: response.settings.map(setting => ({
+            id: setting.id,
+            companyName: setting.company_name,
+            day: setting.day_of_month
+          }))
+        }));
+      } else {
+        console.error('❌ 세금계산서 설정 조회 실패:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ 세금계산서 설정 조회 API 호출 실패:', error);
+    }
   };
 
   // 서버 기반에서는 종료일 알림도 서버에서 처리
@@ -323,9 +398,7 @@ export const NotificationProvider = ({ children }) => {
     closeModal,
     changeTab,
     
-    // 디버깅용 함수 (서버 API 호출)
-    createTestNotification,
-    createEndDateNotification,
+    // 디버깅용 함수들 제거됨 (중복 방지를 위해)
     
     // 세금계산서 설정 관리 (로컬 스토리지)
     addTaxInvoiceSetting,

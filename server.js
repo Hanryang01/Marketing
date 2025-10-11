@@ -525,13 +525,11 @@ const startServer = async () => {
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();
       
-      // 정기 배치 알림 시스템 시작
+      // 정기 배치 알림 시스템 시작 (스케줄러만 사용)
       const scheduler = new NotificationScheduler();
       scheduler.startScheduledNotifications();
       
-      // 방법 2: 간단한 배치 처리 시스템으로 변경
-      console.log('✅ 간단한 알림 시스템이 준비되었습니다.');
-      console.log('📋 수동 실행: GET /api/admin/check-notifications');
+      console.log('✅ 알림 시스템이 준비되었습니다.');
       console.log('⏰ 자동 실행: 매일 오전 9시 (한국 시간)');
     });
     

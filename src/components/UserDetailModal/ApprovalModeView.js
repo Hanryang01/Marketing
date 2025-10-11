@@ -9,7 +9,8 @@ const ApprovalModeView = ({
   formatDate,
   userHistory,
   handleDeleteHistory,
-  showMessage
+  showMessage,
+  setEditedUser
 }) => {
   return (
     <>
@@ -70,7 +71,7 @@ const ApprovalModeView = ({
               type="text"
               value={editedUser?.startDate || ''}
               onChange={(e) => {
-                handleDateInputChange('startDate', e.target.value);
+                handleDateInputChange('startDate', e.target.value, setEditedUser);
               }}
               onFocus={(e) => {
                 // startDate 포커스
@@ -111,7 +112,7 @@ const ApprovalModeView = ({
               type="text"
               value={editedUser?.endDate || ''}
               onChange={(e) => {
-                handleDateInputChange('endDate', e.target.value);
+                handleDateInputChange('endDate', e.target.value, setEditedUser);
               }}
               onFocus={(e) => {
                 // endDate 포커스

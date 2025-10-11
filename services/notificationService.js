@@ -1,4 +1,5 @@
 const { logger } = require('../utils/logger');
+const DateUtils = require('../utils/dateUtils');
 
 // pool을 매개변수로 받도록 수정
 let pool;
@@ -62,25 +63,10 @@ class NotificationService {
       
       const connection = await pool.getConnection();
       
-      // 현재 날짜 계산
-      const today = new Date();
-      const todayString = today.getFullYear() + '-' + 
-        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(today.getDate()).padStart(2, '0');
-      
-      // 14일 후 날짜 계산
-      const twoWeeksLater = new Date(today);
-      twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
-      const twoWeeksLaterString = twoWeeksLater.getFullYear() + '-' + 
-        String(twoWeeksLater.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(twoWeeksLater.getDate()).padStart(2, '0');
-      
-      // 1일 후 날짜 계산
-      const oneDayLater = new Date(today);
-      oneDayLater.setDate(oneDayLater.getDate() + 1);
-      const oneDayLaterString = oneDayLater.getFullYear() + '-' + 
-        String(oneDayLater.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(oneDayLater.getDate()).padStart(2, '0');
+      // 공통 날짜 계산 함수 사용
+      const todayString = DateUtils.getTodayString();
+      const twoWeeksLaterString = DateUtils.getTwoWeeksLaterString();
+      const oneDayLaterString = DateUtils.getOneDayLaterString();
       
       logger.info(`오늘: ${todayString}`);
       logger.info(`14일 후: ${twoWeeksLaterString}`);
@@ -157,11 +143,12 @@ class NotificationService {
         }
       }
       
-      // 세금계산서 알림 생성 (기존 로직 유지)
+      // 세금계산서 알림 생성 (한국 시간대 기준)
       try {
         const [settings] = await connection.execute(`
           SELECT company_name, day_of_month FROM tax_invoice_notification_settings
-          WHERE day_of_month = DAY(NOW())
+          WHERE day_of_month = DAY(CONVERT_TZ(NOW(), '+00:00', '+09:00'))
+          AND is_active = 1
         `);
         
         for (const setting of settings) {
