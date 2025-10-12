@@ -72,17 +72,17 @@ class NotificationService {
       logger.info(`14일 후: ${twoWeeksLaterString}`);
       logger.info(`1일 후: ${oneDayLaterString}`);
       
-      // 오늘 이미 생성된 알림이 있는지 확인 (중복 방지)
+      // DB 레벨 중복 방지: 오늘 이미 생성된 알림 체크
       const [existingNotifications] = await connection.execute(`
         SELECT COUNT(*) as count FROM notifications 
-        WHERE DATE(CONVERT_TZ(created_at, '+00:00', '+09:00')) = ? 
+        WHERE DATE(CONVERT_TZ(created_at, '+00:00', '+09:00')) = ?
         AND type IN ('end_date_14days', 'end_date_1day', 'tax_invoice')
       `, [todayString]);
       
       if (existingNotifications[0].count > 0) {
-        logger.warning(`오늘 이미 알림이 생성되었습니다. (기존 알림 ${existingNotifications[0].count}개)`);
+        logger.warning('오늘 이미 알림이 생성되었습니다. (DB 중복 방지)');
         connection.release();
-        return { success: true, message: '오늘 이미 알림이 생성되었습니다.', count: existingNotifications[0].count };
+        return { success: true, count: 0 };
       }
       
       let notificationCount = 0;
