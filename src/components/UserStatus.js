@@ -100,11 +100,15 @@ const UserStatus = () => {
       
       const thisMonthNewUsers = users.filter(user => {
             if (!user.start_date) return false;
+            // 요금제가 무료인 사용자는 제외
+            if (user.pricing_plan === '무료') return false;
         return isCurrentKoreaYearMonth(user.start_date);
       }).length;
 
       const thisMonthExpiredUsers = users.filter(user => {
         if ((user.approval_status !== '승인 완료' && user.approval_status !== '승인 예정') || !user.end_date) return false;
+        // 요금제가 무료인 사용자는 제외
+        if (user.pricing_plan === '무료') return false;
         return isCurrentKoreaYearMonth(user.end_date);
       }).length;
       
