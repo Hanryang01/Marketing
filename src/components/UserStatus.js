@@ -188,6 +188,8 @@ const UserStatus = () => {
         for (let month = 1; month <= 12; month++) {
           const monthUsers = users.filter(user => {
             if (!user.start_date) return false;
+            // 요금제가 무료인 업체는 카운팅에서 제외
+            if (user.pricing_plan === '무료') return false;
             const userDate = new Date(user.start_date);
             return userDate.getFullYear() === selectedYear && userDate.getMonth() + 1 === month;
           });
