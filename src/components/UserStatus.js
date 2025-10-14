@@ -190,6 +190,7 @@ const UserStatus = () => {
         // 월별 신규 가입자 수 (프론트엔드에서 직접 계산)
         const monthlyNewUsersData = [];
         for (let month = 1; month <= 12; month++) {
+          // 현재 활성화된 사용자들 (users 테이블)
           const monthUsers = users.filter(user => {
             if (!user.start_date) return false;
             // 요금제가 무료인 업체는 카운팅에서 제외
@@ -198,9 +199,38 @@ const UserStatus = () => {
             return userDate.getFullYear() === selectedYear && userDate.getMonth() + 1 === month;
           });
           
+          // 히스토리 사용자들 (company_history 테이블)
+          const monthHistoryUsers = historyData.filter(history => {
+            if (!history.start_date) return false;
+            // 요금제가 무료인 업체는 카운팅에서 제외
+            if (history.pricing_plan === '무료') return false;
+            const historyDate = new Date(history.start_date);
+            return historyDate.getFullYear() === selectedYear && historyDate.getMonth() + 1 === month;
+          });
+          
+          // 중복 제거: user_id 기준으로 중복 제거
+          const allUserIds = new Set();
+          const uniqueUsers = [];
+          
+          // users 테이블에서 먼저 추가
+          monthUsers.forEach(user => {
+            if (!allUserIds.has(user.user_id)) {
+              allUserIds.add(user.user_id);
+              uniqueUsers.push(user);
+            }
+          });
+          
+          // history 테이블에서 중복되지 않는 것만 추가
+          monthHistoryUsers.forEach(history => {
+            if (!allUserIds.has(history.user_id_string)) {
+              allUserIds.add(history.user_id_string);
+              uniqueUsers.push(history);
+            }
+          });
+          
           monthlyNewUsersData.push({
             month: month,
-            newUsers: monthUsers.length
+            newUsers: uniqueUsers.length
           });
         }
         setMonthlyNewUsers(monthlyNewUsersData);

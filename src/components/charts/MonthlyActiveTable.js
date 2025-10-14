@@ -16,14 +16,9 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
             onChange={(e) => onYearChange(parseInt(e.target.value))}
             className="year-select"
           >
-            {Array.from({ length: 5 }, (_, i) => {
-              const year = new Date().getFullYear() - 2 + i;
-              return (
-                <option key={year} value={year}>
-                  {year}년
-                </option>
-              );
-            })}
+            {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+              <option key={year} value={year}>{year}년</option>
+            ))}
           </select>
         </div>
       </div>
