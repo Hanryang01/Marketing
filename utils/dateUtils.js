@@ -16,10 +16,10 @@ class DateUtils {
    * @returns {string} 오늘 날짜 문자열
    */
   static getTodayString() {
-    const koreaTime = this.getKoreaTime();
-    return koreaTime.getFullYear() + '-' + 
-      String(koreaTime.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(koreaTime.getDate()).padStart(2, '0');
+    const now = new Date();
+    // 한국 시간대로 정확한 변환 (toLocaleString 사용)
+    const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    return koreaTime.toISOString().split('T')[0];
   }
 
   /**
