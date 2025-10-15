@@ -75,7 +75,7 @@ class NotificationService {
       // DB 레벨 중복 방지: 오늘 이미 생성된 알림 체크
       const [existingNotifications] = await connection.execute(`
         SELECT COUNT(*) as count FROM notifications 
-        WHERE DATE(CONVERT_TZ(created_at, '+00:00', '+09:00')) = ?
+        WHERE DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+09:00'), '%Y-%m-%d') = ?
         AND type IN ('end_date_14days', 'end_date_1day', 'tax_invoice')
       `, [todayString]);
       
@@ -94,7 +94,7 @@ class NotificationService {
         WHERE approval_status = '승인 완료'
         AND company_type IN ('컨설팅 업체', '일반 업체')
         AND end_date IS NOT NULL
-        AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+        AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
       `, [twoWeeksLaterString]);
       
       // 1일 후 종료 예정 사용자들
@@ -104,7 +104,7 @@ class NotificationService {
         WHERE approval_status = '승인 완료'
         AND company_type IN ('컨설팅 업체', '일반 업체')
         AND end_date IS NOT NULL
-        AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+        AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
       `, [oneDayLaterString]);
       
       // 14일 후 종료일 알림 생성

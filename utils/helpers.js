@@ -7,9 +7,12 @@ let pool;
 const DateUtils = {
   getTodayString: () => {
     const now = new Date();
-    // 한국 시간대로 변환 (UTC+9)
-    const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-    return koreaTime.toISOString().split('T')[0];
+    // 한국 시간대로 정확한 변환 (toLocaleString 사용)
+    const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const year = koreaTime.getFullYear();
+    const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
+    const day = String(koreaTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   },
   
   formatDate: (date) => {

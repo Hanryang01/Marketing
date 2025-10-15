@@ -144,7 +144,7 @@ router.get('/api/users/end-date-check', async (req, res) => {
       WHERE approval_status = '승인 완료'
       AND company_type IN ('컨설팅 업체', '일반 업체')
       AND end_date IS NOT NULL
-      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+      AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
     `, [todayString]);
     
     // 14일 후 종료일인 사용자들 (한국 시간 기준)
@@ -154,7 +154,7 @@ router.get('/api/users/end-date-check', async (req, res) => {
       WHERE approval_status = '승인 완료'
       AND company_type IN ('컨설팅 업체', '일반 업체')
       AND end_date IS NOT NULL
-      AND DATE(CONVERT_TZ(end_date, '+00:00', '+09:00')) = ?
+      AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
     `, [twoWeeksLaterString]);
     
     

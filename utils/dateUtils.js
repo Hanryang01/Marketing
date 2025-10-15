@@ -17,9 +17,12 @@ class DateUtils {
    */
   static getTodayString() {
     const now = new Date();
-    // 한국 시간대로 정확한 변환 (toLocaleString 사용)
+    // 한국 시간대로 정확한 변환 (Intl.DateTimeFormat 사용)
     const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-    return koreaTime.toISOString().split('T')[0];
+    const year = koreaTime.getFullYear();
+    const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
+    const day = String(koreaTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
