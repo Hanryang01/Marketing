@@ -6,7 +6,6 @@ require('dotenv').config();
 // 알림 관련 모듈들
 const notificationRoutes = require('./routes/notifications');
 const NotificationService = require('./services/notificationService');
-const NotificationScheduler = require('./utils/scheduler');
 
 // 세금계산서 관련 모듈들
 const taxInvoiceRoutes = require('./routes/taxInvoice');
@@ -43,7 +42,8 @@ const app = express();
 
 // 유틸리티 함수들은 utils/logger.js, utils/helpers.js로 이동됨
 const { logger } = require('./utils/logger');
-const { withDatabase, handleApiError, DateUtils } = require('./utils/helpers');
+const { withDatabase, handleApiError } = require('./utils/helpers');
+const DateUtils = require('./utils/dateUtils');
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -184,7 +184,7 @@ app.get('/api/timezone-test', (req, res) => {
     utc: now.toISOString(),
     korea: koreaTime.toISOString(),
     koreaString: koreaTime.toLocaleString("ko-KR", {timeZone: "Asia/Seoul"}),
-    todayString: require('./utils/helpers').DateUtils.getTodayString()
+    todayString: DateUtils.getTodayString()
   });
 });
 
@@ -330,7 +330,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
   
   try {
     const today = new Date();
-    const todayString = require('./utils/helpers').DateUtils.getTodayString();
+    const todayString = DateUtils.getTodayString();
     
     logger.info('자동 만료 체크 시작 (한국 시간):', { today, todayString });
     
@@ -468,7 +468,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     const errorInfo = {
       type: 'EXPIRED_PROCESSING_TOTAL_FAILURE',
       message: err.message,
-      processingDate: require('./utils/helpers').DateUtils.getTodayString(),
+      processingDate: DateUtils.getTodayString(),
       details: { error: err.message, stack: err.stack, timestamp: new Date().toISOString() }
     };
     await logError(conn, errorInfo);
@@ -482,8 +482,6 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
   }
 }
 
-
-// checkAndCreateNotifications 함수는 services/notificationService.js로 이동됨
 
 // 누락된 만료 처리 복구 함수
 const recoverMissedProcessing = async () => {
@@ -511,7 +509,6 @@ const recoverMissedProcessing = async () => {
   }
 };
 
-// scheduleNotificationBatch 함수는 utils/scheduler.js로 이동됨
 
 // 서버 초기화 및 시작
 const startServer = async () => {
@@ -525,12 +522,8 @@ const startServer = async () => {
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();
       
-      // 정기 배치 알림 시스템 시작 (스케줄러만 사용)
-      const scheduler = new NotificationScheduler();
-      scheduler.startScheduledNotifications();
-      
-      console.log('✅ 알림 시스템이 준비되었습니다.');
-      console.log('⏰ 자동 실행: 매일 오전 9시 (한국 시간)');
+      console.log('✅ 서버가 준비되었습니다.');
+      console.log('⏰ 알림 시스템: Cron Job으로 관리됩니다.');
     });
     
   } catch (error) {

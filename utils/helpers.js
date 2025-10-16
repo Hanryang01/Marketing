@@ -3,24 +3,8 @@ const { logger } = require('./logger');
 // pool을 전역으로 사용
 let pool;
 
-// DateUtils 추가
-const DateUtils = {
-  getTodayString: () => {
-    const now = new Date();
-    // 한국 시간대로 정확한 변환 (toLocaleString 사용)
-    const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-    const year = koreaTime.getFullYear();
-    const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
-    const day = String(koreaTime.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  },
-  
-  formatDate: (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
-  }
-};
+// DateUtils는 utils/dateUtils.js에서 import
+const DateUtils = require('./dateUtils');
 
 // pool 설정 함수
 const setPool = (databasePool) => {

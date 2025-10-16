@@ -8,7 +8,9 @@ class DateUtils {
    */
   static getKoreaTime() {
     const now = new Date();
-    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    // UTC 시간에 9시간을 더해서 한국 시간 계산
+    const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+    return koreaTime;
   }
 
   /**
@@ -16,9 +18,7 @@ class DateUtils {
    * @returns {string} 오늘 날짜 문자열
    */
   static getTodayString() {
-    const now = new Date();
-    // 한국 시간대로 정확한 변환 (Intl.DateTimeFormat 사용)
-    const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const koreaTime = this.getKoreaTime();
     const year = koreaTime.getFullYear();
     const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
     const day = String(koreaTime.getDate()).padStart(2, '0');
