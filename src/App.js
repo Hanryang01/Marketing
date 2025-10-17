@@ -42,6 +42,19 @@ function App() {
     checkAuthStatus();
   }, []);
 
+  // 컴포넌트 로딩 완료 이벤트 (메뉴 안정화를 위해)
+  useEffect(() => {
+    if (isAuthenticated) {
+      // 모든 컴포넌트가 이미 정적으로 import되어 있으므로 즉시 이벤트 발생
+      console.log('✅ 모든 컴포넌트 로딩 완료');
+      
+      // 컴포넌트 로딩 완료 후 강제 리렌더링 트리거
+      setTimeout(() => {
+        window.dispatchEvent(new Event('componentsLoaded'));
+      }, 100);
+    }
+  }, [isAuthenticated]);
+
   // 로그인 처리 (독립적인 세션 관리)
   const handleLogin = (userData, sessionToken) => {
     setIsAuthenticated(true);

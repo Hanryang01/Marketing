@@ -87,6 +87,18 @@
   background-color: #f0f8ff;
 }
 
+/* 메뉴 로딩 스타일 */
+.menu-loading {
+  color: #999 !important;
+  font-style: italic;
+  cursor: default !important;
+}
+
+.menu-loading:hover {
+  background-color: transparent !important;
+  color: #999 !important;
+}
+
 .menu-item.active {
   background-color: #e3f2fd;
   color: #1976d2;

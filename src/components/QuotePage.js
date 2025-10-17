@@ -4,11 +4,19 @@ import { PRICING_PLANS, DEFAULT_PLANS } from '../constants/pricingPlans';
 
 const QuotePage = () => {
   const [companyType, setCompanyType] = useState('consulting');
-  const [pricingPlan, setPricingPlan] = useState('consulting_standard');
+  const [pricingPlan, setPricingPlan] = useState(DEFAULT_PLANS.consulting);
   const [paymentType, setPaymentType] = useState('annual');
   const [companyName, setCompanyName] = useState('');
   const [usagePeriod, setUsagePeriod] = useState(12);
   const [monthlyPrice, setMonthlyPrice] = useState(0);
+
+  // 컴포넌트 마운트 확인
+  useEffect(() => {
+    console.log('✅ QuotePage 컴포넌트 마운트됨');
+    return () => {
+      console.log('❌ QuotePage 컴포넌트 언마운트됨');
+    };
+  }, []);
 
   // 월 요금 설정 공통 함수
   const updateMonthlyPrice = (plan) => {
@@ -21,7 +29,9 @@ const QuotePage = () => {
   };
 
   // 현재 요금제 목록 가져오기
-  const getCurrentPlans = useCallback(() => PRICING_PLANS[companyType], [companyType]);
+  const getCurrentPlans = useCallback(() => {
+    return PRICING_PLANS[companyType] || [];
+  }, [companyType]);
 
   // 선택된 요금제 가져오기
   const getSelectedPlan = useCallback(() => {
@@ -37,7 +47,7 @@ const QuotePage = () => {
 
   const handleCompanyTypeChange = (type) => {
     setCompanyType(type);
-    // 업체 형태에 따라 적절한 스탠다드 요금제 설정
+    // 업체 형태에 따라 적절한 기본 요금제 설정
     const planId = DEFAULT_PLANS[type];
     setPricingPlan(planId);
     // 월 요금 업데이트는 useEffect에서 자동 처리됨
@@ -130,7 +140,7 @@ const QuotePage = () => {
       try {
         console.log('서버에서 PDF 생성 요청 시작...');
         
-        const response = await fetch('http://localhost:3007/api/generate-pdf', {
+        const response = await fetch('http://localhost:3003/api/generate-pdf', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

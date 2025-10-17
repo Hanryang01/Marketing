@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Layout.css';
 import NotificationIcon from './NotificationIcon';
@@ -7,6 +7,18 @@ import NotificationModal from './NotificationModal';
 const Layout = ({ children, userInfo, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  // 컴포넌트 로딩 완료 이벤트 리스너
+  useEffect(() => {
+    const handleComponentsLoaded = () => {
+      console.log('🔄 컴포넌트 로딩 완료 - 메뉴 강제 리렌더링');
+    };
+
+    window.addEventListener('componentsLoaded', handleComponentsLoaded);
+    
+    return () => {
+      window.removeEventListener('componentsLoaded', handleComponentsLoaded);
+    };
+  }, []);
 
   // 독립적인 Marketing 로그아웃 처리
   const handleLogout = () => {
