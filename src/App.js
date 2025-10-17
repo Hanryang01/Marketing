@@ -7,6 +7,7 @@ import UserManagement from './components/UserManagement';
 import UserStatus from './components/UserStatus';
 import SalesManagement from './components/SalesManagement';
 import RevenueStatus from './components/RevenueStatus';
+import QuotePage from './components/QuotePage';
 import { NotificationProvider } from './context/NotificationContext';
 
 import './App.css';
@@ -158,6 +159,14 @@ function App() {
                         element={
                           <Layout userInfo={userInfo} onLogout={handleLogout}>
                             <RevenueStatus />
+                          </Layout>
+                        }
+                      />
+                      <Route
+                        path="/sales/quote"
+                        element={
+                          <Layout userInfo={userInfo} onLogout={handleLogout}>
+                            <QuotePage />
                           </Layout>
                         }
                       />

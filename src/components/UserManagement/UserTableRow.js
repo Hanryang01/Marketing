@@ -30,7 +30,7 @@ const UserTableRow = ({
       case '무료':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
           <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
           <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
           <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
@@ -50,7 +50,7 @@ const UserTableRow = ({
       case '컨설팅':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
           <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
           <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
           <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
@@ -81,7 +81,7 @@ const UserTableRow = ({
       case '일반':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
           <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
           <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
           <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
@@ -112,7 +112,7 @@ const UserTableRow = ({
       case '탈퇴':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
           <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
           <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
           <td key="delete">
@@ -141,11 +141,16 @@ const UserTableRow = ({
           <td key="companyName">{user.company_name || user.companyName || ''}</td>,
           <td key="userName">{user.user_name || user.userName || ''}</td>,
           <td key="position">{user.manager_position || user.position || ''}</td>,
-          <td key="mobilePhone">{user.mobile_phone || user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone">{user.mobile_phone || user.mobilePhone || ''}</td>,
           <td key="email">{user.email || ''}</td>,
           <td key="companyType">{user.company_type || user.companyType || ''}</td>,
           <td key="pricingPlan">{user.pricing_plan || user.pricingPlan || '무료'}</td>,
-          <td key="activeMonths">{user.active_months ? `${user.active_months}개월` : (user.activeMonths ? `${user.activeMonths}개월` : '-')}</td>,
+          <td key="activeMonths">
+            {user.active_days ? 
+              `${Math.round(user.active_days / 30)}개월` : 
+              (user.active_months ? `${user.active_months}개월` : (user.activeMonths ? `${user.activeMonths}개월` : '-'))
+            }
+          </td>,
           <td key="startDate">{formatDate(user.start_date || user.startDate)}</td>,
           <td key="endDate">{formatDate(user.end_date || user.endDate)}</td>,
           <td key="delete">
@@ -176,7 +181,7 @@ const UserTableRow = ({
       default:
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || user.phoneNumber || ''}</td>,
+          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
           <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
           <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
           <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,

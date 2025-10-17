@@ -55,18 +55,18 @@ const DetailModeView = ({
         <h3 className="section-title">사용자 정보</h3>
         
         {renderFormRow(
-          renderInputField('사용자 ID', 'userId', editedUser?.userId || '', () => {}, { readOnly: true, className: 'readonly-input' }),
-          renderInputField('이름', 'userName', editedUser?.userName || '', (e) => handleInputChange('userName', e.target.value))
+          renderInputField('사용자 ID', 'userId', getFieldValue('userId'), () => {}, { readOnly: true, className: 'readonly-input' }),
+          renderInputField('이름', 'userName', getFieldValue('userName'), (e) => handleInputChange('userName', e.target.value))
         )}
         
         {renderFormRow(
-          renderInputField('부서', 'department', editedUser?.department !== undefined ? editedUser.department : (user.department || ''), (e) => handleInputChange('department', e.target.value)),
-          renderInputField('직책', 'position', editedUser?.position !== undefined ? editedUser.position : (user.manager_position || ''), (e) => handleInputChange('position', e.target.value))
+          renderInputField('부서', 'department', getFieldValue('department'), (e) => handleInputChange('department', e.target.value)),
+          renderInputField('직책', 'position', getFieldValue('position'), (e) => handleInputChange('position', e.target.value))
         )}
         
         {renderFormRow(
-          renderInputField('휴대전화', 'mobilePhone', editedUser?.mobilePhone || '', (e) => handleInputChange('mobilePhone', e.target.value)),
-          renderInputField('이메일', 'email', editedUser?.email !== undefined ? editedUser.email : (user.email || ''), (e) => handleInputChange('email', e.target.value), { type: 'email' })
+          renderInputField('휴대전화', 'mobilePhone', getFieldValue('mobilePhone'), (e) => handleInputChange('mobilePhone', e.target.value)),
+          renderInputField('이메일', 'email', getFieldValue('email'), (e) => handleInputChange('email', e.target.value), { type: 'email' })
         )}
       </div>
 
@@ -75,17 +75,17 @@ const DetailModeView = ({
         <h3 className="section-title">승인 정보</h3>
         
         {renderFormRow(
-          renderDateField('시작일', formatDate(editedUser?.startDate || user.startDate || user.start_date || '')),
-          renderDateField('종료일', formatDate(editedUser?.endDate || user.endDate || user.end_date || ''))
+          renderDateField('시작일', formatDate(editedUser?.startDate || user?.startDate || '')),
+          renderDateField('종료일', formatDate(editedUser?.endDate || user?.endDate || ''))
         )}
         
         {renderFormRow(
-          renderInputField('업체 형태', 'companyType', editedUser?.companyType || '무료 사용자', () => {}, { readOnly: true, className: 'readonly-input' }),
-          renderInputField('요금제', 'pricingPlan', editedUser?.pricingPlan || '무료', () => {}, { readOnly: true, className: 'readonly-input' })
+          renderInputField('업체 형태', 'companyType', getFieldValue('companyType') || '무료 사용자', () => {}, { readOnly: true, className: 'readonly-input' }),
+          renderInputField('요금제', 'pricingPlan', getFieldValue('pricingPlan') || '무료', () => {}, { readOnly: true, className: 'readonly-input' })
         )}
         
         {renderFormRow(
-          renderInputField('승인 상태', 'approvalStatus', editedUser?.approvalStatus || '승인 예정', () => {}, { readOnly: true, className: 'readonly-input' }),
+          renderInputField('승인 상태', 'approvalStatus', getFieldValue('approvalStatus') || '승인 예정', () => {}, { readOnly: true, className: 'readonly-input' }),
           <div className="form-group"><label></label><div></div></div>
         )}
       </div>
@@ -95,8 +95,8 @@ const DetailModeView = ({
         <h3 className="section-title">사용량 정보</h3>
         
         {renderFormRow(
-          renderInputField('MSDS', 'msdsLimit', editedUser?.msdsLimit || 0, () => {}, { readOnly: true, className: 'readonly-input' }),
-          renderInputField('영상분석', 'aiImageLimit', editedUser?.aiImageLimit || 0, () => {}, { readOnly: true, className: 'readonly-input' })
+          renderInputField('MSDS', 'msdsLimit', getFieldValue('msdsLimit') || 0, () => {}, { readOnly: true, className: 'readonly-input' }),
+          renderInputField('영상분석', 'aiImageLimit', getFieldValue('aiImageLimit') || 0, () => {}, { readOnly: true, className: 'readonly-input' })
         )}
         
         <div className="form-row">
@@ -104,7 +104,7 @@ const DetailModeView = ({
             <label>AI 보고서</label>
             <input 
               type="text" 
-              value={editedUser?.aiReportLimit || 0} 
+              value={getFieldValue('aiReportLimit') || 0} 
               readOnly 
               className="readonly-input"
             />
@@ -125,7 +125,7 @@ const DetailModeView = ({
             <label>회사명</label>
             <input 
               type="text" 
-              value={editedUser?.companyName || ''} 
+              value={getFieldValue('companyName')} 
               onChange={(e) => handleInputChange('companyName', e.target.value)}
               readOnly={!isEditable}
               className={!isEditable ? 'readonly-input' : ''}
@@ -147,7 +147,7 @@ const DetailModeView = ({
             <label>사업자등록번호</label>
             <input 
               type="text" 
-              value={formatBusinessLicense(editedUser?.businessLicense || '')} 
+              value={formatBusinessLicense(getFieldValue('businessLicense'))} 
               onChange={(e) => handleInputChange('businessLicense', e.target.value)}
               readOnly={!isEditable}
               className={!isEditable ? 'readonly-input' : ''}
@@ -203,7 +203,7 @@ const DetailModeView = ({
             <label>계좌 정보</label>
             <input 
               type="text" 
-              value={getFieldValue('accountInfo') || getFieldValue('account_info')} 
+              value={getFieldValue('accountInfo')} 
               onChange={(e) => handleInputChange('accountInfo', e.target.value)}
               {...getInputProps()}
             />
@@ -232,7 +232,7 @@ const DetailModeView = ({
             <label>이름</label>
             <input 
               type="text" 
-              value={getFieldValue('accountantName') || getFieldValue('accountant_name')} 
+              value={getFieldValue('accountantName')} 
               onChange={(e) => handleInputChange('accountantName', e.target.value)}
               {...getInputProps()}
             />
@@ -241,7 +241,7 @@ const DetailModeView = ({
             <label>직책</label>
             <input 
               type="text" 
-              value={getFieldValue('accountantPosition') || getFieldValue('accountant_position')} 
+              value={getFieldValue('accountantPosition')} 
               onChange={(e) => handleInputChange('accountantPosition', e.target.value)}
               {...getInputProps()}
             />
@@ -253,7 +253,7 @@ const DetailModeView = ({
             <label>휴대전화</label>
             <input 
               type="text" 
-              value={getFieldValue('accountantMobile') || getFieldValue('accountant_mobile')} 
+              value={getFieldValue('accountantMobile')} 
               onChange={(e) => handleInputChange('accountantMobile', e.target.value)}
               {...getInputProps()}
               maxLength="20"
@@ -263,7 +263,7 @@ const DetailModeView = ({
             <label>이메일</label>
             <input 
               type="text" 
-              value={getFieldValue('accountantEmail') || getFieldValue('accountant_email')} 
+              value={getFieldValue('accountantEmail')} 
               onChange={(e) => handleInputChange('accountantEmail', e.target.value)}
               {...getInputProps()}
               maxLength="100"

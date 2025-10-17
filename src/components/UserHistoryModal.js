@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall, API_ENDPOINTS } from '../config/api';
 import { useCalendar } from '../hooks/useCalendar';
 import './UserHistoryModal.css';
@@ -11,7 +11,7 @@ const UserHistoryModal = ({ user, onClose }) => {
   const { formatDate } = useCalendar();
 
   // 상세 이력 조회
-  const fetchDetailedHistory = async () => {
+  const fetchDetailedHistory = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiCall(`${API_ENDPOINTS.HISTORY_USER_DETAIL}?company=${user.companyName}`);
@@ -25,13 +25,13 @@ const UserHistoryModal = ({ user, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.companyName]);
 
   useEffect(() => {
     if (user && user.companyName) {
       fetchDetailedHistory();
     }
-  }, [user]);
+  }, [user, fetchDetailedHistory]);
 
   // 상태별 색상 반환
   const getStatusColor = (status) => {

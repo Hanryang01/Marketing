@@ -36,7 +36,8 @@ const Layout = ({ children, userInfo, onLogout }) => {
       icon: '💰',
       subItems: [
         { id: 'revenue-status', label: '매출 현황', path: '/sales/status', icon: '💰' },
-        { id: 'revenue-list', label: '매출 리스트', path: '/sales/list', icon: '📋' }
+        { id: 'revenue-list', label: '매출 리스트', path: '/sales/list', icon: '📋' },
+        { id: 'quote', label: '견적서', path: '/sales/quote', icon: '📄' }
       ]
     }
   ];
@@ -112,6 +113,9 @@ const Layout = ({ children, userInfo, onLogout }) => {
                 
                 // 매출 관리 하위 페이지들
                 if (currentPath.startsWith('/sales/')) {
+                  if (currentPath === '/sales/quote') {
+                    return '견적서';
+                  }
                   return '매출 관리';
                 }
                 

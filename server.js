@@ -1,6 +1,9 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
+const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
+const fontkit = require('fontkit');
 require('dotenv').config();
 
 // 알림 관련 모듈들
@@ -10,6 +13,7 @@ const NotificationService = require('./services/notificationService');
 // 세금계산서 관련 모듈들
 const taxInvoiceRoutes = require('./routes/taxInvoice');
 const TaxInvoiceService = require('./services/taxInvoiceService');
+
 
 // 한국 시간대 설정
 process.env.TZ = 'Asia/Seoul';
@@ -49,13 +53,7 @@ const DateUtils = require('./utils/dateUtils');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 알림 라우트 연결
-app.use('/api/notifications', notificationRoutes);
-
-// 세금계산서 라우트 연결
-app.use('/api/tax-invoice-settings', taxInvoiceRoutes);
-
-// CORS 설정 - 개발 환경에서 모든 origin 허용
+// CORS 설정 - 모든 라우트보다 먼저 등록
 app.use((req, res, next) => {
   // 개발 환경에서는 모든 origin 허용
   if (process.env.NODE_ENV !== 'production') {
@@ -77,6 +75,140 @@ app.use((req, res, next) => {
     res.sendStatus(200);
   } else {
     next();
+  }
+});
+
+// 알림 라우트 연결
+app.use('/api/notifications', notificationRoutes);
+
+// 세금계산서 라우트 연결
+app.use('/api/tax-invoice-settings', taxInvoiceRoutes);
+
+// PDF 생성 API - 텍스트 덮어쓰기 방식
+app.post('/api/generate-pdf', async (req, res) => {
+  try {
+    const { companyName, date, priceInfo, selectedPlan, companyType, usagePeriod } = req.body;
+    
+    
+    // PDF 템플릿 로드
+    const templatePath = path.join(__dirname, 'public', '견적서 템플릿.pdf');
+    const templateBytes = fs.readFileSync(templatePath);
+    
+    // PDF 문서 로드
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    
+    // fontkit 등록 (한글 폰트 지원)
+    try {
+      pdfDoc.registerFontkit(fontkit);
+    } catch (fontkitError) {
+      console.error('fontkit 등록 실패:', fontkitError);
+      throw new Error('fontkit 등록에 실패했습니다');
+    }
+    
+    // 한글 폰트 로드
+    const fontPath = path.join(__dirname, 'public', 'fonts', 'NotoSansKR-Regular.ttf');
+    let koreanFont;
+    
+    try {
+      if (fs.existsSync(fontPath)) {
+        const fontBytes = fs.readFileSync(fontPath);
+        koreanFont = await pdfDoc.embedFont(fontBytes);
+      } else {
+        throw new Error(`한글 폰트 파일을 찾을 수 없습니다: ${fontPath}`);
+      }
+    } catch (fontError) {
+      console.error('한글 폰트 로드 실패:', fontError);
+      // 폴백: 기본 폰트 사용
+      koreanFont = await pdfDoc.embedFont('Helvetica-Bold');
+    }
+    
+    // 페이지 정보 가져오기
+    const pages = pdfDoc.getPages();
+    const page = pages[0];
+    const { width, height } = page.getSize();
+    
+    
+    // 텍스트 덮어쓰기 좌표 정의
+    const textPositions = {
+      companyName: { x: 70, y: 580, size: 18 },
+      quoteDate: { x: 402, y: 630, size: 13 },
+      selectedPlan: { x: 138, y: 403, size: 13 },
+      usagePeriod: { x: 138, y: 156, size: 13 },
+      finalPrice1: { x: 138, y: 201, size: 13 },
+      finalPrice2: { x: 308, y: 455, size: 18 }
+    };
+    
+    // 한국 시간으로 오늘 날짜 생성
+    const now = new Date();
+    const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+    const todayString = koreaTime.toISOString().split('T')[0];
+    
+    const textData = {
+      companyName: companyName || '고객',
+      quoteDate: todayString,
+      companyType: companyType || '',
+      selectedPlan: selectedPlan || '',
+      usagePeriod: usagePeriod || '',
+      finalPrice1: priceInfo?.finalPrice || 0,
+      finalPrice2: priceInfo?.finalPrice || 0
+    };
+    
+    
+    Object.keys(textPositions).forEach(key => {
+      const position = textPositions[key];
+      const text = textData[key] || '';
+      
+      
+      let displayText;
+      
+      if (key === 'companyName') {
+        displayText = textData.companyName || '고객';
+      } else if (key === 'quoteDate') {
+        displayText = todayString;
+      } else if (key === 'companyType') {
+        displayText = textData.companyType === 'consulting' ? '컨설팅' : '일반';
+      } else if (key === 'selectedPlan') {
+        const plan = textData.selectedPlan;
+        const planName = plan?.name || '기본';
+        const typeText = textData.companyType === 'consulting' ? '컨설팅' : '일반';
+        displayText = `SIHM ${planName} (${typeText})`;
+      } else if (key === 'usagePeriod') {
+        const period = textData.usagePeriod || 1;
+        displayText = `가입승인일로부터 ${period}개월`;
+      } else if (key === 'finalPrice1') {
+        const finalPrice = priceInfo?.finalAmount || 0;
+        displayText = `${finalPrice.toLocaleString()}원 (부가세포함)`;
+      } else if (key === 'finalPrice2') {
+        const finalPrice = priceInfo?.finalAmount || 0;
+        displayText = `${finalPrice.toLocaleString()}원`;
+      } else {
+        displayText = text || '';
+      }
+      
+      
+      page.drawText(displayText, {
+        x: position.x,
+        y: position.y,
+        size: position.size,
+        font: koreanFont
+      });
+      
+    });
+    
+    
+    const pdfBytes = await pdfDoc.save();
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="quote_${date || 'temp'}.pdf"`);
+    res.send(pdfBytes);
+    
+    
+  } catch (error) {
+    console.error('PDF 생성 중 오류:', error);
+    res.status(500).json({ 
+      error: 'PDF 생성 실패', 
+      message: error.message 
+    });
   }
 });
 
@@ -121,6 +253,32 @@ app.get('/api/test', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// 폰트 파일 테스트 엔드포인트
+app.get('/api/test-font', async (req, res) => {
+  try {
+    const fontPath = path.join(__dirname, 'public', 'fonts', 'NotoSansKR-Regular.ttf');
+    
+    // 파일 존재 확인
+    const fileExists = fs.existsSync(fontPath);
+    const fileStats = fileExists ? fs.statSync(fontPath) : null;
+    
+    res.json({
+      success: true,
+      fontPath: fontPath,
+      fileExists: fileExists,
+      fileSize: fileStats ? fileStats.size : 0,
+      lastModified: fileStats ? fileStats.mtime : null,
+      message: fileExists ? '폰트 파일이 정상적으로 존재합니다' : '폰트 파일을 찾을 수 없습니다'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 
 // 수동 만료 처리 API
 app.post('/api/process-expired-approvals', async (req, res) => {
@@ -491,7 +649,7 @@ const recoverMissedProcessing = async () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = DateUtils.getTodayString();
+    const yesterdayString = DateUtils.getYesterdayString();
     
     logger.info(`어제 날짜 확인: ${yesterdayString}`);
     

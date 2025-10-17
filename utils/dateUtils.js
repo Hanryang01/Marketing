@@ -8,8 +8,8 @@ class DateUtils {
    */
   static getKoreaTime() {
     const now = new Date();
-    // UTC 시간에 9시간을 더해서 한국 시간 계산
-    const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+    // 한국 시간대(Asia/Seoul)로 변환
+    const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     return koreaTime;
   }
 
@@ -53,6 +53,14 @@ class DateUtils {
    */
   static getOneDayLaterString() {
     return this.getDateStringAfter(1);
+  }
+
+  /**
+   * 한국 시간 기준 어제 날짜 문자열 반환
+   * @returns {string} 어제 날짜 문자열
+   */
+  static getYesterdayString() {
+    return this.getDateStringAfter(-1);
   }
 
   /**

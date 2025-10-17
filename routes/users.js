@@ -321,8 +321,8 @@ router.post('/api/users', async (req, res) => {
     `, [
       company_name || null, user_id || null, email || null, password_hash || null, finalCompanyType,
       user_name || null, department || null, mobile_phone || null, business_license || null,
-      phone_number || null, fax_number || null, address || null, notes || null, account_info || null, msds_limit || null,
-      ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || '승인 예정',
+      phone_number || null, fax_number || null, address || null, notes || null, account_info || null,
+      msds_limit || null, ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || '승인 예정',
       finalPricingPlan, startDateValue, endDateValue, manager_position || null, representative || null, industry || null,
       accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null,
       new Date(), new Date()
@@ -447,8 +447,8 @@ router.put('/api/users/:id', async (req, res) => {
     `, [
       company_name || null, user_id || null, email || null, password_hash || null, company_type || null,
       user_name || null, department || null, mobile_phone || null, business_license || null,
-      phone_number || null, fax_number || null, address || null, notes || null, account_info || null, msds_limit || null,
-      ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || null,
+      phone_number || null, fax_number || null, address || null, notes || null, account_info || null,
+      msds_limit || null, ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || null,
       pricing_plan || null, startDateValue || null, endDateValue || null, 
       manager_position || preservedManagerPosition, representative || null, industry || null,
       accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null, userId

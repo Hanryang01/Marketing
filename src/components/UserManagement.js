@@ -24,7 +24,7 @@ import { apiCall, API_ENDPOINTS } from '../config/api';
 
 const UserManagement = () => {
   // 커스텀 훅들 사용
-  const { users, setUsers, loading, companyHistory, fetchCompanyHistory } = useUserData();
+  const { users, loading, companyHistory, fetchCompanyHistory, loadUsers } = useUserData();
   const { 
     searchFilters, 
     activeTab, 
@@ -50,10 +50,17 @@ const UserManagement = () => {
       fetchCompanyHistory();
     };
 
+    const handleUserUpdated = () => {
+      // 사용자 정보 업데이트 시 승인 이력도 새로고침
+      fetchCompanyHistory();
+    };
+
     window.addEventListener('historyDeleted', handleHistoryDeleted);
+    window.addEventListener('userUpdated', handleUserUpdated);
     
     return () => {
       window.removeEventListener('historyDeleted', handleHistoryDeleted);
+      window.removeEventListener('userUpdated', handleUserUpdated);
     };
   }, [fetchCompanyHistory]);
   
@@ -109,49 +116,13 @@ const UserManagement = () => {
       });
       
       if (result && result.success) {
+        // 사용자 목록 새로고침
+        await loadUsers();
+        
         showMessage('success', '성공', '사용자가 성공적으로 추가되었습니다.', {
           showCancel: false,
           confirmText: '확인'
         });
-        
-        // 사용자 목록 새로고침
-        const usersResult = await apiCall(API_ENDPOINTS.USERS);
-        if (usersResult && usersResult.success) {
-          const formattedUsers = usersResult.data.map(user => ({
-            id: user.id,
-            userId: user.user_id,
-            companyName: user.company_name,
-            userName: user.user_name,
-            email: user.email,
-            department: user.department,
-            mobilePhone: user.mobile_phone,
-            phoneNumber: user.phone_number,
-            faxNumber: user.fax_number,
-            address: user.address,
-            notes: user.notes,
-            position: user.manager_position,
-            approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정')),
-            companyType: user.company_type,
-            pricingPlan: user.pricing_plan,
-            startDate: user.start_date,
-            endDate: user.end_date,
-            msdsLimit: user.msds_limit,
-            aiImageLimit: user.ai_image_limit,
-            aiReportLimit: user.ai_report_limit,
-            businessLicense: user.business_license,
-            // 회계 관련 필드들 추가
-            accountantName: user.accountant_name,
-            accountantPosition: user.accountant_position,
-            accountantMobile: user.accountant_mobile,
-            accountantEmail: user.accountant_email,
-            accountInfo: user.account_info,
-            representative: user.representative,
-            industry: user.industry,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          }));
-          setUsers(formattedUsers);
-        }
         
         handleCloseAddUserModal();
       } else {
@@ -242,43 +213,7 @@ const UserManagement = () => {
       
       if (result.message) {
         // 사용자 목록 새로고침
-        const usersResult = await apiCall(API_ENDPOINTS.USERS);
-        if (usersResult && usersResult.success) {
-          const formattedUsers = usersResult.data.map(user => ({
-            id: user.id,
-            userId: user.user_id,
-            companyName: user.company_name,
-            userName: user.user_name,
-            email: user.email,
-            department: user.department,
-            mobilePhone: user.mobile_phone,
-            phoneNumber: user.phone_number,
-            faxNumber: user.fax_number,
-            address: user.address,
-            notes: user.notes,
-            position: user.manager_position,
-            approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정')),
-            companyType: user.company_type,
-            pricingPlan: user.pricing_plan,
-            startDate: user.start_date,
-            endDate: user.end_date,
-            msdsLimit: user.msds_limit,
-            aiImageLimit: user.ai_image_limit,
-            aiReportLimit: user.ai_report_limit,
-            businessLicense: user.business_license,
-            // 회계 관련 필드들 추가
-            accountantName: user.accountant_name,
-            accountantPosition: user.accountant_position,
-            accountantMobile: user.accountant_mobile,
-            accountantEmail: user.accountant_email,
-            accountInfo: user.account_info,
-            representative: user.representative,
-            industry: user.industry,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          }));
-          setUsers(formattedUsers);
-        }
+        await loadUsers();
         
         showMessage('success', '성공', '사용자 정보가 성공적으로 저장되었습니다.', {
           showCancel: false,
@@ -353,49 +288,13 @@ const UserManagement = () => {
       });
       
       if (result.success) {
+        // 사용자 목록 새로고침
+        await loadUsers();
+        
         showMessage('success', '성공', '사용자가 성공적으로 삭제되었습니다.', {
           showCancel: false,
           confirmText: '확인'
         });
-        
-        // 사용자 목록 새로고침
-        const usersResult = await apiCall(API_ENDPOINTS.USERS);
-        if (usersResult && usersResult.success) {
-          const formattedUsers = usersResult.data.map(user => ({
-            id: user.id,
-            userId: user.user_id,
-            companyName: user.company_name,
-            userName: user.user_name,
-            email: user.email,
-            department: user.department,
-            mobilePhone: user.mobile_phone,
-            phoneNumber: user.phone_number,
-            faxNumber: user.fax_number,
-            address: user.address,
-            notes: user.notes,
-            position: user.manager_position,
-            approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정')),
-            companyType: user.company_type,
-            pricingPlan: user.pricing_plan,
-            startDate: user.start_date,
-            endDate: user.end_date,
-            msdsLimit: user.msds_limit,
-            aiImageLimit: user.ai_image_limit,
-            aiReportLimit: user.ai_report_limit,
-            businessLicense: user.business_license,
-            // 회계 관련 필드들 추가
-            accountantName: user.accountant_name,
-            accountantPosition: user.accountant_position,
-            accountantMobile: user.accountant_mobile,
-            accountantEmail: user.accountant_email,
-            accountInfo: user.account_info,
-            representative: user.representative,
-            industry: user.industry,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          }));
-          setUsers(formattedUsers);
-        }
       } else {
         showMessage('error', '오류', result.error || '사용자 삭제에 실패했습니다.', {
           showCancel: false,
@@ -455,6 +354,9 @@ const UserManagement = () => {
       });
       
       if (result.success) {
+        // 사용자 목록 새로고침
+        await loadUsers();
+        
         messageProps.showMessage('success', '성공', '매출이 성공적으로 등록되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -494,6 +396,8 @@ const UserManagement = () => {
         fax_number: approvalData.faxNumber || approvalData.fax_number,
         address: approvalData.address,
         notes: approvalData.notes || '',
+        business_license: approvalData.businessLicense || approvalData.business_license || '',
+        account_info: approvalData.accountInfo || approvalData.account_info || '',
         msds_limit: approvalData.msdsLimit || approvalData.msds_limit || 0,
         ai_image_limit: approvalData.aiImageLimit || approvalData.ai_image_limit || 0,
         ai_report_limit: approvalData.aiReportLimit || approvalData.ai_report_limit || 0,
@@ -504,7 +408,11 @@ const UserManagement = () => {
         end_date: approvalData.endDate || approvalData.end_date,
         manager_position: approvalData.position || approvalData.manager_position || '',
         representative: approvalData.representative || '',
-        industry: approvalData.industry || ''
+        industry: approvalData.industry || '',
+        accountant_name: approvalData.accountantName || approvalData.accountant_name || '',
+        accountant_position: approvalData.accountantPosition || approvalData.accountant_position || '',
+        accountant_mobile: approvalData.accountantMobile || approvalData.accountant_mobile || '',
+        accountant_email: approvalData.accountantEmail || approvalData.accountant_email || ''
       };
 
       const result = await apiCall(API_ENDPOINTS.USER_DETAIL(approvalData.id), {
@@ -513,49 +421,13 @@ const UserManagement = () => {
       });
       
       if (result.message) {
+        // 사용자 목록 새로고침
+        await loadUsers();
+        
         showMessage('success', '성공', '사용자 정보가 성공적으로 저장되었습니다.', {
             showCancel: false,
             confirmText: '확인'
           });
-        // 사용자 목록 새로고침
-        const usersResult = await apiCall(API_ENDPOINTS.USERS);
-        if (usersResult && usersResult.success) {
-          const formattedUsers = usersResult.data.map(user => ({
-            id: user.id,
-            userId: user.user_id,
-            companyName: user.company_name,
-            userName: user.user_name,
-            email: user.email,
-            department: user.department,
-            mobilePhone: user.mobile_phone,
-            phoneNumber: user.phone_number,
-            faxNumber: user.fax_number,
-            address: user.address,
-            notes: user.notes,
-            position: user.manager_position,
-            approvalStatus: user.approval_status || (user.is_active ? '승인 완료' : (user.company_type === '탈퇴 사용자' ? '탈퇴' : '승인 예정')),
-            companyType: user.company_type,
-            pricingPlan: user.pricing_plan,
-            startDate: user.start_date,
-            endDate: user.end_date,
-            msdsLimit: user.msds_limit,
-            aiImageLimit: user.ai_image_limit,
-            aiReportLimit: user.ai_report_limit,
-            businessLicense: user.business_license,
-            // 회계 관련 필드들 추가
-            accountantName: user.accountant_name,
-            accountantPosition: user.accountant_position,
-            accountantMobile: user.accountant_mobile,
-            accountantEmail: user.accountant_email,
-            accountInfo: user.account_info,
-            representative: user.representative,
-            industry: user.industry,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          }));
-          setUsers(formattedUsers);
-        }
-        
         handleCloseApprovalModal();
       } else {
         showMessage('error', '오류', result.error || '사용자 정보 저장에 실패했습니다.', {

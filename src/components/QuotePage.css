@@ -1,0 +1,518 @@
+/* 견적서 페이지 스타일 */
+.quote-page {
+  padding: 10px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.quote-container {
+  max-width: 100%;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.quote-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 15px;
+}
+
+.quote-section {
+  margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0;
+  padding-left: 10px;
+  border-left: 4px solid #3498db;
+}
+
+/* 업체형태 선택 버튼 */
+.company-type-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 25px;
+}
+
+.company-type-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: normal;
+  border: 2px solid #a8d5a8;
+  background: white;
+  color: #a8d5a8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.company-type-btn:hover {
+  background: #e8f5e8;
+  color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.2);
+}
+
+.company-type-btn.active {
+  background: #27ae60;
+  color: white;
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* 요금제 카드 */
+.pricing-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pricing-plan-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  position: relative;
+}
+
+.pricing-plan-card:hover {
+  border-color: #27ae60;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-plan-card.selected {
+  border-color: #27ae60;
+  background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
+  box-shadow: 0 8px 16px rgba(39, 174, 96, 0.2);
+}
+
+.pricing-plan-card.selected::before {
+  content: '✓';
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #27ae60;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.plan-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.plan-name {
+  font-size: 26px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.plan-price {
+  font-size: 28px;
+  font-weight: bold;
+  color: #3498db;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-item {
+  padding: 8px 0;
+  color: #555;
+  font-size: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-item:empty {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 결제 구분 버튼 */
+.payment-type-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.payment-type-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: normal;
+  border: 2px solid #a8d5a8;
+  background: white;
+  color: #a8d5a8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-type-btn:hover {
+  background: #e8f5e8;
+  color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.2);
+}
+
+.payment-type-btn.active {
+  background: #27ae60;
+  color: white;
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* 견적 결과 */
+.quote-result {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 견적 정보 스타일 */
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 16px;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row label {
+  color: #555;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.company-name-input {
+  width: 200px;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.company-name-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.usage-period-select {
+  width: 120px;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.usage-period-select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.usage-period-select:hover {
+  border-color: #3498db;
+}
+
+.usage-period-select:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  border-color: #ddd;
+}
+
+.usage-period-select:disabled:hover {
+  border-color: #ddd;
+}
+
+/* 견적서 발행 버튼 */
+.quote-generate-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.quote-generate-btn {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+  width: 100%;
+}
+
+.quote-generate-btn:hover {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(39, 174, 96, 0.4);
+}
+
+.quote-generate-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+}
+
+.result-card {
+  background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
+  border: 2px solid #27ae60;
+  border-radius: 12px;
+  padding: 25px;
+}
+
+.result-card h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 2px solid #27ae60;
+  padding-bottom: 10px;
+}
+
+.selected-plan {
+  font-size: 20px;
+  font-weight: bold;
+  color: #3498db;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.selected-company-type {
+  font-size: 16px;
+  color: #555;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 16px;
+}
+
+.payment-row:last-child {
+  border-bottom: none;
+}
+
+.payment-row span:first-child {
+  color: #555;
+  font-weight: 500;
+}
+
+.payment-row span:last-child {
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.payment-row.discount {
+  color: #e74c3c;
+}
+
+.payment-row.discount span:last-child {
+  color: #e74c3c;
+}
+
+.payment-row.total {
+  background: transparent;
+  color: #2c3e50;
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.payment-row.total span:last-child {
+  color: #2c3e50;
+}
+
+/* 월 요금 입력창 스타일 */
+.price-input-container {
+  position: relative;
+  display: inline-block;
+}
+
+.monthly-price-input {
+  padding: 8px 35px 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 156px;
+  text-align: right;
+  transition: border-color 0.3s ease;
+}
+
+.monthly-price-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.price-unit {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 서비스 기간 선택창 스타일 */
+.usage-period-select {
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 156px;
+  text-align: center;
+  transition: border-color 0.3s ease;
+  background-color: white;
+}
+
+.usage-period-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.usage-period-select:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .quote-container {
+    padding: 15px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .company-type-buttons,
+  .payment-type-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .company-type-btn,
+  .payment-type-btn {
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  .pricing-plans {
+    grid-template-columns: 1fr;
+  }
+  
+  .quote-result {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .quote-title {
+    font-size: 24px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+  }
+  
+  .pricing-plan-card {
+    padding: 20px;
+  }
+  
+  .plan-name {
+    font-size: 20px;
+  }
+  
+  .plan-price {
+    font-size: 20px;
+  }
+}

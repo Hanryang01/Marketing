@@ -55,7 +55,26 @@ const UserDetailModal = ({
 
   // 필드 값 처리 유틸리티 함수
   const getFieldValue = (fieldName) => {
-    return editedUser?.[fieldName] !== undefined ? editedUser[fieldName] : (user[fieldName] || '');
+    const editedValue = editedUser?.[fieldName];
+    
+    // editedUser에 값이 있으면 그것을 사용 (null도 포함)
+    if (editedValue !== undefined) {
+      return editedValue || '';
+    }
+    
+    // user 객체에서 다양한 필드명으로 시도
+    // 1. 원본 필드명
+    // 2. 소문자 변환
+    // 3. camelCase를 snake_case로 변환
+    // 4. snake_case를 camelCase로 변환
+    const userValue = user?.[fieldName] || 
+                     user?.[fieldName.toLowerCase()] || 
+                     user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase()] ||
+                     user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')] ||
+                     user?.[fieldName.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())];
+    
+    // user 값 사용 (null, undefined 모두 빈 문자열로 변환)
+    return userValue || '';
   };
 
   // input 속성 공통 함수
@@ -74,33 +93,35 @@ const UserDetailModal = ({
       // editedUser에 모든 필드를 포함하여 설정
       const userWithAdditionalFields = {
         ...user,
-        // 모든 필드에 대해 기본값 설정
-        userId: user.userId || user.user_id || '',
-        representative: user.representative || '',
-        industry: user.industry || '',
-        accountantName: user.accountantName || user.accountant_name || '',
-        accountantPosition: user.accountantPosition || user.accountant_position || '',
-        accountantMobile: user.accountantMobile || user.accountant_mobile || '',
-        accountantEmail: user.accountantEmail || user.accountant_email || '',
-        startDate: user.startDate || user.start_date || '',
-        endDate: user.endDate || user.end_date || '',
-        accountInfo: user.accountInfo || user.account_info || '',
-        department: user.department || '',
-        mobilePhone: user.mobilePhone || user.mobile_phone || '',
-        phoneNumber: user.phoneNumber || user.phone_number || '',
-        faxNumber: user.faxNumber || user.fax_number || '',
-        address: user.address || '',
-        businessLicense: user.businessLicense || user.business_license || '',
-        notes: user.notes || '',
-        companyName: user.companyName || user.company_name || '',
-        companyType: user.companyType || user.company_type || '무료 사용자',
-        pricingPlan: user.pricingPlan || user.pricing_plan || '무료',
-        approvalStatus: user.approvalStatus || user.approval_status || '승인 예정',
-        isActive: user.isActive || user.is_active || 1,
-        position: user.manager_position || user.position || '',
-        msdsLimit: user.msdsLimit || user.msds_limit || 0,
-        aiImageLimit: user.aiImageLimit || user.ai_image_limit || 0,
-        aiReportLimit: user.aiReportLimit || user.ai_report_limit || 0
+        // 모든 필드에 대해 기본값 설정 (camelCase 우선)
+        userId: user?.userId || user?.user_id || '',
+        userName: user?.userName || user?.user_name || '',
+        email: user?.email || '',
+        representative: user?.representative || '',
+        industry: user?.industry || '',
+        accountantName: user?.accountantName || user?.accountant_name || '',
+        accountantPosition: user?.accountantPosition || user?.accountant_position || '',
+        accountantMobile: user?.accountantMobile || user?.accountant_mobile || '',
+        accountantEmail: user?.accountantEmail || user?.accountant_email || '',
+        startDate: user?.startDate || user?.start_date || '',
+        endDate: user?.endDate || user?.end_date || '',
+        accountInfo: user?.accountInfo || user?.account_info || '',
+        department: user?.department || '',
+        mobilePhone: user?.mobilePhone || user?.mobile_phone || '',
+        phoneNumber: user?.phoneNumber || user?.phone_number || '',
+        faxNumber: user?.faxNumber || user?.fax_number || '',
+        address: user?.address || '',
+        businessLicense: user?.businessLicense || user?.business_license || '',
+        notes: user?.notes || '',
+        companyName: user?.companyName || user?.company_name || '',
+        companyType: user?.companyType || user?.company_type || '무료 사용자',
+        pricingPlan: user?.pricingPlan || user?.pricing_plan || '무료',
+        approvalStatus: user?.approvalStatus || user?.approval_status || '승인 예정',
+        isActive: user?.isActive ?? user?.is_active ?? 1,
+        position: user?.position || user?.manager_position || '',
+        msdsLimit: user?.msdsLimit || user?.msds_limit || 0,
+        aiImageLimit: user?.aiImageLimit || user?.ai_image_limit || 0,
+        aiReportLimit: user?.aiReportLimit || user?.ai_report_limit || 0
       };
       
       setEditedUser(userWithAdditionalFields);
@@ -113,6 +134,18 @@ const UserDetailModal = ({
     }
   }, [isOpen, user?.id, isApprovalMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 사용자 상태 변경 시 히스토리 새로고침 (승인 상태나 회사 타입이 실제로 변경될 때만)
+  React.useEffect(() => {
+    if (isOpen && isApprovalMode && (user?.userId || user?.user_id) && prevUserRef.current) {
+      const prevUser = prevUserRef.current;
+      const hasStatusChanged = prevUser.approvalStatus !== user.approvalStatus || 
+                              prevUser.companyType !== user.companyType;
+      
+      if (hasStatusChanged) {
+        fetchUserHistory(user.userId || user.user_id);
+      }
+    }
+  }, [user?.approvalStatus, user?.companyType, isOpen, isApprovalMode, user?.userId, user?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 무료 사용자/탈퇴 사용자일 때 날짜 필드 강제 초기화 (승인 상태와 상관없이)
   React.useEffect(() => {
@@ -127,7 +160,7 @@ const UserDetailModal = ({
         }));
       }
     }
-  }, [editedUser]);
+  }, [editedUser?.companyType, editedUser?.endDate, editedUser?.startDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 입력 필드 변경 처리
   const handleInputChange = (field, value) => {
@@ -200,7 +233,7 @@ const UserDetailModal = ({
       }
       
       // userId 필드 검증 및 수정
-      const userId = editedUser.userId || editedUser.user_id || user?.userId || user?.user_id || '';
+      const userId = editedUser?.userId || user?.userId || '';
       
       if (!userId || userId.trim() === '') {
         alert('사용자 ID가 없습니다. 페이지를 새로고침해주세요.');
@@ -219,8 +252,8 @@ const UserDetailModal = ({
         phone_number: editedUser.phoneNumber,
         fax_number: editedUser.faxNumber,
         address: editedUser.address,
-        business_license: editedUser.businessLicense,
-        notes: editedUser.notes,
+        business_license: editedUser.businessLicense || '',
+        notes: editedUser.notes || '',
         account_info: editedUser.accountInfo || '',
         company_type: editedUser.companyType,
         approval_status: editedUser.approvalStatus,
@@ -229,18 +262,21 @@ const UserDetailModal = ({
         start_date: editedUser.startDate,
         end_date: editedUser.endDate,
         manager_position: editedUser.position || '',
-        accountant_name: editedUser.accountantName,
-        accountant_position: editedUser.accountantPosition,
+        accountant_name: editedUser.accountantName || '',
+        accountant_position: editedUser.accountantPosition || '',
         accountant_mobile: editedUser.accountantMobile || '',
-        accountant_email: editedUser.accountantEmail,
-        representative: editedUser.representative,
-        industry: editedUser.industry,
+        accountant_email: editedUser.accountantEmail || '',
+        representative: editedUser.representative || '',
+        industry: editedUser.industry || '',
         msds_limit: editedUser.msdsLimit,
         ai_image_limit: editedUser.aiImageLimit,
         ai_report_limit: editedUser.aiReportLimit
       };
       
       await onSave(serverData);
+      
+      // 사용자 정보 저장 후 승인 이력 새로고침
+      window.dispatchEvent(new CustomEvent('userUpdated'));
     }
   };
 

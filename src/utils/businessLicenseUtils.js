@@ -11,8 +11,8 @@ export const formatBusinessLicense = (businessLicense) => {
   // 숫자만 추출
   const numbers = businessLicense.replace(/\D/g, '');
   
-  // 10자리가 아니면 원본 데이터 그대로 반환 (기존 데이터 보존)
-  if (numbers.length !== 10) return businessLicense;
+  // 10자리가 아니면 숫자만 반환 (입력 중인 상태)
+  if (numbers.length !== 10) return numbers;
   
   // XXX-XX-XXXXX 형식으로 포맷팅
   return `${numbers.slice(0, 3)}-${numbers.slice(3, 5)}-${numbers.slice(5, 10)}`;

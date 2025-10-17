@@ -36,6 +36,7 @@ const useUserData = () => {
             aiImageLimit: user.ai_image_limit,
             aiReportLimit: user.ai_report_limit,
             businessLicense: user.business_license,
+            isActive: user.is_active,
             // 회계 관련 필드들 추가
             accountantName: user.accountant_name,
             accountantPosition: user.accountant_position,
@@ -77,7 +78,20 @@ const useUserData = () => {
           const dateB = b.end_date ? new Date(b.end_date) : new Date('1900-01-01');
           return dateB - dateA; // 내림차순 (늦은 날짜가 먼저)
         });
-        setCompanyHistory(sortedHistory);
+        
+        // active_days가 없는 경우 계산해서 추가
+        const processedHistory = sortedHistory.map(history => {
+          if (!history.active_days && history.start_date && history.end_date) {
+            const startDate = new Date(history.start_date);
+            const endDate = new Date(history.end_date);
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
+            return { ...history, active_days: activeDays };
+          }
+          return history;
+        });
+        
+        setCompanyHistory(processedHistory);
       } else {
         console.error('승인 이력 데이터 형식 오류:', result);
         setCompanyHistory([]);
@@ -92,7 +106,7 @@ const useUserData = () => {
   useEffect(() => {
     loadUsers();
     fetchCompanyHistory();
-  }, [loadUsers, fetchCompanyHistory]); // ESLint 경고 해결
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     users,
