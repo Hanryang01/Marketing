@@ -226,11 +226,27 @@ const DashboardPage = () => {
   }, [selectedYear, selectedMonth, calculatePreviousYearCumulative, getMonthData]);
 
 
-  // 연도 옵션 생성
-  const yearOptions = Array.from({ length: 5 }, (_, i) => {
-    const year = new Date().getFullYear() - i;
-    return { value: year, label: `${year}년` };
-  });
+  // 연도 변경 핸들러 (ExpenseStatus와 동일)
+  const handleYearChange = (newYear) => {
+    setSelectedYear(newYear);
+  };
+
+  // 연도 선택 컴포넌트 (ExpenseStatus와 동일)
+  const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
+    return (
+      <select 
+        value={selectedYear} 
+        onChange={(e) => onYearChange(parseInt(e.target.value))}
+        className={className}
+      >
+        {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+          <option key={year} value={year}>
+            {year}년
+          </option>
+        ))}
+      </select>
+    );
+  };
 
   // 월 옵션 생성
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
@@ -248,17 +264,11 @@ const DashboardPage = () => {
       <div className="dashboard-header">
         <h1>월별 입출금</h1>
         <div className="date-selector">
-          <select 
-            value={selectedYear} 
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+          <YearSelector 
+            selectedYear={selectedYear} 
+            onYearChange={handleYearChange}
             className="year-select"
-          >
-            {yearOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
           <select 
             value={selectedMonth} 
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}

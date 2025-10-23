@@ -212,8 +212,8 @@ const NotificationModal = () => {
   }
 
   return (
-    <div className="notification-modal-overlay" onClick={closeModal}>
-      <div className="notification-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="notification-modal-overlay">
+      <div className="notification-modal">
         {/* 모달 헤더 */}
         <div className="notification-modal-header">
           <h2>알림</h2>

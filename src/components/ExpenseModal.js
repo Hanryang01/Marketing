@@ -439,8 +439,8 @@ const ExpenseModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleCloseModal}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay">
+      <div className="modal-content">
         <div className="modal-header">
           <h2>{mode === 'add' ? `${getUITexts().modalTitle} 입력` : `${getUITexts().modalTitle} 수정`}</h2>
           <button className="close-button" onClick={handleCloseModal}>×</button>

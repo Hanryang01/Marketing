@@ -452,13 +452,44 @@ const ExpenseStatus = () => {
 
   // 월별 손익 그래프 데이터 생성
   const monthlyProfitChartData = useMemo(() => {
-    return createChartData(
-      '월별 손익',
-      getMonthlyProfitData(),
-      'rgba(54, 162, 235, 0.8)',
-      'rgba(54, 162, 235, 1)'
-    );
-  }, [getMonthlyProfitData, createChartData]);
+    const profitData = getMonthlyProfitData();
+    const baseData = {
+      labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+      datasets: [
+        {
+          label: '월별 손익',
+          data: profitData,
+          backgroundColor: profitData.map(value => 
+            value >= 0 
+              ? 'rgba(54, 162, 235, 0.8)'  // 양수: 파란색
+              : 'rgba(255, 99, 132, 0.8)'   // 음수: 연한 빨간색
+          ),
+          borderColor: profitData.map(value => 
+            value >= 0 
+              ? 'rgba(54, 162, 235, 1)'     // 양수: 파란색 테두리
+              : 'rgba(255, 99, 132, 1)'     // 음수: 빨간색 테두리
+          ),
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false,
+          cornerRadius: 4,
+          datalabels: {
+            display: true,
+            color: '#333',
+            font: { weight: 'bold', size: 12 },
+            formatter: function(value) {
+              return value !== 0 ? value.toLocaleString() + '원' : '';
+            },
+            anchor: 'end',
+            align: 'top',
+            offset: 4
+          }
+        },
+      ],
+    };
+    
+    return applyCurrentMonthHighlight(baseData, selectedYear);
+  }, [getMonthlyProfitData, selectedYear, applyCurrentMonthHighlight]);
 
   // 월별 손익 그래프 옵션
   const monthlyProfitChartOptions = useMemo(() => {
@@ -508,8 +539,16 @@ const ExpenseStatus = () => {
         {
           label: '연도별 손익',
           data: profitData,
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: profitData.map(value => 
+            value >= 0 
+              ? 'rgba(54, 162, 235, 0.8)'  // 양수: 파란색
+              : 'rgba(255, 99, 132, 0.8)'   // 음수: 연한 빨간색
+          ),
+          borderColor: profitData.map(value => 
+            value >= 0 
+              ? 'rgba(54, 162, 235, 1)'     // 양수: 파란색 테두리
+              : 'rgba(255, 99, 132, 1)'     // 음수: 빨간색 테두리
+          ),
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
