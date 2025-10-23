@@ -84,8 +84,8 @@
 }
 
 .export-excel-button {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  padding: 8px 20px;
+  background: #27ae60;
   color: white;
   border: none;
   border-radius: 6px;
@@ -98,12 +98,12 @@
 
 .export-excel-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
 }
 
 .add-revenue-button {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  padding: 8px 20px;
+  background: #36a2eb;
   color: white;
   border: none;
   border-radius: 6px;
@@ -115,7 +115,7 @@
 
 .add-revenue-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 4px 12px rgba(54, 162, 235, 0.4);
 }
 
 /* 테이블 스타일 */
@@ -135,7 +135,7 @@
 
 .revenue-table th {
   background: #f8f9fa;
-  padding: 10px 10px;
+  padding: 10px 6px;
   text-align: left;
   font-weight: 600;
   color: #333;
@@ -146,7 +146,7 @@
 }
 
 .revenue-table td {
-  padding: 10px 10px;
+  padding: 10px 6px;
   border-bottom: 1px solid #e9ecef;
   color: #555;
   white-space: nowrap;
@@ -187,7 +187,6 @@
 .add-button {
   padding: 3px 10px;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
@@ -215,7 +214,6 @@
 .status-button {
   padding: 3px 10px;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
@@ -571,8 +569,8 @@
 
 /* 오늘 버튼 스타일 */
 .today-button {
-  background-color: rgba(0, 123, 255, 0.7);
-  border: 1px solid rgba(0, 123, 255, 0.8);
+  background: #36a2eb;
+  border: none;
   color: white;
   padding: 6px 12px;
   border-radius: 4px;
@@ -583,8 +581,7 @@
 }
 
 .today-button:hover {
-  background-color: rgba(0, 123, 255, 0.9);
-  border-color: rgba(0, 123, 255, 1);
+  background: #2196f3;
   transform: translateY(-1px);
 }
 

@@ -34,11 +34,14 @@ export const API_ENDPOINTS = {
   
   // 세금계산서 알림 설정 관련
   TAX_INVOICE_SETTINGS: `${API_BASE_URL}/api/tax-invoice-settings`,
+  
+  // 지출 관련
+  EXPENSES: `${API_BASE_URL}/api/expenses`,
+  EXPENSE_DETAIL: (id) => `${API_BASE_URL}/api/expenses/${id}`,
 };
 
 // API 호출 헬퍼 함수
 export const apiCall = async (url, options = {}) => {
-  console.log('🌐 apiCall 입력:', { url, API_BASE_URL });
   
   // API_BASE_URL에서 공백 제거
   const cleanApiBaseUrl = API_BASE_URL.trim();
@@ -46,16 +49,13 @@ export const apiCall = async (url, options = {}) => {
   let fullUrl;
   if (url.startsWith('http')) {
     fullUrl = url;
-    console.log('🌐 절대 URL 사용:', fullUrl);
   } else if (url.startsWith('/api/')) {
     // 이미 /api/로 시작하는 경우 중복 방지 - /api/ 제거 후 처리
     const cleanUrl = url.replace(/^\/api/, '');
     fullUrl = `${cleanApiBaseUrl}/api${cleanUrl}`;
-    console.log('🌐 /api/로 시작하는 URL 처리:', fullUrl);
   } else {
     // /api/로 시작하지 않는 경우 추가
     fullUrl = `${cleanApiBaseUrl}/api${url}`;
-    console.log('🌐 일반 URL 처리:', fullUrl);
   }
   
   const defaultOptions = {
@@ -66,21 +66,15 @@ export const apiCall = async (url, options = {}) => {
   };
   
   try {
-    console.log('🌐 API 요청 시작:', fullUrl);
     const response = await fetch(fullUrl, { ...defaultOptions, ...options });
-    console.log('🌐 API 응답 상태:', response.status, response.ok);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('🌐 HTTP 에러 상세:', { status: response.status, statusText: response.statusText, body: errorText });
       throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log('🌐 API 응답 성공:', fullUrl, data);
     return data;
   } catch (error) {
-    console.error('🌐 API 호출 실패:', { url: fullUrl, error: error.message, stack: error.stack });
     throw error;
   }
 };

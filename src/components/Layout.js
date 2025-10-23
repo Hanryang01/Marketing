@@ -10,7 +10,6 @@ const Layout = ({ children, userInfo, onLogout }) => {
   // 컴포넌트 로딩 완료 이벤트 리스너
   useEffect(() => {
     const handleComponentsLoaded = () => {
-      console.log('🔄 컴포넌트 로딩 완료 - 메뉴 강제 리렌더링');
     };
 
     window.addEventListener('componentsLoaded', handleComponentsLoaded);
@@ -50,6 +49,16 @@ const Layout = ({ children, userInfo, onLogout }) => {
         { id: 'revenue-status', label: '매출 현황', path: '/sales/status', icon: '💰' },
         { id: 'revenue-list', label: '매출 리스트', path: '/sales/list', icon: '📋' },
         { id: 'quote', label: '견적서', path: '/sales/quote', icon: '📄' }
+      ]
+    },
+    { 
+      id: 'expense', 
+      label: '입출금', 
+      path: '/expense', 
+      icon: '💸',
+      subItems: [
+        { id: 'expense-status', label: '입출금 현황', path: '/expense/status', icon: '📊' },
+        { id: 'expense-list', label: '입출금 리스트', path: '/expense/list', icon: '📋' }
       ]
     }
   ];
@@ -129,6 +138,11 @@ const Layout = ({ children, userInfo, onLogout }) => {
                     return '견적서';
                   }
                   return '매출 관리';
+                }
+                
+                // 지출 관리 하위 페이지들
+                if (currentPath.startsWith('/expense/')) {
+                  return '지출 관리';
                 }
                 
                                  // 대시보드

@@ -566,7 +566,7 @@ router.put('/api/users/:id', async (req, res) => {
               await connection.execute(`
                 INSERT INTO company_history (
                   user_id_string, company_name, user_name, company_type, status_type,
-                  start_date, end_date, pricing_plan, mobile_phone, email, manager_position, created_at
+                  start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
               `, [
                 user_id || null,

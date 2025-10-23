@@ -444,6 +444,16 @@ export const useCalendar = () => {
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
+    // ISO 문자열(예: 2025-10-20T00:00:00.000Z)인 경우 Date로 변환 후 YYYY-MM-DD 반환
+    if (typeof dateValue === 'string' && /T\d{2}:\d{2}:\d{2}/.test(dateValue)) {
+      const d = new Date(dateValue);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+    }
     
     // 8자리 숫자 형식인 경우
     if (typeof dateValue === 'number' && dateValue.toString().length === 8) {

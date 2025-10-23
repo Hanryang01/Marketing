@@ -14,6 +14,9 @@ const NotificationService = require('./services/notificationService');
 const taxInvoiceRoutes = require('./routes/taxInvoice');
 const TaxInvoiceService = require('./services/taxInvoiceService');
 
+// 지출 관련 모듈들
+const expenseRoutes = require('./routes/expenses');
+
 
 // 한국 시간대 설정
 process.env.TZ = 'Asia/Seoul';
@@ -24,14 +27,14 @@ const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_N
 // 설정값 상수화
 const config = {
   server: {
-    port: process.env.PORT || 3003
+    port: process.env.PORT || 3007
   },
   database: {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '8123',
-    database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
+    database: process.env.DB_NAME || 'sihm_local',
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
@@ -50,8 +53,33 @@ const { withDatabase, handleApiError } = require('./utils/helpers');
 const DateUtils = require('./utils/dateUtils');
 
 // Middleware
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ 
+  limit: '10mb',
+  strict: false,
+  type: 'application/json',
+  verify: (req, res, buf, encoding) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      console.error('JSON 파싱 전 검증 실패:', e.message);
+      console.error('버퍼 내용:', buf.toString());
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// JSON 파싱 오류 처리 미들웨어
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    console.error('JSON 파싱 오류:', error.message);
+    console.error('요청 본문:', req.body);
+    return res.status(400).json({ 
+      error: '잘못된 JSON 형식입니다.', 
+      details: error.message 
+    });
+  }
+  next();
+});
 
 // CORS 설정 - 모든 라우트보다 먼저 등록
 app.use((req, res, next) => {
@@ -83,6 +111,9 @@ app.use('/api/notifications', notificationRoutes);
 
 // 세금계산서 라우트 연결
 app.use('/api/tax-invoice-settings', taxInvoiceRoutes);
+
+// 지출 라우트 연결
+app.use('/api/expenses', expenseRoutes);
 
 // PDF 생성 API - 텍스트 덮어쓰기 방식
 app.post('/api/generate-pdf', async (req, res) => {
@@ -675,7 +706,7 @@ const startServer = async () => {
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  console.log(`🔧 Environment: ${isDevelopment ? 'DEVELOPMENT (sihm_local)' : 'PRODUCTION (sihm_user_management)'}`);
+  console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
       
       // 서버 시작 시 누락된 처리 복구
       recoverMissedProcessing();

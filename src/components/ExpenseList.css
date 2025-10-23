@@ -1,0 +1,344 @@
+/* ExpenseList.css - 지출 목록 스타일 */
+
+.expense-list-container {
+  padding: 20px;
+}
+
+/* 탭 네비게이션 */
+.expense-tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.expense-tabs-left {
+  display: flex;
+}
+
+.expense-tabs-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: none;
+  background: none;
+  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button.active {
+  color: #4CAF50;
+  border-bottom-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.tab-button:hover:not(.active) {
+  color: #333;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.export-excel-button {
+  padding: 8px 20px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.export-excel-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+.add-expense-button {
+  padding: 8px 20px;
+  background: #36a2eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.add-expense-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(54, 162, 235, 0.4);
+}
+
+.add-expense-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.expense-list-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.expense-table-container {
+  overflow-x: auto;
+}
+
+.expense-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.expense-table th {
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  padding: 10px 6px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.expense-table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #e9ecef;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.expense-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.expense-table tbody tr:hover {
+  background-color: #e3f2fd;
+}
+
+.expense-table .amount {
+  text-align: left;
+  font-weight: normal;
+}
+
+/* 거래 유형별 금액 색상 */
+.income-amount {
+  color: #4CAF50; /* 녹색 - 입금 */
+  font-weight: 600;
+}
+
+.expense-amount {
+  color: #F44336; /* 빨간색 - 지출 */
+  font-weight: 600;
+}
+
+
+
+.expense-table .actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-button {
+  padding: 3px 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  width: 80px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: rgba(108, 117, 125, 0.3);
+  color: #495057;
+}
+
+.status-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.status-button.delete-red {
+  background-color: rgba(220, 53, 69, 0.3) !important;
+  color: #721c24 !important;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .expense-list-container {
+    padding: 10px;
+  }
+  
+  .expense-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .expense-list-header h1 {
+    font-size: 20px;
+  }
+  
+  .expense-table th,
+  .expense-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+  
+  .edit-button,
+  .delete-button {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+}
+
+/* 통일된 메시지 팝업창 스타일 */
+.message-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.message-modal {
+  background: white;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  text-align: center;
+  position: relative;
+}
+
+.message-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 auto 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-icon.success {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+
+.message-icon.error {
+  background: #ffebee;
+  color: #f44336;
+}
+
+.message-icon.warning {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.message-icon.info {
+  background: #e3f2fd;
+  color: #2196f3;
+}
+
+.message-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.message-content {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 25px;
+  white-space: pre-line;
+}
+
+.message-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.message-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.message-button.confirm {
+  background: #4caf50;
+  color: white;
+}
+
+.message-button.confirm:hover {
+  background: #45a049;
+}
+
+.message-button.cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.message-button.cancel:hover {
+  background: #e0e0e0;
+}
+
+.message-button.delete {
+  background: #f44336;
+  color: white;
+}
+
+.message-button.delete:hover {
+  background: #da190b;
+}

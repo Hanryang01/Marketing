@@ -1,6 +1,7 @@
--- SIHM User Management MySQL Schema
--- Updated: 2025-10-06
+-- SIHM Local MySQL Schema
+-- Updated: 2025-10-23
 -- Current database state applied
+-- Includes: users, company_history, revenue, notifications, tax_invoice_notification_settings, error_logs, notification_log, expenses
 
 -- 사용자 테이블
 CREATE TABLE IF NOT EXISTS `users` (
@@ -162,4 +163,29 @@ CREATE TABLE IF NOT EXISTS `notification_log` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_notification_type` (`notification_type`),
   KEY `idx_notification_date` (`notification_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 지출 테이블
+CREATE TABLE IF NOT EXISTS `expenses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `business_license` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issue_date` date NOT NULL,
+  `expense_date` date DEFAULT NULL,
+  `item` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payment_method` enum('세금계산서','영수증','신용카드') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `supply_amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `vat_amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `total_amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `transaction_type` enum('expense','income') COLLATE utf8mb4_unicode_ci DEFAULT 'expense',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_company_name` (`company_name`),
+  KEY `idx_business_license` (`business_license`),
+  KEY `idx_issue_date` (`issue_date`),
+  KEY `idx_expense_date` (`expense_date`),
+  KEY `idx_payment_method` (`payment_method`),
+  KEY `idx_transaction_type` (`transaction_type`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

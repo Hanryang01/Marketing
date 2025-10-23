@@ -326,7 +326,8 @@
 }
 
 .today-button {
-  background: #f0f0f0;
+  background: #36a2eb;
+  color: white;
   border: none;
   padding: 5px 10px;
   border-radius: 4px;
@@ -336,7 +337,7 @@
 }
 
 .today-button:hover {
-  background: #e0e0e0;
+  background: #2196f3;
 }
 
 /* 반응형 디자인 */

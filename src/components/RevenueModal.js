@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './RevenueModal.css';
 import { useCalendar } from '../hooks/useCalendar';
+import { formatAmount } from '../utils/helpers';
 import { handleBusinessLicenseInput, formatBusinessLicense } from '../utils/businessLicenseUtils';
 
 const RevenueModal = ({
@@ -42,12 +43,6 @@ const RevenueModal = ({
 
   useEffect(() => {
     if (isOpen && initialData) {
-      // 금액 필드에 천 단위 구분자 추가
-      const formatAmount = (amount) => {
-        if (!amount) return '';
-        const numericValue = parseFloat(amount.toString().replace(/,/g, ''));
-        return isNaN(numericValue) ? '' : numericValue.toLocaleString();
-      };
       
       setRevenueData(prev => ({
         ...prev,

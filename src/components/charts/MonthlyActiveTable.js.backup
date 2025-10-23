@@ -1,0 +1,99 @@
+import React from 'react';
+import { useCurrentMonth } from '../../hooks/useCurrentMonth';
+
+const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
+  const { isCurrentMonth } = useCurrentMonth();
+
+  return (
+    <div className="monthly-active-table-container">
+      <div className="monthly-active-table-header">
+        <h3>월별 활성화 업체 수 (표)</h3>
+        <div className="year-selector">
+          <label htmlFor="year-select">연도 선택:</label>
+          <select 
+            id="year-select" 
+            value={selectedYear} 
+            onChange={(e) => onYearChange(parseInt(e.target.value))}
+            className="year-select"
+          >
+            {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+              <option key={year} value={year}>{year}년</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <div className="monthly-active-table-wrapper">
+        <table className="monthly-active-table">
+          <thead>
+            <tr>
+              <th className="category-header">구분</th>
+              {Array.from({ length: 12 }, (_, i) => {
+                const month = i + 1;
+                const isCurrent = isCurrentMonth(month, selectedYear);
+                return (
+                  <th 
+                    key={i} 
+                    className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                  >
+                    {month}월
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="category-cell">컨설팅 업체</td>
+              {data.consulting.map((count, index) => {
+                const month = index + 1;
+                const isCurrent = isCurrentMonth(month, selectedYear);
+                return (
+                  <td 
+                    key={index} 
+                    className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                  >
+                    {count}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr>
+              <td className="category-cell">일반 업체</td>
+              {data.general.map((count, index) => {
+                const month = index + 1;
+                const isCurrent = isCurrentMonth(month, selectedYear);
+                return (
+                  <td 
+                    key={index} 
+                    className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                  >
+                    {count}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr className="total-row">
+              <td className="category-cell total-label">합계</td>
+              {data.total.map((count, index) => {
+                const month = index + 1;
+                const isCurrent = isCurrentMonth(month, selectedYear);
+                return (
+                  <td 
+                    key={index} 
+                    className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                  >
+                    {count}
+                  </td>
+                );
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default MonthlyActiveTable;
+

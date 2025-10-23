@@ -510,8 +510,8 @@ input:focus::placeholder {
 
 /* 오늘 버튼 스타일 */
 .today-button {
-  background-color: rgba(0, 123, 255, 0.7);
-  border: 1px solid rgba(0, 123, 255, 0.8);
+  background: #36a2eb;
+  border: none;
   color: white;
   padding: 6px 12px;
   border-radius: 4px;
@@ -522,8 +522,7 @@ input:focus::placeholder {
 }
 
 .today-button:hover {
-  background-color: rgba(0, 123, 255, 0.9);
-  border-color: rgba(0, 123, 255, 1);
+  background: #2196f3;
   transform: translateY(-1px);
 }
 
@@ -618,7 +617,7 @@ input:focus::placeholder {
 .status-button {
   border: none;
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 16px;
   cursor: pointer;
   font-size: 11px;
   transition: all 0.3s ease;

@@ -10,7 +10,7 @@ const dbConfig = {
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '8123',
-  database: process.env.DB_NAME || (isDevelopment ? 'sihm_local' : 'sihm_user_management'),
+  database: process.env.DB_NAME || 'sihm_local',
   waitForConnections: true,
   connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
   queueLimit: 0,

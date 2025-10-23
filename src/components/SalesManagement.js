@@ -202,7 +202,10 @@ const SalesManagement = () => {
       
       saveAs(blob, fileName);
       
-            showMessage('success', '성공', `매출 리스트가 성공적으로 추출되었습니다.\n파일명: ${fileName}`);
+            showMessage('success', '성공', `매출 리스트가 성공적으로 추출되었습니다.\n파일명: ${fileName}`, {
+        showCancel: false,
+        confirmText: '확인'
+      });
       
     } catch (error) {
       console.error('엑셀 추출 중 오류:', error);
@@ -518,13 +521,13 @@ const SalesManagement = () => {
             onClick={exportToExcel}
             title="매출 리스트를 엑셀 파일로 다운로드"
           >
-            📊 엑셀 추출
+            엑셀 추출
           </button>
           <button 
             className="add-revenue-button"
             onClick={handleOpenAddRevenueModal}
           >
-            ➕ 매출 추가
+            매출 추가
           </button>
         </div>
       </div>

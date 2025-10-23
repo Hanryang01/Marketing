@@ -22,23 +22,22 @@
 }
 
 .export-excel-button {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  padding: 8px 20px;
+  background: #27ae60;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
 }
 
 .export-excel-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4);
-  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
 }
 
 .revenue-header h1 {
@@ -155,7 +154,7 @@
   text-align: center;
   border: 2px solid;
   transition: all 0.3s ease;
-  height: 213px;
+  height: 208px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -217,7 +216,7 @@
 
 .summary-card h3 {
   margin: 0 0 8px 0;
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -261,7 +260,7 @@
 
 .summary-number {
   margin: 0;
-  font-size: 1.7rem;
+  font-size: 27px;
   font-weight: 800;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -297,6 +296,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  margin-top: 30px;
   margin-bottom: 20px;
 }
 
@@ -460,7 +460,7 @@
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+  margin-top: 30px;
   border: 1px solid #e0e0e0;
 }
 

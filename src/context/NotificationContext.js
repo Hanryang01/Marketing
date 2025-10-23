@@ -60,7 +60,6 @@ export const NotificationProvider = ({ children }) => {
       const response = await apiCall(API_ENDPOINTS.NOTIFICATIONS);
       
       if (response && response.success && response.data && Array.isArray(response.data)) {
-        console.log('📋 원본 알림 데이터:', response.data);
         // 서버 데이터를 프론트엔드 형식으로 변환
         const serverNotifications = response.data.map(notification => ({
           id: notification.id.toString(),
@@ -73,23 +72,11 @@ export const NotificationProvider = ({ children }) => {
           expiresAt: notification.expires_at
         }));
         
-        console.log('🔄 변환된 알림 데이터:', serverNotifications);
         setNotifications(serverNotifications);
-        console.log(`✅ 서버에서 ${serverNotifications.length}개 알림 로드 완료`);
       } else {
-        console.log('📝 서버에 알림이 없습니다.');
-        console.log('🔍 데이터 구조:', { 
-          success: response?.success, 
-          hasData: !!response?.data, 
-          isArray: Array.isArray(response?.data),
-          dataType: typeof response?.data,
-          dataValue: response?.data
-        });
         setNotifications([]);
       }
     } catch (error) {
-      console.error('❌ 서버 알림 로드 실패:', error);
-      console.error('❌ 에러 상세:', error.message, error.stack);
       // 서버 로드 실패 시 빈 배열로 설정
       setNotifications([]);
     }
@@ -140,7 +127,6 @@ export const NotificationProvider = ({ children }) => {
       await loadTaxInvoiceSettings();
       
     } catch (error) {
-      console.error('알림 설정 로드 실패:', error);
       // 에러 발생 시 기본값 설정
       const defaultSettings = {
         endDateReminder14Days: true,
@@ -162,7 +148,6 @@ export const NotificationProvider = ({ children }) => {
   // 알림 읽음 처리 (서버 API 호출)
   const markAsRead = async (notificationId) => {
     try {
-      console.log(`📖 알림 읽음 처리: ${notificationId}`);
       await apiCall(API_ENDPOINTS.NOTIFICATION_READ(notificationId), {
         method: 'PUT'
       });
@@ -174,16 +159,14 @@ export const NotificationProvider = ({ children }) => {
           : notification
       );
       setNotifications(updatedNotifications);
-      console.log('✅ 알림 읽음 처리 완료');
     } catch (error) {
-      console.error('❌ 알림 읽음 처리 실패:', error);
+      // 조용히 무시
     }
   };
 
   // 모든 알림 읽음 처리 (서버 API 호출)
   const markAllAsRead = async () => {
     try {
-      console.log('📖 모든 알림 읽음 처리 중...');
       
       // 읽지 않은 알림들만 서버에 읽음 처리 요청
       const unreadNotifications = notifications.filter(notification => !notification.isRead);
@@ -194,7 +177,6 @@ export const NotificationProvider = ({ children }) => {
             method: 'PUT'
           });
         } catch (error) {
-          console.error(`❌ 알림 ${notification.id} 읽음 처리 실패:`, error);
         }
       }
       
@@ -205,16 +187,14 @@ export const NotificationProvider = ({ children }) => {
         readAt: notification.readAt || new Date().toISOString()
       }));
       setNotifications(updatedNotifications);
-      console.log('✅ 모든 알림 읽음 처리 완료');
     } catch (error) {
-      console.error('❌ 모든 알림 읽음 처리 실패:', error);
+      // 조용히 무시
     }
   };
 
   // 알림 삭제 (서버 API 호출)
   const deleteNotification = async (notificationId) => {
     try {
-      console.log(`🗑️ 알림 삭제: ${notificationId}`);
       await apiCall(API_ENDPOINTS.NOTIFICATION_DELETE(notificationId), {
         method: 'DELETE'
       });
@@ -224,9 +204,8 @@ export const NotificationProvider = ({ children }) => {
         notification => notification.id !== notificationId
       );
       setNotifications(updatedNotifications);
-      console.log('✅ 알림 삭제 완료');
     } catch (error) {
-      console.error('❌ 알림 삭제 실패:', error);
+      // 조용히 무시
     }
   };
 
@@ -267,7 +246,6 @@ export const NotificationProvider = ({ children }) => {
       // 2. 알림 설정도 함께 로드 (모달에서 설정 표시를 위해)
       await loadNotificationSettings();
     } catch (error) {
-      console.error('❌ 알림 로드 실패:', error);
     }
   };
   const closeModal = () => setIsModalOpen(false);
@@ -281,7 +259,6 @@ export const NotificationProvider = ({ children }) => {
   // 세금계산서 설정 추가 (서버 API 호출)
   const addTaxInvoiceSetting = async (companyName, day) => {
     try {
-      console.log('🔄 세금계산서 설정 추가:', { companyName, day });
       const response = await apiCall(API_ENDPOINTS.TAX_INVOICE_SETTINGS, {
         method: 'POST',
         headers: {
@@ -294,21 +271,17 @@ export const NotificationProvider = ({ children }) => {
       });
       
       if (response.success) {
-        console.log('✅ 세금계산서 설정 추가 성공:', response);
         // 서버에서 설정 조회하여 로컬 상태 업데이트
         await loadTaxInvoiceSettings();
-      } else {
-        console.error('❌ 세금계산서 설정 추가 실패:', response.error);
       }
     } catch (error) {
-      console.error('❌ 세금계산서 설정 추가 API 호출 실패:', error);
+      // 조용히 무시
     }
   };
 
   // 세금계산서 설정 수정 (서버 API 호출)
   const updateTaxInvoiceSetting = async (id, companyName, day) => {
     try {
-      console.log('🔄 세금계산서 설정 수정:', { id, companyName, day });
       const response = await apiCall(`${API_ENDPOINTS.TAX_INVOICE_SETTINGS}/${id}`, {
         method: 'PUT',
         headers: {
@@ -322,45 +295,36 @@ export const NotificationProvider = ({ children }) => {
       });
       
       if (response.success) {
-        console.log('✅ 세금계산서 설정 수정 성공:', response);
         // 서버에서 설정 조회하여 로컬 상태 업데이트
         await loadTaxInvoiceSettings();
-      } else {
-        console.error('❌ 세금계산서 설정 수정 실패:', response.error);
       }
     } catch (error) {
-      console.error('❌ 세금계산서 설정 수정 API 호출 실패:', error);
+      // 조용히 무시
     }
   };
 
   // 세금계산서 설정 삭제 (서버 API 호출)
   const removeTaxInvoiceSetting = async (id) => {
     try {
-      console.log('🔄 세금계산서 설정 삭제:', { id });
       const response = await apiCall(`${API_ENDPOINTS.TAX_INVOICE_SETTINGS}/${id}`, {
         method: 'DELETE'
       });
       
       if (response.success) {
-        console.log('✅ 세금계산서 설정 삭제 성공:', response);
         // 서버에서 설정 조회하여 로컬 상태 업데이트
         await loadTaxInvoiceSettings();
-      } else {
-        console.error('❌ 세금계산서 설정 삭제 실패:', response.error);
       }
     } catch (error) {
-      console.error('❌ 세금계산서 설정 삭제 API 호출 실패:', error);
+      // 조용히 무시
     }
   };
 
   // 세금계산서 설정 조회 (서버에서)
   const loadTaxInvoiceSettings = async () => {
     try {
-      console.log('🔄 세금계산서 설정 조회...');
       const response = await apiCall(API_ENDPOINTS.TAX_INVOICE_SETTINGS);
       
       if (response.success && response.settings) {
-        console.log('✅ 세금계산서 설정 조회 성공:', response.settings);
         setNotificationSettings(prev => ({
           ...prev,
           taxInvoiceSettings: response.settings.map(setting => ({
@@ -369,11 +333,9 @@ export const NotificationProvider = ({ children }) => {
             day: setting.day_of_month
           }))
         }));
-      } else {
-        console.error('❌ 세금계산서 설정 조회 실패:', response.error);
       }
     } catch (error) {
-      console.error('❌ 세금계산서 설정 조회 API 호출 실패:', error);
+      // 조용히 무시
     }
   };
 

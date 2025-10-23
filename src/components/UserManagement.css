@@ -126,7 +126,7 @@
 
 .add-user-button {
   padding: 8px 20px;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: #36a2eb;
   color: white;
   border: none;
   border-radius: 6px;
@@ -138,7 +138,7 @@
 
 .add-user-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 4px 12px rgba(54, 162, 235, 0.4);
 }
 
 /* 테이블 스타일 */
@@ -202,7 +202,6 @@
 
 .status-badge {
   padding: 3px 10px;
-  border-radius: 16px;
   font-size: 11px;
   font-weight: 500;
 }
@@ -211,7 +210,6 @@
 .status-button {
   padding: 3px 10px;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
@@ -307,7 +305,6 @@
 .approval-button {
   padding: 3px 10px;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
@@ -755,8 +752,8 @@ div.form-row-single div.form-group input[type="text"] {
 
 /* 오늘 버튼 스타일 */
 .today-button {
-  background-color: rgba(0, 123, 255, 0.7);
-  border: 1px solid rgba(0, 123, 255, 0.8);
+  background: #36a2eb;
+  border: none;
   color: white;
   padding: 6px 12px;
   border-radius: 4px;
@@ -767,8 +764,7 @@ div.form-row-single div.form-group input[type="text"] {
 }
 
 .today-button:hover {
-  background-color: rgba(0, 123, 255, 0.9);
-  border-color: rgba(0, 123, 255, 1);
+  background: #2196f3;
   transform: translateY(-1px);
 }
 

@@ -135,7 +135,8 @@ const UserStatus = () => {
         const totalData = Array(12).fill(0);
         
         for (let month = 1; month <= 12; month++) {
-          const monthDate = `${selectedYear}-${month.toString().padStart(2, '0')}-01`;
+          const lastDay = new Date(selectedYear, month, 0).getDate();
+          const monthDate = `${selectedYear}-${month.toString().padStart(2, '0')}-${lastDay}`;
           
           // 현재 활성화된 업체들 (users 테이블)
           const activeUsers = users.filter(user => {

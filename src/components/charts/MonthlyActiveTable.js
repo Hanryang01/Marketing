@@ -1,8 +1,11 @@
 import React from 'react';
-import { useCurrentMonth } from '../../hooks/useCurrentMonth';
 
 const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
-  const { isCurrentMonth } = useCurrentMonth();
+  // 현재 월 확인 함수
+  const isCurrentMonth = (month, year) => {
+    const now = new Date();
+    return month === now.getMonth() + 1 && year === now.getFullYear();
+  };
 
   return (
     <div className="monthly-active-table-container">
@@ -27,14 +30,21 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
         <table className="monthly-active-table">
           <thead>
             <tr>
-              <th className="category-header">구분</th>
+              <th style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef'}}>구분</th>
               {Array.from({ length: 12 }, (_, i) => {
                 const month = i + 1;
                 const isCurrent = isCurrentMonth(month, selectedYear);
                 return (
                   <th 
                     key={i} 
-                    className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                    style={{
+                      minWidth: '60px',
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: isCurrent ? '#64b5f6' : '#f8f9fa',
+                      color: isCurrent ? 'white' : '#333',
+                      border: '1px solid #e9ecef'
+                    }}
                   >
                     {month}월
                   </th>
@@ -44,14 +54,22 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
           </thead>
           <tbody>
             <tr>
-              <td className="category-cell">컨설팅 업체</td>
+              <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef', fontWeight: '400', fontSize: '14px'}}>컨설팅 업체</td>
               {data.consulting.map((count, index) => {
                 const month = index + 1;
                 const isCurrent = isCurrentMonth(month, selectedYear);
                 return (
                   <td 
                     key={index} 
-                    className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                    style={{
+                      minWidth: '60px',
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: isCurrent ? '#e3f2fd' : 'white',
+                      border: '1px solid #e9ecef',
+                      fontWeight: '400',
+                      fontSize: '14px'
+                    }}
                   >
                     {count}
                   </td>
@@ -59,29 +77,45 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
               })}
             </tr>
             <tr>
-              <td className="category-cell">일반 업체</td>
+              <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef', fontWeight: '400', fontSize: '14px'}}>일반 업체</td>
               {data.general.map((count, index) => {
                 const month = index + 1;
                 const isCurrent = isCurrentMonth(month, selectedYear);
                 return (
                   <td 
                     key={index} 
-                    className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                    style={{
+                      minWidth: '60px',
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: isCurrent ? '#e3f2fd' : 'white',
+                      border: '1px solid #e9ecef',
+                      fontWeight: '400',
+                      fontSize: '14px'
+                    }}
                   >
                     {count}
                   </td>
                 );
               })}
             </tr>
-            <tr className="total-row">
-              <td className="category-cell total-label">합계</td>
+            <tr style={{background: '#f0f0f0'}}>
+              <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f0f0f0', border: '1px solid #e9ecef', fontWeight: '400', fontSize: '14px'}}>합계</td>
               {data.total.map((count, index) => {
                 const month = index + 1;
                 const isCurrent = isCurrentMonth(month, selectedYear);
                 return (
                   <td 
                     key={index} 
-                    className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                    style={{
+                      minWidth: '60px',
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: isCurrent ? '#e3f2fd' : '#f0f0f0',
+                      border: '1px solid #e9ecef',
+                      fontWeight: '500',
+                      fontSize: '14px'
+                    }}
                   >
                     {count}
                   </td>

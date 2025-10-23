@@ -709,14 +709,21 @@ const RevenueStatus = () => {
             <table className="monthly-revenue-table">
               <thead>
                 <tr>
-                  <th className="category-header">구분</th>
+                  <th style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef'}}>구분</th>
                   {Array.from({ length: 12 }, (_, i) => {
                     const month = i + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <th 
                         key={i} 
-                        className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#64b5f6' : '#f8f9fa',
+                          color: isCurrent ? 'white' : '#333',
+                          border: '1px solid #e9ecef'
+                        }}
                       >
                         {month}월
                       </th>
@@ -726,14 +733,22 @@ const RevenueStatus = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td className="category-cell">컨설팅 업체</td>
+                  <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef', fontWeight: '400'}}>컨설팅 업체</td>
                   {monthlyRevenueTableData.consulting.map((amount, index) => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#e3f2fd' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -741,14 +756,22 @@ const RevenueStatus = () => {
                   })}
                 </tr>
                 <tr>
-                  <td className="category-cell">일반 업체</td>
+                  <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef', fontWeight: '400'}}>일반 업체</td>
                   {monthlyRevenueTableData.general.map((amount, index) => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#e3f2fd' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -756,14 +779,22 @@ const RevenueStatus = () => {
                   })}
                 </tr>
                 <tr>
-                  <td className="category-cell">기타</td>
+                  <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f8f9fa', border: '1px solid #e9ecef', fontWeight: '400'}}>기타</td>
                   {monthlyRevenueTableData.other.map((amount, index) => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#e3f2fd' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -771,14 +802,22 @@ const RevenueStatus = () => {
                   })}
                 </tr>
                 <tr className="total-row">
-                  <td className="category-cell total-label">매출 금액</td>
+                  <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#f0f0f0', border: '1px solid #e9ecef', fontWeight: '400'}}>매출 금액</td>
                   {monthlyRevenueTableData.total.map((amount, index) => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#e3f2fd' : '#f0f0f0',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '500',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -786,14 +825,22 @@ const RevenueStatus = () => {
                   })}
                 </tr>
                 <tr className="total-row">
-                  <td className="category-cell total-label">누적 매출</td>
+                  <td style={{width: '120px', textAlign: 'left', padding: '12px', background: '#e8f5e8', border: '1px solid #e9ecef', fontWeight: '400'}}>누적 매출</td>
                   {calculateCumulativeRevenue(monthlyRevenueTableData.total).map((amount, index) => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell total-data ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#e3f2fd' : '#e8f5e8',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '500',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>

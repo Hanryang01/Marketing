@@ -8,6 +8,8 @@ import UserStatus from './components/UserStatus';
 import SalesManagement from './components/SalesManagement';
 import RevenueStatus from './components/RevenueStatus';
 import QuotePage from './components/QuotePage';
+import ExpenseStatus from './components/ExpenseStatus';
+import ExpenseList from './components/ExpenseList';
 import { NotificationProvider } from './context/NotificationContext';
 
 import './App.css';
@@ -180,6 +182,32 @@ function App() {
                         element={
                           <Layout userInfo={userInfo} onLogout={handleLogout}>
                             <QuotePage />
+                          </Layout>
+                        }
+                      />
+                      
+                      {/* 지출 관리 라우트들 */}
+                      <Route
+                        path="/expense"
+                        element={
+                          <Layout userInfo={userInfo} onLogout={handleLogout}>
+                            <ExpenseStatus />
+                          </Layout>
+                        }
+                      />
+                      <Route
+                        path="/expense/status"
+                        element={
+                          <Layout userInfo={userInfo} onLogout={handleLogout}>
+                            <ExpenseStatus />
+                          </Layout>
+                        }
+                      />
+                      <Route
+                        path="/expense/list"
+                        element={
+                          <Layout userInfo={userInfo} onLogout={handleLogout}>
+                            <ExpenseList />
                           </Layout>
                         }
                       />
