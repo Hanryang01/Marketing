@@ -10,19 +10,23 @@
   margin-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
   padding-bottom: 10px;
+  width: 100%;
 }
 
 .view-tabs-left {
   display: flex;
-  gap: 10px;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
 }
 
 .view-tabs-right {
   display: flex;
   align-items: center;
+  gap: 15px;
 }
 
-.view-tab {
+.sales-management .view-tab {
   padding: 12px 24px;
   border: none;
   background: none;
@@ -33,16 +37,21 @@
   border-radius: 8px 8px 0 0;
   transition: all 0.3s ease;
   position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: fit-content;
+  min-width: unset;
+  max-width: fit-content;
 }
 
-.view-tab:hover {
+.sales-management .view-tab:hover {
   color: #495057;
   background-color: #f8f9fa;
   font-size: 16px;
   font-weight: 500;
 }
 
-.view-tab.active {
+.sales-management .view-tab.active {
   color: #1e7e34;
   background-color: #e8f5e8;
   border-bottom: 3px solid #28a745;
@@ -93,7 +102,6 @@
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  margin-right: 10px;
 }
 
 .export-excel-button:hover {
@@ -130,7 +138,7 @@
 .revenue-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1000px;
+  min-width: 1200px;
 }
 
 .revenue-table th {
@@ -141,7 +149,7 @@
   color: #333;
   border-bottom: 1px solid #e9ecef;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
 }
 
@@ -150,7 +158,7 @@
   border-bottom: 1px solid #e9ecef;
   color: #555;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
   vertical-align: middle;
 }
@@ -183,20 +191,25 @@
   gap: 8px;
 }
 
-.edit-button,
-.add-button {
+/* 공통 버튼 스타일 */
+.common-button {
   padding: 3px 10px;
   border: none;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
   transition: all 0.3s ease;
-  min-width: 80px;  /* 최소 너비 설정 */
-  width: 80px;      /* 고정 너비 설정 */
-  text-align: center; /* 텍스트 중앙 정렬 */
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-  overflow: hidden;    /* 넘치는 텍스트 숨김 */
-  text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
+  min-width: 80px;
+  width: 80px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.common-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .edit-button {
@@ -212,25 +225,8 @@
 
 
 .status-button {
-  padding: 3px 10px;
-  border: none;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  min-width: 80px;
-  width: 80px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   background-color: rgba(108, 117, 125, 0.3);
   color: #495057;
-}
-
-.status-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .status-button.delete-red {
@@ -239,16 +235,6 @@
 }
 
 
-.add-button {
-  background-color: rgba(40, 167, 69, 0.3);
-  color: #155724;
-}
-
-.add-button:hover {
-  background-color: rgba(40, 167, 69, 0.4);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
 
 /* 모달 스타일 */
 .modal-overlay {
@@ -382,11 +368,6 @@
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
-.form-group input[readonly] {
-  background-color: #f8f9fa;
-  color: #6c757d;
-}
-
 .readonly-input {
   background-color: #f8f9fa !important;
   color: #6c757d !important;
@@ -444,9 +425,10 @@
 
 .date-picker-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .date-picker-header .close-button {
@@ -558,15 +540,6 @@
   background-color: #1565c0;
 }
 
-/* 달력 헤더 레이아웃 */
-.date-picker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e9ecef;
-}
-
 /* 오늘 버튼 스타일 */
 .today-button {
   background: #36a2eb;
@@ -655,10 +628,11 @@
 /* 업체별 현황 카드 그리드 */
 .company-revenue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   padding: 20px 0;
 }
+
 
 .company-card {
   background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);
@@ -736,6 +710,13 @@
   margin-top: 15px;
 }
 
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .total-revenue {
   font-size: 20px;
   font-weight: 600;
@@ -771,102 +752,65 @@
   gap: 12px;
 }
 
+/* 3컬럼 거래내역 스타일 (날짜, 항목, 금액) */
 .transaction-item {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr;
-  gap: 10px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
+  grid-template-columns: 100px 1fr 120px;
+  gap: 12px;
+  padding: 8px 12px;
+  min-height: 40px;
   align-items: center;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.transaction-item:hover {
+  background-color: #e3f2fd;
+  cursor: pointer;
 }
 
 .transaction-date {
-  font-size: 12px;
-  color: #495057;
-  font-weight: 500;
+  font-size: 16px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transaction-company {
+  font-size: 16px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .transaction-item-name {
-  font-size: 14px;
-  color: #212529;
-  font-weight: 500;
+  font-size: 16px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .transaction-amount {
-  font-size: 14px;
-  color: #28a745;
+  font-size: 16px;
   font-weight: 600;
+  color: #28a745;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: right;
 }
 
-.transaction-payment {
-  font-size: 12px;
-  color: #6c757d;
-  text-align: center;
+/* 데스크탑 전용 - 최소 너비 설정 */
+.sales-management {
+  min-width: 1200px;
+  overflow-x: auto;
 }
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
   
-  .search-filters {
-    flex-direction: column;
-  }
-  
-  .filter-group {
-    min-width: auto;
-  }
-  
-  .view-tabs {
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .view-tab {
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 500;
-  }
-  
-  .view-tab.active {
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-  }
-  
-  .company-revenue-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-    padding: 15px 0;
-  }
-  
-  .company-card {
-    margin: 0 10px;
-  }
-  
-  .company-card-header {
-    padding: 15px;
-  }
-  
-  .company-card-body {
-    padding: 15px;
-  }
-  
-  .transaction-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    text-align: center;
-  }
-  
-  .company-summary {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
-  }
-}
 
 /* 통일된 메시지 팝업창 스타일 */
 .message-modal-overlay {

@@ -133,37 +133,16 @@ input:focus::placeholder {
 }
 
 /* 승인 정보 섹션의 행 간격 5px */
-.approval-info-section .form-row {
-  margin-bottom: 5px;
-}
-
-.approval-info-section .form-group {
-  margin-bottom: 5px;
-}
-
-/* 사용량 정보 섹션의 행 간격 5px */
-.usage-info-section .form-row {
-  margin-bottom: 5px;
-}
-
-.usage-info-section .form-group {
-  margin-bottom: 5px;
-}
-
-/* 회사 정보 섹션의 행 간격 5px */
-.company-info-section .form-row {
-  margin-bottom: 5px;
-}
-
-.company-info-section .form-group {
-  margin-bottom: 5px;
-}
-
-/* 회계 담당자 정보 섹션의 행 간격 5px */
+.approval-info-section .form-row,
+.usage-info-section .form-row,
+.company-info-section .form-row,
 .accountant-info-section .form-row {
   margin-bottom: 5px;
 }
 
+.approval-info-section .form-group,
+.usage-info-section .form-group,
+.company-info-section .form-group,
 .accountant-info-section .form-group {
   margin-bottom: 5px;
 }
@@ -321,31 +300,10 @@ input:focus::placeholder {
   box-shadow: none;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .modal-content {
-    width: 95%;
-    margin: 20px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group {
-    margin-left: 0;
-  }
-  
-  .form-group label {
-    width: 70px;
-  }
-  
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding: 15px 20px;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.user-detail-modal {
+  min-width: 1200px;
+  overflow-x: auto;
 }
 
 /* 달력 팝업창 스타일 */
@@ -382,11 +340,11 @@ input:focus::placeholder {
 }
 
 .date-picker-header {
-  padding: 10px 15px;
-  border-bottom: 1px solid #eee;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .date-picker-header .close-button {
@@ -499,15 +457,6 @@ input:focus::placeholder {
   background-color: #1565c0;
 }
 
-/* 달력 헤더 레이아웃 */
-.date-picker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e9ecef;
-}
-
 /* 오늘 버튼 스타일 */
 .today-button {
   background: #36a2eb;
@@ -545,73 +494,6 @@ input:focus::placeholder {
   transform: translateY(-1px);
 }
 
-/* 승인 이력 섹션 스타일 */
-.approval-history-section {
-  margin-top: 20px;
-  border-top: 2px solid #f0f0f0;
-  padding-top: 15px;
-  background: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 이력 추가 버튼 스타일 */
-.add-history-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  background-color: #28a745;
-  color: white;
-}
-
-.add-history-button:hover {
-  background-color: #218838;
-  transform: translateY(-1px);
-}
-
-/* 이력 조회 모달 스타일 */
-.history-modal {
-  max-width: 1000px;
-  width: 95%;
-}
-
-.history-table-container {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.history-table th,
-.history-table td {
-  padding: 12px 8px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.history-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #333;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.history-table tbody tr:hover {
-  background-color: #f5f5f5;
-}
 
 /* 상태 버튼 기본 스타일 */
 .status-button {
@@ -659,38 +541,6 @@ input:focus::placeholder {
 }
 
 
-/* 이력 추가 모달 스타일 */
-.add-history-modal {
-  max-width: 600px;
-  width: 90%;
-}
-
-.add-history-modal .form-group {
-  margin-bottom: 15px;
-}
-
-.add-history-modal .form-group label {
-  width: 70px;
-  font-size: 13px;
-}
-
-.add-history-modal .form-group input,
-.add-history-modal .form-group select {
-  flex: 1;
-  min-width: 150px;
-  max-width: 200px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.add-history-modal .form-group input:focus,
-.add-history-modal .form-group select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-}
 
 /* 통일된 메시지 팝업창 스타일 */
 .message-modal-overlay {
@@ -816,22 +666,3 @@ input:focus::placeholder {
   color: #2196f3;
 }
 
-/* 반응형 디자인 - 이력 관리 */
-@media (max-width: 768px) {
-  .add-history-button {
-    width: 100%;
-    font-size: 11px;
-    padding: 6px 12px;
-  }
-  
-  .history-table th,
-  .history-table td {
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-  
-  .add-history-modal {
-    width: 95%;
-    max-width: none;
-  }
-}

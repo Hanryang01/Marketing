@@ -253,6 +253,23 @@ router.post('/api/users', async (req, res) => {
 
     const finalCompanyType = company_type || '무료 사용자';
     
+    // 탈퇴 사용자 일관성 검증
+    if (finalCompanyType === '탈퇴 사용자' && approval_status !== '탈퇴') {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        error: '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.'
+      });
+    }
+    
+    if (approval_status === '탈퇴' && finalCompanyType !== '탈퇴 사용자') {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        error: '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.'
+      });
+    }
+    
     const validCompanyTypes = ['무료 사용자', '컨설팅 업체', '일반 업체', '탈퇴 사용자', '기타'];
     
     if (!validCompanyTypes.includes(finalCompanyType)) {
@@ -377,6 +394,23 @@ router.put('/api/users/:id', async (req, res) => {
       });
     }
 
+    // 탈퇴 사용자 일관성 검증
+    if (company_type === '탈퇴 사용자' && approval_status !== '탈퇴') {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        error: '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.'
+      });
+    }
+    
+    if (approval_status === '탈퇴' && company_type !== '탈퇴 사용자') {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        error: '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.'
+      });
+    }
+
     if (company_type !== '무료 사용자' && company_type !== '탈퇴 사용자') {
       const isValidStartDate = start_date && (
         (typeof start_date === 'number' && start_date.toString().length === 8) ||
@@ -465,7 +499,8 @@ router.put('/api/users/:id', async (req, res) => {
     let statusChanged = false;
     let newStatus = approval_status;
     
-    if (approval_status === '승인 완료' && end_date && company_type !== '탈퇴 사용자') {
+    // 종료일이 지난 경우 이력 생성 및 무료 사용자 전환 로직
+    if (end_date && company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
       const today = new Date();
       const todayString = DateUtils.getTodayString();
       
@@ -540,55 +575,67 @@ router.put('/api/users/:id', async (req, res) => {
       }
     }
 
-    // 승인 완료 이력 기록 (종료일 < 오늘인 경우에만)
-    if (approval_status === '승인 완료' && !statusChanged && endDateValue) {
-      try {
-        // 종료일이 오늘보다 이전인지 확인
-        const todayString = DateUtils.getTodayString();
-        const endDateString = endDateValue;
-        
-        if (endDateString && endDateString < todayString) {
-          // 기존 승인 상태 확인
-          const [currentUser] = await connection.execute(`
-            SELECT approval_status FROM users WHERE id = ?
+    // 승인 완료 상태로 변경 시 이력 생성 (종료일이 지난 경우만)
+    if (approval_status === '승인 완료' && !statusChanged && endDateValue && 
+        company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
+      
+      // 종료일이 지났는지 확인
+      const today = new Date();
+      const todayString = DateUtils.getTodayString();
+      const endDateObj = new Date(endDateValue);
+      const todayObj = new Date(todayString);
+      
+      // 종료일이 지난 경우에만 이력 생성
+      if (endDateObj < todayObj) {
+        try {
+          // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
+          const [userData] = await connection.execute(`
+            SELECT user_name, company_name, company_type, pricing_plan, 
+                   mobile_phone, email, manager_position, start_date, end_date
+            FROM users WHERE id = ?
           `, [userId]);
           
-          if (currentUser.length > 0 && currentUser[0].approval_status === '승인 예정') {
-            // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
-            const [userData] = await connection.execute(`
-              SELECT user_name, company_name, company_type, pricing_plan, 
-                     mobile_phone, email, manager_position, start_date, end_date
-              FROM users WHERE id = ?
-            `, [userId]);
+          if (userData.length > 0) {
+            const user = userData[0];
             
-            if (userData.length > 0) {
-              const user = userData[0];
-              await connection.execute(`
-                INSERT INTO company_history (
-                  user_id_string, company_name, user_name, company_type, status_type,
-                  start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-              `, [
-                user_id || null,
-                user.company_name || null,
-                user.user_name || null,
-                user.company_type || null,
-                '승인 완료',
-                user.start_date || null,
-                user.end_date || null,
-                user.pricing_plan || null,
-                user.mobile_phone || null,
-                user.email || null,
-                user.manager_position || null
-              ]);
+            // 활성화 일수 계산
+            let activeDays = 0;
+            if (user.start_date && user.end_date) {
+              const startDate = new Date(user.start_date);
+              const endDate = new Date(user.end_date);
+              const timeDiff = endDate.getTime() - startDate.getTime();
+              activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
             }
+            
+            await connection.execute(`
+              INSERT INTO company_history (
+                user_id_string, company_name, user_name, company_type, status_type,
+                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `, [
+              user_id || null,
+              user.company_name || null,
+              user.user_name || null,
+              user.company_type || null,
+              '승인 완료',
+              user.start_date || null,
+              user.end_date || null,
+              user.pricing_plan || null,
+              user.mobile_phone || null,
+              user.email || null,
+              user.manager_position || null,
+              activeDays
+            ]);
+            console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료 (종료일 지남)`);
           }
+        } catch (historyError) {
+          console.error(`승인 완료 이력 기록 실패:`, historyError.message);
         }
-      } catch (historyError) {
-        console.error(`승인 완료 이력 기록 실패:`, historyError.message);
+      } else {
+        console.log(`📝 ${user_id} - 승인 완료 상태로 변경되었지만 종료일이 아직 지나지 않아 이력 기록하지 않음`);
       }
     }
-
+    
     res.json({
       success: true,
       data: { 

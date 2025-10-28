@@ -7,22 +7,21 @@ const UserTableRow = ({
   handleDoubleClick, 
   handleDeleteUser, 
   handleDeleteHistory,
-  handleApprovalUser, 
-  handleRevenueUser,
-  isUserActive,
-  showMessageRef
+  handleRevenueUser, 
+  isUserActive, 
+  showMessageRef 
 }) => {
   const renderCells = () => {
     const commonCells = [
-      <td key="userId" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.userId}</td>,
-      <td key="companyName" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.companyName}</td>,
-      <td key="userName" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.userName}</td>
+      <td key="userId">{user.userId}</td>,
+      <td key="companyName">{user.companyName}</td>,
+      <td key="userName">{user.userName}</td>
     ];
 
     // 직책 컬럼 (전체, 무료, 탈퇴, 승인 탭에서만 표시)
     if (['전체', '무료', '탈퇴', '승인'].includes(activeTab)) {
       commonCells.push(
-        <td key="position" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}>{user.position || ''}</td>
+        <td key="position">{user.position || ''}</td>
       );
     }
 
@@ -30,17 +29,16 @@ const UserTableRow = ({
       case '무료':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
-          <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
-          <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
-          <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
-          <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
-          <td key="endDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.endDate ? formatDate(user.endDate) : ''}</td>,
+          <td key="mobilePhone">{user.mobilePhone || ''}</td>,
+          <td key="email">{user.email}</td>,
+          <td key="companyType">{user.companyType || ''}</td>,
+          <td key="pricingPlan">{user.pricingPlan || '무료'}</td>,
+          <td key="startDate">{user.startDate ? formatDate(user.startDate) : ''}</td>,
+          <td key="endDate">{user.endDate ? formatDate(user.endDate) : ''}</td>,
           <td key="approvalStatus">
             <button 
               className={`status-button ${user.approvalStatus === '승인 완료' ? 'approved' : user.approvalStatus === '탈퇴' ? 'withdrawn' : 'pending'}`}
-              onClick={() => handleApprovalUser(user)}
-              title="승인 관리"
+              title="승인 상태"
             >
               {user.approvalStatus}
             </button>
@@ -50,19 +48,18 @@ const UserTableRow = ({
       case '컨설팅':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
-          <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
-          <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
-          <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
-          <td key="endDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.endDate ? formatDate(user.endDate) : ''}</td>,
-          <td key="msdsLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.msdsLimit || 0}</td>,
-          <td key="aiImageLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.aiImageLimit || 0}</td>,
-          <td key="aiReportLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.aiReportLimit || 0}</td>,
+          <td key="mobilePhone">{user.mobilePhone || ''}</td>,
+          <td key="companyType">{user.companyType || ''}</td>,
+          <td key="pricingPlan">{user.pricingPlan || '무료'}</td>,
+          <td key="startDate">{user.startDate ? formatDate(user.startDate) : ''}</td>,
+          <td key="endDate">{user.endDate ? formatDate(user.endDate) : ''}</td>,
+          <td key="msdsLimit">{user.msdsLimit || 0}</td>,
+          <td key="aiImageLimit">{user.aiImageLimit || 0}</td>,
+          <td key="aiReportLimit">{user.aiReportLimit || 0}</td>,
           <td key="approvalStatus">
             <button 
               className={`status-button ${user.approvalStatus === '승인 완료' ? 'approved' : user.approvalStatus === '탈퇴' ? 'withdrawn' : 'pending'}`}
-              onClick={() => handleApprovalUser(user)}
-              title="승인 관리"
+              title="승인 상태"
             >
               {user.approvalStatus}
             </button>
@@ -81,19 +78,18 @@ const UserTableRow = ({
       case '일반':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
-          <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
-          <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
-          <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
-          <td key="endDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.endDate ? formatDate(user.endDate) : ''}</td>,
-          <td key="msdsLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.msdsLimit || 0}</td>,
-          <td key="aiImageLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.aiImageLimit || 0}</td>,
-          <td key="aiReportLimit" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.aiReportLimit || 0}</td>,
+          <td key="mobilePhone">{user.mobilePhone || ''}</td>,
+          <td key="companyType">{user.companyType || ''}</td>,
+          <td key="pricingPlan">{user.pricingPlan || '무료'}</td>,
+          <td key="startDate">{user.startDate ? formatDate(user.startDate) : ''}</td>,
+          <td key="endDate">{user.endDate ? formatDate(user.endDate) : ''}</td>,
+          <td key="msdsLimit">{user.msdsLimit || 0}</td>,
+          <td key="aiImageLimit">{user.aiImageLimit || 0}</td>,
+          <td key="aiReportLimit">{user.aiReportLimit || 0}</td>,
           <td key="approvalStatus">
             <button 
               className={`status-button ${user.approvalStatus === '승인 완료' ? 'approved' : user.approvalStatus === '탈퇴' ? 'withdrawn' : 'pending'}`}
-              onClick={() => handleApprovalUser(user)}
-              title="승인 관리"
+              title="승인 상태"
             >
               {user.approvalStatus}
             </button>
@@ -112,9 +108,9 @@ const UserTableRow = ({
       case '탈퇴':
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
-          <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
-          <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
+          <td key="mobilePhone">{user.mobilePhone || ''}</td>,
+          <td key="email">{user.email}</td>,
+          <td key="companyType">{user.companyType || ''}</td>,
           <td key="delete">
             <button 
               className="status-button delete-red"
@@ -181,17 +177,16 @@ const UserTableRow = ({
       default:
         return [
           ...commonCells,
-          <td key="mobilePhone" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.mobilePhone || ''}</td>,
-          <td key="email" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.email}</td>,
-          <td key="companyType" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.companyType || ''}</td>,
-          <td key="pricingPlan" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.pricingPlan || '무료'}</td>,
-          <td key="startDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.startDate ? formatDate(user.startDate) : ''}</td>,
-          <td key="endDate" onDoubleClick={() => handleDoubleClick(user)} style={{ cursor: 'pointer' }}>{user.endDate ? formatDate(user.endDate) : ''}</td>,
+          <td key="mobilePhone">{user.mobilePhone || ''}</td>,
+          <td key="email">{user.email}</td>,
+          <td key="companyType">{user.companyType || ''}</td>,
+          <td key="pricingPlan">{user.pricingPlan || '무료'}</td>,
+          <td key="startDate">{user.startDate ? formatDate(user.startDate) : ''}</td>,
+          <td key="endDate">{user.endDate ? formatDate(user.endDate) : ''}</td>,
           <td key="approvalStatus">
             <button 
               className={`status-button ${user.approvalStatus === '승인 완료' ? 'approved' : user.approvalStatus === '탈퇴' ? 'withdrawn' : 'pending'}`}
-              onClick={() => handleApprovalUser(user)}
-              title="승인 관리"
+              title="승인 상태"
             >
               {user.approvalStatus}
             </button>
@@ -201,7 +196,11 @@ const UserTableRow = ({
   };
 
   return (
-    <tr>
+    <tr 
+      onDoubleClick={() => handleDoubleClick(user)} 
+      style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}
+      className="user-row"
+    >
       {renderCells()}
     </tr>
   );

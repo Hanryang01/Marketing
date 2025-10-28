@@ -215,29 +215,8 @@
   font-size: 16px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .expense-status {
-    padding: 0 10px;
-  }
-  
-  .summary-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .summary-cards-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .monthly-chart-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-  }
-  
-  .monthly-year-selector {
-    position: static;
-    flex-direction: column;
-    align-items: center;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.expense-status {
+  min-width: 1200px;
+  overflow-x: auto;
 }

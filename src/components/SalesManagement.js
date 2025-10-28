@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './SalesManagement.css';
 import { apiCall, API_ENDPOINTS } from '../config/api';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import useExcelExport from '../hooks/useExcelExport';
 import { useCalendar } from '../hooks/useCalendar';
 import { useMessage } from '../hooks/useMessage';
+import useSearchFilters from '../hooks/useSearchFilters';
 import MessageModal from './MessageModal';
 import RevenueModal from './RevenueModal';
 import SearchFilters from './common/SearchFilters';
@@ -16,18 +16,18 @@ const SalesManagement = () => {
   const [showAddRevenueModal, setShowAddRevenueModal] = useState(false);
   const [showEditRevenueModal, setShowEditRevenueModal] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(null);
-  const [searchFilters, setSearchFilters] = useState({
-    companyName: '',
-    businessLicense: '',
-    companyType: ''
-  });
-
-  // 필터 필드 설정
+  // 검색 필터 필드 정의
   const salesFilterFields = [
     { name: 'companyName', placeholder: '회사명 검색' },
     { name: 'businessLicense', placeholder: '사업자등록번호 검색' },
-    { name: 'companyType', placeholder: '업체 형태 검색' }
+    { name: 'item', placeholder: '항목 검색' }
   ];
+
+  // 공통 검색 필터 훅 사용
+  const { searchFilters, handleFilterChange, filteredData: filteredRevenueData } = useSearchFilters(
+    salesFilterFields,
+    revenueData
+  );
 
   // useCalendar 훅 사용
   const {
@@ -47,38 +47,27 @@ const SalesManagement = () => {
   const [currentView, setCurrentView] = useState('list'); // 'list' 또는 'company'
   const [expandedCompanies, setExpandedCompanies] = useState(new Set());
   
-  // 필터링된 매출 데이터 계산 (발행일 기준 내림차순 정렬)
-  const filteredRevenueData = useMemo(() => {
-    return revenueData
-      .filter(item => {
-        const matchesCompanyName = !searchFilters.companyName || 
-          item.companyName?.toLowerCase().includes(searchFilters.companyName.toLowerCase());
-        const matchesBusinessLicense = !searchFilters.businessLicense || 
-          item.businessLicense?.toLowerCase().includes(searchFilters.businessLicense.toLowerCase());
-        const matchesCompanyType = !searchFilters.companyType || 
-          item.companyType?.toLowerCase().includes(searchFilters.companyType.toLowerCase());
-        
-        return matchesCompanyName && matchesBusinessLicense && matchesCompanyType;
-      })
-      .sort((a, b) => {
-        // 발행일 기준으로 내림차순 정렬 (최신순)
-        const getDateValue = (revenue) => {
-          if (!revenue.issueDate) return 0;
-          // 날짜를 8자리 숫자로 변환 (YYYYMMDD)
-          const date = new Date(revenue.issueDate);
-          if (isNaN(date.getTime())) return 0;
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return parseInt(`${year}${month}${day}`);
-        };
-        
-        const dateA = getDateValue(a);
-        const dateB = getDateValue(b);
-        
-        return dateB - dateA; // 내림차순 (최신순)
-      });
-  }, [revenueData, searchFilters]);
+  // 필터링된 매출 데이터를 발행일 기준 내림차순으로 정렬
+  const sortedFilteredRevenueData = useMemo(() => {
+    return filteredRevenueData.sort((a, b) => {
+      // 발행일 기준으로 내림차순 정렬 (최신순)
+      const getDateValue = (revenue) => {
+        if (!revenue.issueDate) return 0;
+        // 날짜를 8자리 숫자로 변환 (YYYYMMDD)
+        const date = new Date(revenue.issueDate);
+        if (isNaN(date.getTime())) return 0;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return parseInt(`${year}${month}${day}`);
+      };
+      
+      const dateA = getDateValue(a);
+      const dateB = getDateValue(b);
+      
+      return dateB - dateA; // 내림차순 (최신순)
+    });
+  }, [filteredRevenueData]);
   
   // 메시지 관련 로직을 useMessage 훅으로 분리
   const messageProps = useMessage();
@@ -130,88 +119,31 @@ const SalesManagement = () => {
     fetchRevenueData();
   }, [fetchRevenueData]);
 
-  // 검색 필터 처리
-  const handleFilterChange = (field, value) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
   // 필터링된 매출 데이터 (발행일 기준 내림차순 정렬) - useMemo 버전으로 교체됨
 
-  // 엑셀 파일로 매출 데이터 추출
-  const exportToExcel = useCallback(() => {
-    try {
-            // 현재 필터링된 데이터 또는 전체 데이터 사용
-      const dataToExport = filteredRevenueData.length > 0 ? filteredRevenueData : revenueData;
-      
-      if (dataToExport.length === 0) {
-        showMessage('warning', '경고', '추출할 데이터가 없습니다.');
-        return;
-      }
+  // 엑셀 추출을 위한 컬럼 정의
+  const excelColumns = [
+    { key: 'issueDate', label: '발행일', width: 12, formatter: (value) => formatDate(value) },
+    { key: 'companyName', label: '회사명', width: 25 },
+    { key: 'businessLicense', label: '사업자등록번호', width: 18, formatter: (value) => formatBusinessLicense(value) || '' },
+    { key: 'item', label: '항목', width: 20 },
+    { key: 'supplyAmount', label: '공급가액', width: 12, formatter: (value) => (value || 0).toLocaleString() },
+    { key: 'vat', label: '부가세', width: 10, formatter: (value) => (value || 0).toLocaleString() },
+    { key: 'totalAmount', label: '총금액', width: 12, formatter: (value) => (value || 0).toLocaleString() }
+  ];
 
-      // 엑셀용 데이터 준비 (한글 컬럼명) - 필요한 항목만 추출
-      const excelData = dataToExport.map((revenue, index) => {
-        // 발행일을 YYYY-MM-DD 형식으로 변환
-        const formattedIssueDate = formatDate(revenue.issueDate);
-
-        return {
-          '번호': index + 1,
-          '발행일': formattedIssueDate,
-          '회사명': revenue.companyName || '',
-          '사업자등록번호': formatBusinessLicense(revenue.businessLicense) || '',
-          '항목': revenue.item || '',
-          '공급가액': (revenue.supplyAmount || 0).toLocaleString(),
-          '부가세': (revenue.vat || 0).toLocaleString(),
-          '총금액': (revenue.totalAmount || 0).toLocaleString()
-        };
-      });
-
-            // 워크북 생성
-      const workbook = XLSX.utils.book_new();
-      
-      // 워크시트 생성
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      
-      // 컬럼 너비 자동 조정
-      const columnWidths = [
-        { wch: 8 },   // 번호
-        { wch: 12 },  // 발행일
-        { wch: 25 },  // 회사명
-        { wch: 18 },  // 사업자등록번호
-        { wch: 20 },  // 항목
-        { wch: 12 },  // 공급가액
-        { wch: 10 },  // 부가세
-        { wch: 12 }   // 총금액
-      ];
-      worksheet['!cols'] = columnWidths;
-
-      // 워크북에 워크시트 추가
-      XLSX.utils.book_append_sheet(workbook, worksheet, '매출리스트');
-
-      // 현재 날짜로 파일명 생성
-      const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
-      const fileName = `매출리스트_${dateStr}_${timeStr}.xlsx`;
-
-      // 엑셀 파일 생성 및 다운로드
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
-      saveAs(blob, fileName);
-      
-            showMessage('success', '성공', `매출 리스트가 성공적으로 추출되었습니다.\n파일명: ${fileName}`, {
-        showCancel: false,
-        confirmText: '확인'
-      });
-      
-    } catch (error) {
-      console.error('엑셀 추출 중 오류:', error);
-      showMessage('error', '오류', '엑셀 파일 추출 중 오류가 발생했습니다.');
-    }
-  }, [filteredRevenueData, revenueData, formatDate, showMessage]);
+  // 현재 필터링된 데이터 또는 전체 데이터 사용
+  const dataToExport = sortedFilteredRevenueData.length > 0 ? sortedFilteredRevenueData : revenueData;
+  
+  // 공통 엑셀 추출 훅 사용
+  const exportToExcel = useExcelExport(
+    dataToExport,
+    excelColumns,
+    '매출리스트',
+    '매출리스트',
+    showMessage
+  );
 
   // 업체별 매출 데이터 그룹핑
   const groupRevenueByCompany = useCallback(() => {
@@ -506,7 +438,7 @@ const SalesManagement = () => {
             className={`view-tab ${currentView === 'list' ? 'active' : ''}`}
             onClick={() => setCurrentView('list')}
           >
-            📋 매출 리스트 ({filteredRevenueData.length}건)
+            📋 매출 리스트 ({sortedFilteredRevenueData.length}건)
           </button>
           <button 
             className={`view-tab ${currentView === 'company' ? 'active' : ''}`}
@@ -559,7 +491,7 @@ const SalesManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRevenueData.map((revenue) => (
+              {sortedFilteredRevenueData.map((revenue) => (
                 <tr 
                   key={revenue.id}
                   className="revenue-row"
@@ -611,13 +543,15 @@ const SalesManagement = () => {
                   <span className="company-type">{company.companyInfo.companyType}</span>
                 </div>
                 <div className="company-summary">
-                  <div className="total-revenue">총 매출: {company.summary.totalRevenue.toLocaleString()}원</div>
-                  <button 
-                    className="transaction-count-button"
-                    onClick={() => toggleCompanyExpansion(company.companyInfo.businessLicense)}
-                  >
-                    거래 건수: {company.summary.transactionCount}건
-                  </button>
+                  <div className="summary-row">
+                    <div className="total-revenue">총 매출: {company.summary.totalRevenue.toLocaleString()}원</div>
+                    <button 
+                      className="transaction-count-button"
+                      onClick={() => toggleCompanyExpansion(company.companyInfo.businessLicense)}
+                    >
+                      거래 건수: {company.summary.transactionCount}건
+                    </button>
+                  </div>
                 </div>
               </div>
               {expandedCompanies.has(company.companyInfo.businessLicense) && (
@@ -641,7 +575,6 @@ const SalesManagement = () => {
                         <div className="transaction-date">{formatDate(transaction.issueDate)}</div>
                         <div className="transaction-item-name">{transaction.item}</div>
                         <div className="transaction-amount">{transaction.supplyAmount.toLocaleString()}원</div>
-                        <div className="transaction-payment">{transaction.paymentMethod || '-'}</div>
                       </div>
                     ))}
                   </div>

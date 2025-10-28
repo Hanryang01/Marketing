@@ -386,11 +386,24 @@ router.post('/api/record-approval-history', async (req, res) => {
       });
     }
 
-    // 업체 형태가 무료 사용자이면 히스토리 기록 거부
-    if (company_type === '무료 사용자') {
+    // 업체 형태가 무료 사용자 또는 탈퇴 사용자이면 히스토리 기록 거부
+    if (company_type === '무료 사용자' || company_type === '탈퇴 사용자') {
       return res.status(400).json({
         success: false,
-        error: '무료 사용자는 히스토리를 기록할 수 없습니다.'
+        error: '무료 사용자와 탈퇴 사용자는 히스토리를 기록할 수 없습니다.'
+      });
+    }
+
+    // 종료일이 지났는지 확인
+    const today = new Date();
+    const todayString = DateUtils.getTodayString();
+    const endDateObj = new Date(end_date);
+    const todayObj = new Date(todayString);
+    
+    if (endDateObj >= todayObj) {
+      return res.status(400).json({
+        success: false,
+        error: '종료일이 지나지 않은 사용자는 히스토리를 기록할 수 없습니다.'
       });
     }
 
@@ -456,7 +469,9 @@ router.post('/api/record-approval-history', async (req, res) => {
       email: safeParams[9],
       manager_position: safeParams[10],
       active_days: safeParams[11],
-      safeParamsLength: safeParams.length
+      safeParamsLength: safeParams.length,
+      todayString: todayString,
+      endDateCheck: `${end_date} < ${todayString} = ${endDateObj < todayObj}`
     });
 
     const [result] = await connection.execute(`
@@ -465,6 +480,8 @@ router.post('/api/record-approval-history', async (req, res) => {
         start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `, [...safeParams]);
+
+    console.log(`📝 ${user_id_string} - 승인 완료 이력 기록 완료 (종료일 지남: ${end_date} < ${todayString})`);
 
     res.status(201).json({
       success: true,

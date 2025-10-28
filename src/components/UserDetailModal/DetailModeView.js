@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatBusinessLicense } from '../../utils/businessLicenseUtils';
+import ApprovalSection from './ApprovalSection';
 
 const DetailModeView = ({ 
   editedUser, 
@@ -8,7 +9,12 @@ const DetailModeView = ({
   getFieldValue,
   getInputProps,
   isEditable,
-  formatDate
+  formatDate,
+  handleDateInputChange,
+  handleOpenCalendar,
+  showMessage,
+  onUserUpdate,
+  setEditedUser
 }) => {
   // JSX 최적화 함수들
   const renderInputField = (label, name, value, onChange, options = {}) => (
@@ -22,22 +28,6 @@ const DetailModeView = ({
         className={!isEditable ? 'readonly-input' : ''}
         {...options}
       />
-    </div>
-  );
-
-  const renderDateField = (label, value, onChange, options = {}) => (
-    <div className="form-group">
-      <label>{label}</label>
-      <div className="date-input-container">
-        <input
-          type="text"
-          value={value}
-          onChange={onChange}
-          readOnly
-          className="readonly-input"
-          {...options}
-        />
-      </div>
     </div>
   );
 
@@ -71,24 +61,15 @@ const DetailModeView = ({
       </div>
 
       {/* 승인 정보 섹션 */}
-      <div className="form-section approval-info-section">
-        <h3 className="section-title">승인 정보</h3>
-        
-        {renderFormRow(
-          renderDateField('시작일', formatDate(editedUser?.startDate || user?.startDate || '')),
-          renderDateField('종료일', formatDate(editedUser?.endDate || user?.endDate || ''))
-        )}
-        
-        {renderFormRow(
-          renderInputField('업체 형태', 'companyType', getFieldValue('companyType') || '무료 사용자', () => {}, { readOnly: true, className: 'readonly-input' }),
-          renderInputField('요금제', 'pricingPlan', getFieldValue('pricingPlan') || '무료', () => {}, { readOnly: true, className: 'readonly-input' })
-        )}
-        
-        {renderFormRow(
-          renderInputField('승인 상태', 'approvalStatus', getFieldValue('approvalStatus') || '승인 예정', () => {}, { readOnly: true, className: 'readonly-input' }),
-          <div className="form-group"><label></label><div></div></div>
-        )}
-      </div>
+      <ApprovalSection 
+        editedUser={editedUser}
+        user={user}
+        handleInputChange={handleInputChange}
+        handleDateInputChange={handleDateInputChange}
+        handleOpenCalendar={handleOpenCalendar}
+        isEditable={isEditable}
+        setEditedUser={setEditedUser}
+      />
 
       {/* 사용량 정보 섹션 */}
       <div className="form-section usage-info-section">

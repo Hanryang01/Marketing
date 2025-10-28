@@ -301,7 +301,7 @@ const UserStatus = () => {
             </div>
 
             <div className="stat-card expired-users">
-              <h3>이번달 기간 종료 사용자 (유료) </h3>
+              <h3>이번달 종료 사용자 (유료) </h3>
               <div className="stat-number">{userStats.thisMonthExpiredUsers}</div>
             </div>
           </div>
