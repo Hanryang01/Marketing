@@ -4,7 +4,6 @@ import './UserManagement.css';
 // Import the UserDetailModal component
 import UserDetailModal from './UserDetailModal';
 import AddUserModal from './AddUserModal';
-import ApprovalModal from './ApprovalModal';
 import MessageModal from './MessageModal';
 import RevenueModal from './RevenueModal';
 import SearchFilters from './common/SearchFilters';
@@ -141,18 +140,14 @@ const UserManagement = () => {
   const {
     showAddUserModal,
     showDetailModal,
-    showApprovalModal,
     showRevenueModal,
     selectedUser,
-    approvalUser,
     revenueUser,
     newUser,
     setNewUser,
     handleOpenAddUserModal,
     handleCloseAddUserModal,
     handleCloseDetailModal,
-    handleOpenApprovalModal,
-    handleCloseApprovalModal,
     handleOpenRevenueModal,
     handleCloseRevenueModal,
     handleDoubleClick
@@ -376,75 +371,6 @@ const UserManagement = () => {
     }
   };
 
-  // 승인 저장
-  const handleApprovalSave = async (approvalData) => {
-    try {
-      // 승인 관리 모드에서는 사업자등록번호 검증을 하지 않음
-      // (승인 관리 모달에는 사업자등록번호 입력창이 없음)
-      
-      // 프론트엔드 필드명을 서버 필드명으로 변환
-      const serverData = {
-        id: approvalData.id,
-        company_name: approvalData.companyName || approvalData.company_name,
-        user_id: approvalData.userId || approvalData.user_id,
-        email: approvalData.email,
-        company_type: approvalData.companyType || approvalData.company_type,
-        user_name: approvalData.userName || approvalData.user_name,
-        department: approvalData.department,
-        mobile_phone: approvalData.mobilePhone || approvalData.mobile_phone,
-        phone_number: approvalData.phoneNumber || approvalData.phone_number,
-        fax_number: approvalData.faxNumber || approvalData.fax_number,
-        address: approvalData.address,
-        notes: approvalData.notes || '',
-        business_license: approvalData.businessLicense || approvalData.business_license || '',
-        account_info: approvalData.accountInfo || approvalData.account_info || '',
-        msds_limit: approvalData.msdsLimit || approvalData.msds_limit || 0,
-        ai_image_limit: approvalData.aiImageLimit || approvalData.ai_image_limit || 0,
-        ai_report_limit: approvalData.aiReportLimit || approvalData.ai_report_limit || 0,
-        is_active: approvalData.isActive !== undefined ? approvalData.isActive : approvalData.is_active,
-        approval_status: approvalData.approvalStatus || approvalData.approval_status,
-        pricing_plan: approvalData.pricingPlan || approvalData.pricing_plan,
-        start_date: approvalData.startDate || approvalData.start_date,
-        end_date: approvalData.endDate || approvalData.end_date,
-        manager_position: approvalData.position || approvalData.manager_position || '',
-        representative: approvalData.representative || '',
-        industry: approvalData.industry || '',
-        accountant_name: approvalData.accountantName || approvalData.accountant_name || '',
-        accountant_position: approvalData.accountantPosition || approvalData.accountant_position || '',
-        accountant_mobile: approvalData.accountantMobile || approvalData.accountant_mobile || '',
-        accountant_email: approvalData.accountantEmail || approvalData.accountant_email || ''
-      };
-
-      const result = await apiCall(API_ENDPOINTS.USER_DETAIL(approvalData.id), {
-        method: 'PUT',
-        body: JSON.stringify(serverData)
-      });
-      
-      if (result.message) {
-        // 사용자 목록 새로고침
-        await loadUsers();
-        
-        showMessage('success', '성공', '사용자 정보가 성공적으로 저장되었습니다.', {
-            showCancel: false,
-            confirmText: '확인'
-          });
-        handleCloseApprovalModal();
-      } else {
-        showMessage('error', '오류', result.error || '사용자 정보 저장에 실패했습니다.', {
-        showCancel: false,
-        confirmText: '확인'
-      });
-      }
-    } catch (error) {
-      showMessage('error', '오류', '사용자 정보 저장 중 오류가 발생했습니다.', {
-        showCancel: false,
-        confirmText: '확인'
-      });
-    }
-  };
-
-
-
   if (loading) {
     return <div className="loading">로딩 중...</div>;
   }
@@ -497,7 +423,7 @@ const UserManagement = () => {
               className={`tab-button ${activeTab === '탈퇴' ? 'active' : ''}`}
               onClick={() => handleTabChange('탈퇴')}
             >
-              🚪 탈퇴 ({users.filter(user => user.approvalStatus === '탈퇴').length}명)
+              🚪 탈퇴 ({users.filter(user => user.approvalStatus === '탈퇴' && user.companyType === '탈퇴 사용자').length}명)
             </button>
             <button 
               className={`tab-button ${activeTab === '승인' ? 'active' : ''}`}
@@ -532,7 +458,6 @@ const UserManagement = () => {
         handleDoubleClick={handleDoubleClick}
         handleDeleteUser={handleDeleteUser}
         handleDeleteHistory={handleDeleteHistory}
-        handleApprovalUser={handleOpenApprovalModal}
         handleRevenueUser={handleOpenRevenueModal}
         isUserActive={isUserActive}
         showMessageRef={showMessageRef}
@@ -557,14 +482,6 @@ const UserManagement = () => {
           companyHistory={companyHistory}
         activeTab={activeTab}
         />
-
-       {/* 승인 관리 모달 */}
-       <ApprovalModal
-         isOpen={showApprovalModal}
-        onClose={handleCloseApprovalModal}
-         onSave={handleApprovalSave}
-         user={approvalUser}
-       />
 
       {/* 매출 모달 */}
        <RevenueModal

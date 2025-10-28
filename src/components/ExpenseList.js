@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './ExpenseList.css';
 import { useMessage } from '../hooks/useMessage';
 import { apiCall, API_ENDPOINTS } from '../config/api';
 import { useCalendar } from '../hooks/useCalendar';
 import { formatBusinessLicense } from '../utils/businessLicenseUtils';
+import useExcelExport from '../hooks/useExcelExport';
+import useSearchFilters from '../hooks/useSearchFilters';
 import ExpenseModal from './ExpenseModal';
 import MessageModal from './MessageModal';
-import * as XLSX from 'xlsx';
+import SearchFilters from './common/SearchFilters';
 
 const ExpenseList = () => {
   const [expenses, setExpenses] = useState([]);
@@ -15,8 +17,28 @@ const ExpenseList = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [activeTab, setActiveTab] = useState('expense'); // 'expense' | 'income'
+  // 검색 필터 필드 정의
+  const expenseFilterFields = [
+    { name: 'companyName', placeholder: '회사명 검색' },
+    { name: 'businessLicense', placeholder: '사업자등록번호 검색' },
+    { name: 'item', placeholder: '항목 검색' }
+  ];
   const messageProps = useMessage();
   const { formatDate } = useCalendar();
+
+  // 공통 검색 필터 훅 사용
+  const { searchFilters, handleFilterChange, filteredData } = useSearchFilters(
+    expenseFilterFields,
+    expenses
+  );
+
+  // 탭별 필터링 적용
+  const filteredExpenses = useMemo(() => {
+    return filteredData.filter(expense => {
+      const transactionType = expense.transactionType || 'expense';
+      return activeTab === 'income' ? transactionType === 'income' : transactionType === 'expense';
+    });
+  }, [filteredData, activeTab]);
 
   // 지출 목록 로드
   const loadExpenses = useCallback(async () => {
@@ -103,71 +125,34 @@ const ExpenseList = () => {
     handleCloseModal();
   };
 
-  // 탭별 필터링된 데이터
-  const filteredExpenses = expenses.filter(expense => {
-    const transactionType = expense.transactionType || 'expense';
-    
-    if (activeTab === 'income') {
-      return transactionType === 'income';
-    } else {
-      return transactionType === 'expense';
-    }
-  });
 
-  // 엑셀 파일로 데이터 추출
-  const exportToExcel = () => {
-    try {
-      if (filteredExpenses.length === 0) {
-        messageProps.showMessage('warning', '경고', '추출할 데이터가 없습니다.');
-        return;
-      }
+  // 엑셀 추출을 위한 컬럼 정의
+  const excelColumns = [
+    { key: 'companyName', label: '회사명', width: 20 },
+    { key: 'businessLicense', label: '사업자등록번호', width: 15, formatter: (value) => value ? formatBusinessLicense(value) : '' },
+    { key: 'issueDate', label: '결제일', width: 12, formatter: (value) => formatDate(value) },
+    { key: 'expenseDate', label: '지출일', width: 12, formatter: (value) => formatDate(value) },
+    { key: 'paymentMethod', label: '결제 방법', width: 12 },
+    { key: 'item', label: '항목', width: 20 },
+    { key: 'supplyAmount', label: '공급가액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() },
+    { key: 'vatAmount', label: '부가세', width: 12, formatter: (value) => Math.round(value || 0).toLocaleString() },
+    { key: 'totalAmount', label: '합계금액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() }
+  ];
 
-      // 엑셀용 데이터 준비
-      const excelData = filteredExpenses.map((expense, index) => ({
-        '순번': index + 1,
-        '회사명': expense.companyName || '',
-        '사업자등록번호': expense.businessLicense ? formatBusinessLicense(expense.businessLicense) : '',
-        '결제일': formatDate(expense.issueDate),
-        '지출일': formatDate(expense.expenseDate),
-        '결제 방법': expense.paymentMethod || '',
-        '항목': expense.item || '',
-        '공급가액': Math.round(expense.supplyAmount || 0).toLocaleString(),
-        '부가세': Math.round(expense.vatAmount || 0).toLocaleString(),
-        '합계금액': Math.round(expense.totalAmount || 0).toLocaleString()
-      }));
-
-      // 워크북 생성 및 설정
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
-      
-      // 컬럼 너비 설정
-      ws['!cols'] = [
-        { wch: 8 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
-        { wch: 12 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 15 }
-      ];
-      
-      XLSX.utils.book_append_sheet(wb, ws, '지출리스트');
-      
-      // 파일명 생성 및 다운로드
-      const dateStr = new Date().toISOString().split('T')[0];
-      const fileName = `지출리스트_${dateStr}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      
-      messageProps.showMessage('success', '성공', `지출 리스트가 성공적으로 추출되었습니다.\n파일명: ${fileName}`, {
-        showCancel: false,
-        confirmText: '확인'
-      });
-      
-    } catch (error) {
-      messageProps.showMessage('error', '오류', '엑셀 파일 추출 중 오류가 발생했습니다.');
-    }
-  };
+  // 공통 엑셀 추출 훅 사용
+  const exportToExcel = useExcelExport(
+    filteredExpenses,
+    excelColumns,
+    '지출리스트',
+    '지출리스트',
+    messageProps.showMessage
+  );
 
   return (
     <div className="expense-list-container">
       {/* 탭 네비게이션 */}
-      <div className="expense-tabs">
-        <div className="expense-tabs-left">
+      <div className="user-tabs">
+        <div className="user-tabs-left">
           <button 
             className={`tab-button ${activeTab === 'expense' ? 'active' : ''}`}
             onClick={() => setActiveTab('expense')}
@@ -181,7 +166,7 @@ const ExpenseList = () => {
             💰 입금
           </button>
         </div>
-        <div className="expense-tabs-right">
+        <div className="user-tabs-right">
           <button 
             className="export-excel-button"
             onClick={exportToExcel}
@@ -198,6 +183,13 @@ const ExpenseList = () => {
           </button>
         </div>
       </div>
+
+      {/* 검색 필터 */}
+      <SearchFilters 
+        filters={searchFilters}
+        onFilterChange={handleFilterChange}
+        fields={expenseFilterFields}
+      />
 
       <div className="expense-list-content">
         {isLoading ? (

@@ -2,20 +2,16 @@ import React, { useState } from 'react';
 import './UserDetailModal.css';
 import { useCalendar } from '../hooks/useCalendar';
 import { handleBusinessLicenseInput, isValidBusinessLicense } from '../utils/businessLicenseUtils';
-import { apiCall, API_ENDPOINTS } from '../config/api';
 import DatePicker from './DatePicker';
-import ApprovalModeView from './UserDetailModal/ApprovalModeView';
 import DetailModeView from './UserDetailModal/DetailModeView';
 
 const UserDetailModal = ({ 
   isOpen, 
   user, 
   onClose, 
-  onSave, 
+  onSave,
   isEditable = true,
   showFooter = true,
-  isApprovalMode = false,
-  companyHistory = [],
   showMessage: parentShowMessage
 }) => {
   const [editedUser, setEditedUser] = useState(null);
@@ -38,9 +34,7 @@ const UserDetailModal = ({
     formatDate
   } = useCalendar();
 
-  // 이력 관리 관련 상태
-  const [userHistory, setUserHistory] = useState([]);
-  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  // 이력 관리 관련 상태는 현재 사용되지 않음
 
   // 통일된 메시지 팝업창 상태
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -126,41 +120,10 @@ const UserDetailModal = ({
       
       setEditedUser(userWithAdditionalFields);
       prevUserRef.current = user;
-      
-      // 승인 관리 모드일 때 이력 자동 로드
-      if (isApprovalMode) {
-        fetchUserHistory(user.userId || user.user_id);
-      }
     }
-  }, [isOpen, user?.id, isApprovalMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 사용자 상태 변경 시 히스토리 새로고침 (승인 상태나 회사 타입이 실제로 변경될 때만)
-  React.useEffect(() => {
-    if (isOpen && isApprovalMode && (user?.userId || user?.user_id) && prevUserRef.current) {
-      const prevUser = prevUserRef.current;
-      const hasStatusChanged = prevUser.approvalStatus !== user.approvalStatus || 
-                              prevUser.companyType !== user.companyType;
-      
-      if (hasStatusChanged) {
-        fetchUserHistory(user.userId || user.user_id);
-      }
-    }
-  }, [user?.approvalStatus, user?.companyType, isOpen, isApprovalMode, user?.userId, user?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 무료 사용자/탈퇴 사용자일 때 날짜 필드 강제 초기화 (승인 상태와 상관없이)
-  React.useEffect(() => {
-    if (editedUser && 
-        (editedUser.companyType === '무료 사용자' || editedUser.companyType === '탈퇴 사용자')) {
-      // 날짜 필드들이 비어있지 않다면 강제로 초기화
-      if (editedUser.endDate || editedUser.startDate) {
-        setEditedUser(prev => ({
-          ...prev,
-          endDate: '',
-          startDate: ''
-        }));
-      }
-    }
-  }, [editedUser?.companyType, editedUser?.endDate, editedUser?.startDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  // 사용자 상태 변경 감지 (현재는 사용되지 않음 - 향후 필요시 구현)
 
   // 입력 필드 변경 처리
   const handleInputChange = (field, value) => {
@@ -226,8 +189,19 @@ const UserDetailModal = ({
   const handleSave = async () => {
     if (onSave && editedUser) {
       
-      // 사업자등록번호 유효성 검사 (승인 관리 모드가 아닐 때만)
-      if (!isApprovalMode && editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
+      // 탈퇴 사용자 일관성 검증
+      if (editedUser.companyType === '탈퇴 사용자' && editedUser.approvalStatus !== '탈퇴') {
+        showMessage('error', '일관성 오류', '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.', '확인', false);
+        return;
+      }
+      
+      if (editedUser.approvalStatus === '탈퇴' && editedUser.companyType !== '탈퇴 사용자') {
+        showMessage('error', '일관성 오류', '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.', '확인', false);
+        return;
+      }
+      
+      // 사업자등록번호 유효성 검사
+      if (editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
         showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', '확인', false);
         return;
       }
@@ -238,6 +212,14 @@ const UserDetailModal = ({
       if (!userId || userId.trim() === '') {
         alert('사용자 ID가 없습니다. 페이지를 새로고침해주세요.');
         return;
+      }
+      
+      // 승인 상태 변경 감지 (백엔드에서 처리)
+      const isApprovalStatusChanged = user?.approvalStatus !== editedUser?.approvalStatus;
+      const isChangedToApproved = editedUser?.approvalStatus === '승인 완료';
+      
+      if (isApprovalStatusChanged && isChangedToApproved) {
+        console.log('승인 상태가 승인 완료로 변경됨 - 백엔드에서 이력 생성 처리');
       }
       
       // 서버가 기대하는 snake_case 필드명으로 변환
@@ -275,12 +257,17 @@ const UserDetailModal = ({
       
       await onSave(serverData);
       
+      // 승인 상태 변경 시 특별 메시지 표시
+      if (isApprovalStatusChanged && isChangedToApproved) {
+        showMessage('success', '승인 완료', '사용자 승인이 완료되었습니다. 이력이 자동으로 생성되었습니다.', '확인', false);
+      }
+      
       // 사용자 정보 저장 후 승인 이력 새로고침
       window.dispatchEvent(new CustomEvent('userUpdated'));
     }
   };
 
-  // 현재 한국 날짜 가져오기
+  // 현재 한국 날짜 가져오기 (사용되지 않음)
 
   // 달력에서 날짜 선택 (YYYY-MM-DD 형식으로 통일)
   const handleUserDateSelect = (field, value) => {
@@ -291,59 +278,8 @@ const UserDetailModal = ({
     }));
   };
 
-  // 사용자 이력 조회 - 승인 완료 이력만 표시 (승인 이력 탭과 동일)
-  const fetchUserHistory = async (userId) => {
-        try {
-      const result = await apiCall(API_ENDPOINTS.COMPANY_HISTORY_LIST);
-      
-      if (result.success) {
-        // 해당 사용자의 승인 완료 이력만 필터링 (승인 이력 탭과 동일)
-        const userApprovalHistory = result.data.history.filter(history => {
-          return history.user_id_string === userId && history.status_type === '승인 완료';
-        });
-        
-                setUserHistory(userApprovalHistory);
-      } else {
-        setUserHistory([]);
-      }
-    } catch (error) {
-      setUserHistory([]);
-    }
-  };
+  // 사용자 이력 조회 (현재 사용되지 않음 - 향후 필요시 구현)
 
-  // 이력 삭제
-  const handleDeleteHistory = async (historyId) => {
-        // 통일된 메시지 팝업창으로 삭제 확인
-    showMessage('warning', '이력 삭제', '이 이력을 삭제하시겠습니까?', '삭제', true, '취소');
-    
-    // 삭제 확인을 위한 상태 저장
-    setPendingDeleteId(historyId);
-  };
-
-  // 실제 삭제 실행 함수
-  const executeDelete = async (historyId) => {
-        try {
-      const data = await apiCall(API_ENDPOINTS.HISTORY_DELETE(historyId), {
-        method: 'DELETE'
-      });
-      
-      if (data.success) {
-        // 삭제 성공 후 이력 데이터 새로고침
-        const userId = user?.userId || user?.user_id;
-        if (userId) {
-          await fetchUserHistory(userId);
-        }
-        // 승인 이력 탭 새로고침을 위한 이벤트 발생
-        window.dispatchEvent(new CustomEvent('historyDeleted'));
-        // 삭제 성공 메시지 표시
-        showMessage('success', '삭제 완료', '이력이 성공적으로 삭제되었습니다.', '확인', false);
-      } else {
-        showMessage('error', '삭제 실패', data.error, '확인', false);
-      }
-    } catch (error) {
-      showMessage('error', '삭제 오류', '이력 삭제 중 오류가 발생했습니다.', '확인', false);
-    }
-  };
 
   // 메시지 팝업창 표시 함수
   const showMessage = (type, title, content, confirmText = '확인', showCancel = false, cancelText = '취소') => {
@@ -360,14 +296,8 @@ const UserDetailModal = ({
 
   // 메시지 팝업창 확인 버튼 클릭 처리
   const handleMessageConfirm = () => {
-            // 삭제 확인인 경우 실제 삭제 실행
-    if (pendingDeleteId && messageData.title === '이력 삭제') {
-            executeDelete(pendingDeleteId);
-      setPendingDeleteId(null);
-    } else {
-      // 삭제 성공/실패 메시지인 경우 메시지 창만 닫기
-      setShowMessageModal(false);
-    }
+    // 현재는 이력 삭제 기능이 사용되지 않으므로 메시지 창만 닫기
+    setShowMessageModal(false);
   };
 
   // 메시지 팝업창 취소 버튼 클릭 처리
@@ -382,35 +312,25 @@ const UserDetailModal = ({
     <div className="modal-overlay">
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{isApprovalMode ? '승인 관리' : '사용자 상세 정보'}</h2>
+          <h2>사용자 상세 정보</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         
         <div className="modal-body">
-          {isApprovalMode ? (
-            <ApprovalModeView
-              editedUser={editedUser}
-              user={user}
-              handleInputChange={handleInputChange}
-              handleDateInputChange={handleDateInputChange}
-              handleOpenCalendar={handleOpenCalendar}
-              formatDate={formatDate}
-              userHistory={userHistory}
-              handleDeleteHistory={handleDeleteHistory}
-              showMessage={showMessage}
-              setEditedUser={setEditedUser}
-            />
-          ) : (
-            <DetailModeView
-              editedUser={editedUser}
-              user={user}
-              handleInputChange={handleInputChange}
-              getFieldValue={getFieldValue}
-              getInputProps={getInputProps}
-              isEditable={isEditable}
-              formatDate={formatDate}
-            />
-          )}
+          <DetailModeView
+            editedUser={editedUser}
+            user={user}
+            handleInputChange={handleInputChange}
+            getFieldValue={getFieldValue}
+            getInputProps={getInputProps}
+            isEditable={isEditable}
+            formatDate={formatDate}
+            handleDateInputChange={handleDateInputChange}
+            handleOpenCalendar={handleOpenCalendar}
+            showMessage={showMessage}
+            onUserUpdate={onSave}
+            setEditedUser={setEditedUser}
+          />
         </div>
         
         {/* 푸터 (선택적) */}

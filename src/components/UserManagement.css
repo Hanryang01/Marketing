@@ -58,7 +58,7 @@
   align-items: center;
 }
 
-.tab-button {
+.user-management .tab-button {
   padding: 12px 24px;
   border: none;
   background: none;
@@ -76,14 +76,14 @@
   max-width: fit-content;
 }
 
-.tab-button:hover {
+.user-management .tab-button:hover {
   color: #495057;
   background-color: #f8f9fa;
   font-size: 16px;
   font-weight: 500;
 }
 
-.tab-button.active {
+.user-management .tab-button.active {
   color: #1e7e34;
   background-color: #e8f5e8;
   border-bottom: 3px solid #28a745;
@@ -164,7 +164,7 @@
   font-weight: 600;
   color: #333;
   border-bottom: 1px solid #e9ecef;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -173,7 +173,7 @@
   padding: 10px 6px;
   border-bottom: 1px solid #e9ecef;
   color: #555;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
   vertical-align: middle;
   white-space: nowrap;
@@ -187,10 +187,18 @@
   background-color: #f8f9fa;
 }
 
-/* 더블 클릭 가능한 셀 스타일 */
-.users-table td[style*="cursor: pointer"]:hover {
-  background-color: #e3f2fd;
-  color: #1976d2;
+/* 더블 클릭 가능한 행 스타일 */
+.user-row {
+  transition: background-color 0.2s ease;
+}
+
+.user-row:hover {
+  background-color: #e3f2fd !important;
+  cursor: pointer;
+}
+
+.user-row:active {
+  background-color: #bbdefb !important;
 }
 
 /* 상태 배지 */
@@ -206,27 +214,31 @@
   font-weight: 500;
 }
 
-/* 상태 버튼 */
-.status-button {
+/* 공통 버튼 스타일 */
+.common-button {
   padding: 3px 10px;
   border: none;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
   transition: all 0.3s ease;
-  min-width: 80px;  /* 최소 너비 설정 */
-  width: 80px;      /* 고정 너비 설정 */
-  text-align: center; /* 텍스트 중앙 정렬 */
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-  overflow: hidden;    /* 넘치는 텍스트 숨김 */
-  text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
-  background-color: rgba(108, 117, 125, 0.3);
-  color: #495057;
+  min-width: 80px;
+  width: 80px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.status-button:hover {
+.common-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 상태 버튼 (공통 버튼 상속) */
+.status-button {
+  background-color: rgba(108, 117, 125, 0.3);
+  color: #495057;
 }
 
 .status-badge.approved {
@@ -301,22 +313,6 @@
 }
 
 
-.detail-button,
-.approval-button {
-  padding: 3px 10px;
-  border: none;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  min-width: 80px;  /* 최소 너비 설정 */
-  width: 80px;      /* 고정 너비 설정 */
-  text-align: center; /* 텍스트 중앙 정렬 */
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-  overflow: hidden;    /* 넘치는 텍스트 숨김 */
-  text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
-}
-
 .detail-button {
   background-color: rgba(0, 123, 255, 0.3);
   color: #004085;
@@ -329,16 +325,6 @@
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
-.approval-button {
-  background-color: rgba(40, 167, 69, 0.3);
-  color: #155724;
-}
-
-.approval-button:hover {
-  background-color: rgba(30, 126, 52, 0.4);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
 
 
 
@@ -460,9 +446,16 @@
 }
 
 .readonly-input {
-  background-color: #f8f9fa !important;
-  color: #6c757d !important;
-  cursor: not-allowed;
+  background-color: #f5f5f5 !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  border: 1px solid #ddd !important;
+}
+
+.readonly-input:focus {
+  outline: none !important;
+  border-color: #ddd !important;
+  box-shadow: none !important;
 }
 
 .form-row {
@@ -490,12 +483,6 @@
 }
 
 .form-row-single .form-group input[type="text"] {
-  width: 100% !important;
-  max-width: calc(80% - 30px) !important;
-}
-
-/* 더 구체적인 선택자 추가 */
-div.form-row-single div.form-group input[type="text"] {
   width: 100% !important;
   max-width: calc(80% - 30px) !important;
 }
@@ -848,19 +835,6 @@ div.form-row-single div.form-group input[type="text"] {
   color: #666;
 }
 
-/* 읽기 전용 입력 필드 스타일 */
-.readonly-input {
-  background-color: #f5f5f5 !important;
-  color: #666 !important;
-  cursor: not-allowed !important;
-  border: 1px solid #ddd !important;
-}
-
-.readonly-input:focus {
-  outline: none !important;
-  border-color: #ddd !important;
-  box-shadow: none !important;
-}
 
 
 
@@ -996,23 +970,6 @@ div.form-row-single div.form-group input[type="text"] {
 }
 
 
-/* 이력 버튼 */
-.history-button {
-  padding: 6px 12px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.history-button:hover {
-  background: #1e7e34;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
 
 
 /* 테이블 셀 스타일 조정 */
@@ -1020,50 +977,9 @@ div.form-row-single div.form-group input[type="text"] {
   vertical-align: middle;
 }
 
-/* 승인 상태 스타일 */
-.approval-status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
-.approval-status:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* 모바일 대응 */
-@media (max-width: 768px) {
-  .user-tabs {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  
-  .user-tabs-left {
-    overflow-x: auto;
-    padding-bottom: 5px;
-  }
-  
-  .tab-button {
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    width: fit-content;
-    min-width: unset;
-    max-width: fit-content;
-  }
-  
-  .tab-button.active {
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-  }
-  
-  .user-tabs-right {
-    justify-content: center;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.user-management {
+  min-width: 1200px;
+  overflow-x: auto;
 }

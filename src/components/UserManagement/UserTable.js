@@ -10,7 +10,6 @@ const UserTable = ({
   handleDoubleClick, 
   handleDeleteUser, 
   handleDeleteHistory,
-  handleApprovalUser, 
   handleRevenueUser,
   isUserActive,
   showMessageRef
@@ -32,7 +31,6 @@ const UserTable = ({
                   handleDoubleClick={handleDoubleClick}
                   handleDeleteUser={handleDeleteUser}
                   handleDeleteHistory={handleDeleteHistory}
-                  handleApprovalUser={handleApprovalUser}
                   handleRevenueUser={handleRevenueUser}
                   isUserActive={isUserActive}
                   showMessageRef={showMessageRef}
@@ -63,7 +61,6 @@ const UserTable = ({
                   handleDoubleClick={handleDoubleClick}
                   handleDeleteUser={handleDeleteUser}
                   handleDeleteHistory={handleDeleteHistory}
-                  handleApprovalUser={handleApprovalUser}
                   handleRevenueUser={handleRevenueUser}
                   isUserActive={isUserActive}
                   showMessageRef={showMessageRef}

@@ -94,7 +94,7 @@ const RevenueModal = ({
         // 숫자만 추출
         const numericValue = value.replace(/[^0-9]/g, '');
         const supplyAmount = parseFloat(numericValue) || 0;
-        const vat = Math.round(supplyAmount * 0.1);
+        const vat = Math.floor(supplyAmount * 0.1);
         const totalAmount = supplyAmount + vat;
         
         // 천 단위 구분자 추가
@@ -109,7 +109,12 @@ const RevenueModal = ({
 
   const handleSave = async () => {
     if (onSave) {
-      await onSave(revenueData);
+      // id를 포함한 완전한 데이터 전달
+      const completeData = {
+        ...revenueData,
+        id: initialData?.id || revenueData.id
+      };
+      await onSave(completeData);
     }
   };
 
@@ -338,7 +343,7 @@ const RevenueModal = ({
           <button 
             className="submit-button" 
             onClick={handleSave}
-            disabled={!revenueData.businessLicense}
+            disabled={!revenueData.companyName || !revenueData.item || !revenueData.supplyAmount}
           >
             {mode === 'edit' ? '수정' : '등록'}
           </button>

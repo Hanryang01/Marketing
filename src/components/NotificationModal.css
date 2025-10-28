@@ -72,7 +72,7 @@
   background: #f8f9fa;
 }
 
-.tab-button {
+.notification-modal .tab-button {
   flex: 1;
   padding: 16px 20px;
   background: none;
@@ -90,12 +90,12 @@
   gap: 8px;
 }
 
-.tab-button:hover {
+.notification-modal .tab-button:hover {
   color: #333;
   background-color: #e9ecef;
 }
 
-.tab-button.active {
+.notification-modal .tab-button.active {
   color: #007bff;
   border-bottom-color: #007bff;
   background-color: white;

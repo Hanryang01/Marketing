@@ -233,24 +233,11 @@
   margin: 0;
 }
 
-@media (max-width: 768px) {
-  .login-container {
-    flex-direction: column;
-  }
-  
-  .login-divider {
-    width: 100%;
-    height: 1px;
-    margin: 0;
-  }
-  
-  .login-left, .login-right {
-    padding: 1rem;
-  }
-  
-  .login-right {
-    justify-content: center;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.login-container {
+  min-width: 1200px;
+  overflow-x: auto;
+}
   
   .login-form {
     margin-left: 0;
@@ -265,5 +252,4 @@
   .form-header h1 {
     font-size: 2.2rem;
   }
-}
 

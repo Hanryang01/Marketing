@@ -57,9 +57,8 @@ const UserHistoryModal = ({ user, onClose }) => {
   const isDateBeforeToday = (dateString) => {
     if (!dateString) return false;
     
-    const koreaTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-    const todayString = koreaTime.toISOString().split('T')[0];
-    const targetDateString = dateString.toString().split('T')[0];
+    const todayString = formatDate(new Date());
+    const targetDateString = formatDate(dateString);
     
     return targetDateString < todayString;
   };

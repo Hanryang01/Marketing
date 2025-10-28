@@ -65,19 +65,23 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.year-selector {
+/* 공통 년도 선택기 스타일 */
+.year-selector,
+.monthly-year-selector {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.year-selector label {
+.year-selector label,
+.monthly-year-selector label {
   font-weight: 600;
   color: #333;
   font-size: 0.9rem;
 }
 
-.year-selector select {
+.year-selector select,
+.monthly-year-selector select {
   padding: 8px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -86,48 +90,17 @@
   cursor: pointer;
 }
 
-.year-selector select:focus {
+.year-selector select:focus,
+.monthly-year-selector select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
-.chart-container {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  height: 430px;
-  position: relative;
-}
-
-.revenue-summary {
-  padding: 0 10px;
-}
-
-.summary-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 20px;
-  align-items: start;
-}
-
-.summary-cards-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 5px;
-  height: auto;
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.yearly-revenue-chart {
+/* 공통 차트 컨테이너 스타일 */
+.chart-container,
+.yearly-revenue-chart,
+.monthly-chart-container {
   background: white;
   border-radius: 12px;
   padding: 20px;
@@ -137,7 +110,9 @@
   position: relative;
 }
 
-.yearly-revenue-chart h3 {
+.chart-container h3,
+.yearly-revenue-chart h3,
+.monthly-chart-container h3 {
   margin: 0 0 20px 0;
   font-size: 1.2rem;
   font-weight: 600;
@@ -301,35 +276,11 @@
 }
 
 .charts-grid .chart-container {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-  height: 430px;
   min-height: 430px;
-}
-
-.charts-grid .chart-container h3 {
-  margin: 0 0 20px 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
 }
 
 .charts-grid .chart-container canvas {
   max-height: 350px;
-}
-
-/* 월별 차트 컨테이너 */
-.monthly-chart-container {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-  margin-bottom: 20px;
 }
 
 .monthly-chart-header {
@@ -350,107 +301,14 @@
   text-align: center;
 }
 
-.monthly-year-selector {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: absolute;
-  right: 0;
-}
-
-.monthly-year-selector label {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.monthly-year-selector select {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: white;
-  cursor: pointer;
-  min-width: 100px;
-}
-
-.monthly-year-selector select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-}
-
 .monthly-chart-container canvas {
   max-height: 400px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .revenue-status {
-    padding: 15px 20px;
-  }
-  
-  .revenue-header h1 {
-    font-size: 2rem;
-  }
-  
-  .chart-container {
-    height: 350px;
-    padding: 15px;
-  }
-  
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .year-selector {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .summary-layout {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .summary-cards-grid {
-    order: 2;
-    height: auto;
-    gap: 5px;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  
-  .summary-card {
-    height: 100px;
-    padding: 15px;
-  }
-  
-  .yearly-revenue-chart {
-    order: 1;
-    height: 350px;
-  }
-  
-  .charts-grid .chart-container {
-    min-height: 350px;
-    height: 350px;
-  }
-  
-  .monthly-chart-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-  }
-  
-  .monthly-year-selector {
-    flex-direction: column;
-    align-items: center;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.revenue-status {
+  min-width: 1200px;
+  overflow-x: auto;
 }
 
 
@@ -482,13 +340,10 @@
 }
 
 .monthly-company-type-chart-container .monthly-year-selector {
-  display: flex;
-  align-items: center;
   gap: 10px;
 }
 
 .monthly-company-type-chart-container .monthly-year-selector label {
-  font-weight: 600;
   color: #555;
   font-size: 14px;
 }
@@ -496,18 +351,9 @@
 .monthly-company-type-chart-container .monthly-year-selector select {
   padding: 8px 12px;
   border: 2px solid #ddd;
-  border-radius: 6px;
   font-size: 14px;
-  background: white;
   color: #333;
-  cursor: pointer;
   transition: border-color 0.3s ease;
-}
-
-.monthly-company-type-chart-container .monthly-year-selector select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
 .monthly-company-type-chart-container .monthly-year-selector select:hover {
@@ -559,14 +405,14 @@
   min-width: 600px;
 }
 
-.monthly-revenue-table th,
-.monthly-revenue-table td {
+.revenue-status .monthly-revenue-table th,
+.revenue-status .monthly-revenue-table td {
   padding: 12px 8px;
   text-align: center;
   border: 1px solid #e9ecef;
 }
 
-.monthly-revenue-table th {
+.revenue-status .monthly-revenue-table th {
   background: #f8f9fa;
   color: #333;
   font-weight: 600;
@@ -599,7 +445,7 @@
   color: #333;
 }
 
-.monthly-revenue-table .data-cell {
+.revenue-status .monthly-revenue-table .data-cell {
   font-weight: 500;
   color: #555;
   font-size: 0.9rem;
@@ -678,23 +524,4 @@
   color: #64b5f6;
   font-size: 8px;
   font-weight: bold;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .monthly-revenue-table-container {
-    padding: 15px;
-    margin-top: 20px;
-  }
-
-  .monthly-revenue-table-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .year-selector {
-    width: 100%;
-    justify-content: flex-start;
-  }
 }

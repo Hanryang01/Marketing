@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './RevenueStatus.css';
 import { apiCall, API_ENDPOINTS } from '../config/api';
+import useChart from '../hooks/useChart';
 import {
   Chart as ChartJS,
   CategoryScale,

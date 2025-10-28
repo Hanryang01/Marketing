@@ -134,7 +134,7 @@ const ExpenseModal = ({
             // 지출 모드: 기존 로직 (부가세 계산 포함)
             if (name === 'supplyAmount') {
               const supplyAmount = parseFloat(numericValue) || 0;
-              const calculatedVat = Math.round(supplyAmount * 0.1);
+              const calculatedVat = Math.floor(supplyAmount * 0.1);
               newData.vatAmount = formatAmount(calculatedVat);
               newData.totalAmount = formatAmount(supplyAmount + calculatedVat);
             } else if (name === 'vatAmount') {
@@ -260,7 +260,14 @@ const ExpenseModal = ({
         const action = isEdit ? '수정' : '추가';
         const type = transactionType === 'income' ? '입금' : '지출';
         showMessage('success', `${type} ${action} 성공`, `${type}이 성공적으로 ${action}되었습니다.`);
-        onSave && onSave();
+        if (onSave) {
+          // id를 포함한 완전한 데이터 전달
+          const completeData = {
+            ...formData,
+            id: initialData?.id || formData.id
+          };
+          onSave(completeData);
+        }
         onClose();
         resetForm();
       } else {

@@ -462,57 +462,8 @@
   cursor: not-allowed;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .quote-container {
-    padding: 15px;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .company-type-buttons,
-  .payment-type-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .company-type-btn,
-  .payment-type-btn {
-    width: 100%;
-    max-width: 500px;
-  }
-  
-  .pricing-plans {
-    grid-template-columns: 1fr;
-  }
-  
-  .quote-result {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .quote-title {
-    font-size: 24px;
-  }
-  
-  .section-title {
-    font-size: 18px;
-  }
-  
-  .pricing-plan-card {
-    padding: 20px;
-  }
-  
-  .plan-name {
-    font-size: 20px;
-  }
-  
-  .plan-price {
-    font-size: 20px;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.quote-container {
+  min-width: 1200px;
+  overflow-x: auto;
 }

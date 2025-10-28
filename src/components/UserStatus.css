@@ -247,35 +247,10 @@
   color: #666;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .user-status-container {
-    padding: 15px 20px;
-  }
-  
-  .user-status-header h1 {
-    font-size: 1.8rem;
-  }
-  
-  .user-status-main-content {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .user-status-grid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    gap: 5px;
-  }
-  
-  .stat-card {
-    height: 100px;
-    padding: 15px;
-  }
-  
-  .stat-card .stat-number {
-    font-size: 27px;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.user-status-container {
+  min-width: 1200px;
+  overflow-x: auto;
 }
 
 /* 업체 형태별 가입자 수 그래프 스타일 */
@@ -586,44 +561,3 @@
   font-weight: bold;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .monthly-chart-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .monthly-year-selector {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
-  .monthly-active-companies-chart-container canvas {
-    height: 300px !important;
-  }
-  
-  .company-type-users-chart-container {
-    height: 350px;
-    padding: 15px;
-  }
-  
-  .company-type-users-chart-container canvas {
-    max-height: 300px;
-  }
-
-  .monthly-active-table-container {
-    padding: 15px;
-    margin-top: 20px;
-  }
-
-  .monthly-active-table-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .year-selector {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}

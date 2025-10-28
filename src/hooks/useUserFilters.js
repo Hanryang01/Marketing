@@ -63,7 +63,7 @@ const useUserFilters = (users) => {
         break;
       case '탈퇴':
         filteredUsers = users.filter(user => 
-          user.approvalStatus === '탈퇴'
+          user.approvalStatus === '탈퇴' && user.companyType === '탈퇴 사용자'
         );
         break;
       default:

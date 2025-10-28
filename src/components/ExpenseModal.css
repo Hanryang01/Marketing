@@ -359,33 +359,10 @@
   background: #2196f3;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-row .form-group {
-    flex: 1;
-  }
-  
-  .form-group {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .form-group label {
-    width: 100%;
-    margin-bottom: 8px;
-    padding-top: 0;
-  }
-  
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    max-width: 100%;
-  }
+/* 데스크탑 전용 - 최소 너비 설정 */
+.expense-modal {
+  min-width: 1200px;
+  overflow-x: auto;
 }
 
 /* 거래 유형 토글 스위치 */

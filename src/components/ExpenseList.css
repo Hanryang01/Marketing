@@ -1,50 +1,76 @@
 /* ExpenseList.css - 지출 목록 스타일 */
 
 .expense-list-container {
-  padding: 20px;
+  padding: 0;
+  min-width: 1200px;
+  overflow-x: auto;
 }
 
-/* 탭 네비게이션 */
-.expense-tabs {
+/* 사용자 탭 스타일 */
+.user-tabs {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
   padding-bottom: 10px;
 }
 
-.expense-tabs-left {
+.user-tabs-left {
   display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
 }
 
-.expense-tabs-right {
+.user-tabs-right {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 15px;
 }
 
-.tab-button {
+.expense-list-container .tab-button {
   padding: 12px 24px;
   border: none;
   background: none;
-  color: #666;
+  cursor: pointer;
   font-size: 16px;
   font-weight: 500;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
+  color: #6c757d;
+  border-radius: 8px 8px 0 0;
   transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: fit-content;
+  min-width: unset;
+  max-width: fit-content;
 }
 
-.tab-button.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
-  background: rgba(76, 175, 80, 0.1);
+.expense-list-container .tab-button:hover {
+  color: #495057;
+  background-color: #f8f9fa;
+  font-size: 16px;
+  font-weight: 500;
 }
 
-.tab-button:hover:not(.active) {
-  color: #333;
-  background: rgba(0, 0, 0, 0.05);
+.expense-list-container .tab-button.active {
+  color: #1e7e34;
+  background-color: #e8f5e8;
+  border-bottom: 3px solid #28a745;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.expense-list-container .tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #28a745;
 }
 
 .export-excel-button {
@@ -57,8 +83,6 @@
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
 }
 
 .export-excel-button:hover {
@@ -88,6 +112,7 @@
   cursor: not-allowed;
 }
 
+/* 테이블 스타일 */
 .expense-list-content {
   background: white;
   border-radius: 8px;
@@ -102,7 +127,7 @@
 .expense-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  min-width: 1200px;
 }
 
 .expense-table th {
@@ -112,16 +137,19 @@
   padding: 10px 6px;
   text-align: left;
   border-bottom: 1px solid #e9ecef;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .expense-table td {
   padding: 10px 6px;
   border-bottom: 1px solid #e9ecef;
   color: #555;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .expense-table tbody tr {
@@ -197,34 +225,6 @@
   font-size: 16px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .expense-list-container {
-    padding: 10px;
-  }
-  
-  .expense-list-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .expense-list-header h1 {
-    font-size: 20px;
-  }
-  
-  .expense-table th,
-  .expense-table td {
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-  
-  .edit-button,
-  .delete-button {
-    padding: 3px 6px;
-    font-size: 10px;
-  }
-}
 
 /* 통일된 메시지 팝업창 스타일 */
 .message-modal-overlay {

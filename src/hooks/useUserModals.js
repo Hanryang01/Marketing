@@ -4,12 +4,10 @@ const useUserModals = () => {
   // 모달 상태들
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   
   // 선택된 사용자들
   const [selectedUser, setSelectedUser] = useState(null);
-  const [approvalUser, setApprovalUser] = useState(null);
   const [revenueUser, setRevenueUser] = useState(null);
 
   // 새 사용자 폼 상태
@@ -77,16 +75,6 @@ const useUserModals = () => {
     setSelectedUser(null);
   }, []);
 
-  const handleOpenApprovalModal = useCallback((user) => {
-    setApprovalUser(user);
-    setShowApprovalModal(true);
-  }, []);
-
-  const handleCloseApprovalModal = useCallback(() => {
-    setShowApprovalModal(false);
-    setApprovalUser(null);
-  }, []);
-
   const handleOpenRevenueModal = useCallback((user) => {
     setRevenueUser({
       companyName: user.companyName || '',
@@ -117,10 +105,8 @@ const useUserModals = () => {
     // 모달 상태들
     showAddUserModal,
     showDetailModal,
-    showApprovalModal,
     showRevenueModal,
     selectedUser,
-    approvalUser,
     revenueUser,
     setRevenueUser,
     newUser,
@@ -131,8 +117,6 @@ const useUserModals = () => {
     handleCloseAddUserModal,
     handleOpenDetailModal,
     handleCloseDetailModal,
-    handleOpenApprovalModal,
-    handleCloseApprovalModal,
     handleOpenRevenueModal,
     handleCloseRevenueModal,
     handleDoubleClick

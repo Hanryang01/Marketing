@@ -325,7 +325,11 @@ export const useCalendar = () => {
       // 이미 YYYY-MM-DD 형식인 경우 - 그대로 반환
       else if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         return dateValue;
-      } 
+      }
+      // YYYY.MM.DD 형식을 YYYY-MM-DD로 변환
+      else if (typeof dateValue === 'string' && /^\d{4}\.\d{2}\.\d{2}$/.test(dateValue)) {
+        return dateValue.replace(/\./g, '-');
+      }
       // ISO 날짜 형식 또는 다른 형식 - 단순 변환
       else {
         const date = new Date(dateValue);

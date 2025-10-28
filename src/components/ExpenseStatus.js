@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './ExpenseStatus.css';
 import { apiCall, API_ENDPOINTS } from '../config/api';
 import { Bar } from 'react-chartjs-2';
+import useChart from '../hooks/useChart';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,14 +28,29 @@ if (!ChartJS.registry.getPlugin('datalabels')) {
   );
 }
 
+// YearSelector 컴포넌트 분리
+const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
+  return (
+    <select 
+      value={selectedYear} 
+      onChange={(e) => onYearChange(parseInt(e.target.value))}
+      className={className}
+    >
+      {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
+        <option key={year} value={year}>
+          {year}년
+        </option>
+      ))}
+    </select>
+  );
+};
+
 const ExpenseStatus = () => {
   const [expenseList, setExpenseList] = useState([]);
   const [revenueList, setRevenueList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { applyCurrentMonthHighlight, isCurrentMonth } = useCurrentMonth();
-
-  // 현재 월 확인 함수 (useCurrentMonth 훅과 중복이므로 제거)
 
   // 숫자 변환 헬퍼 함수
   const parseAmount = (amount) => {
@@ -110,74 +126,53 @@ const ExpenseStatus = () => {
     };
   }, [revenueList, expenseList]);
 
-  // 지출 데이터 로드
-  const loadExpenseData = async () => {
+  // 공통 데이터 로딩 함수
+  const loadData = async (endpoint, setter, errorMessage) => {
     try {
-      setLoading(true);
-      const data = await apiCall(API_ENDPOINTS.EXPENSES);
-      setExpenseList(data);
+      if (setter === setExpenseList) setLoading(true);
+      const response = await apiCall(endpoint);
+      const data = response?.data || response || [];
+      setter(data);
     } catch (error) {
-      console.error('지출 데이터 로드 실패:', error);
+      console.error(errorMessage, error);
     } finally {
-      setLoading(false);
+      if (setter === setExpenseList) setLoading(false);
     }
   };
 
+  // 지출 데이터 로드
+  const loadExpenseData = useCallback(() => {
+    loadData(API_ENDPOINTS.EXPENSES, setExpenseList, '지출 데이터 로드 실패:');
+  }, []);
+
   // 매출 데이터 로드
-  const loadRevenueData = async () => {
-    try {
-      const response = await apiCall(API_ENDPOINTS.REVENUE);
-      const data = response?.data || response || [];
-      setRevenueList(data);
-    } catch (error) {
-      console.error('매출 데이터 로드 실패:', error);
-    }
-  };
+  const loadRevenueData = useCallback(() => {
+    loadData(API_ENDPOINTS.REVENUE, setRevenueList, '매출 데이터 로드 실패:');
+  }, []);
 
   useEffect(() => {
     loadExpenseData();
     loadRevenueData();
-  }, []);
+  }, [loadExpenseData, loadRevenueData]);
 
-  // 연도 변경 핸들러 (매출 그래프와 동일)
+  // 연도 변경 핸들러
   const handleYearChange = (newYear) => {
     setSelectedYear(newYear);
   };
 
-  // 연도 선택 컴포넌트 (매출 그래프와 동일)
-  const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
-    return (
-      <select 
-        value={selectedYear} 
-        onChange={(e) => onYearChange(parseInt(e.target.value))}
-        className={className}
-      >
-        {Array.from({ length: 6 }, (_, i) => 2029 - i).map(year => (
-          <option key={year} value={year}>
-            {year}년
-          </option>
-        ))}
-      </select>
-    );
-  };
-
-  // 월별 지출 데이터 계산 (Chart.js용) - 지출만 포함
-  const getMonthlyExpenseData = useCallback(() => {
+  // 통합 월별 데이터 계산 함수
+  const getMonthlyData = useCallback((dataType, field) => {
     return Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
-      const data = calculateMonthlyData(selectedYear, month, 'expense');
-      return data.totalExpense;
+      const data = calculateMonthlyData(selectedYear, month, dataType);
+      return data[field];
     });
   }, [selectedYear, calculateMonthlyData]);
 
-  // 월별 입금 데이터 계산 (입금 내역 + 매출 입금)
-  const getMonthlyIncomeData = useCallback(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const data = calculateMonthlyData(selectedYear, month, 'income');
-      return data.totalIncome;
-    });
-  }, [selectedYear, calculateMonthlyData]);
+  // 월별 데이터 계산 함수들
+  const getMonthlyExpenseData = useCallback(() => getMonthlyData('expense', 'totalExpense'), [getMonthlyData]);
+  const getMonthlyIncomeData = useCallback(() => getMonthlyData('income', 'totalIncome'), [getMonthlyData]);
+  const getMonthlyProfitData = useCallback(() => getMonthlyData('profit', 'profit'), [getMonthlyData]);
 
   // 월별 손익 표 데이터 계산
   const getMonthlyProfitTableData = useCallback(() => {
@@ -229,14 +224,6 @@ const ExpenseStatus = () => {
   }, [selectedYear, calculateMonthlyData]);
 
 
-  // 월별 손익 데이터 계산 (표와 동일한 로직) - 불필요한 중간 함수 제거
-  const getMonthlyProfitData = useCallback(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const data = calculateMonthlyData(selectedYear, month, 'profit');
-      return data.profit;
-    });
-  }, [selectedYear, calculateMonthlyData]);
 
   // 연도별 손익 데이터 계산
   const getYearlyProfitData = useCallback(() => {
@@ -300,39 +287,20 @@ const ExpenseStatus = () => {
     };
   }, [calculateMonthlyData, expenseList, revenueList]);
 
-  // 공통 Chart.js 데이터 생성 함수
-  const createChartData = useCallback((label, data, backgroundColor, borderColor) => {
-    const baseData = {
-      labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-      datasets: [
-        {
-          label,
-          data,
-          backgroundColor,
-          borderColor,
-          borderWidth: 1,
-          borderRadius: 4,
-          borderSkipped: false,
-          cornerRadius: 4,
-          datalabels: {
-            display: true,
-            color: '#333',
-            font: { weight: 'bold', size: 12 },
-            formatter: function(value) {
-              return value > 0 ? value.toLocaleString() + '원' : '';
-            },
-            anchor: 'end',
-            align: 'top',
-            offset: 4
-          }
-        },
-      ],
-    };
-    
-    return applyCurrentMonthHighlight(baseData, selectedYear);
-  }, [selectedYear, applyCurrentMonthHighlight]);
+  // 공통 Chart.js 훅 사용
+  const { createChartData, createChartOptions, createProfitChartData, calculateStepSize } = useChart({
+    applyCurrentMonthHighlight,
+    selectedYear
+  });
 
-  // Chart.js 데이터 생성 (매출 그래프와 동일한 구조)
+
+  // 공통 차트 옵션 생성 함수
+  const createCommonChartOptions = useCallback((data, chartType = 'bar') => {
+    const maxValue = data.length > 0 ? Math.max(...data.map(Math.abs)) : 0;
+    return createChartOptions(maxValue, chartType);
+  }, [createChartOptions]);
+
+  // 월별 지출 그래프 데이터 생성
   const monthlyChartData = useMemo(() => {
     return createChartData(
       '월별 지출',
@@ -342,182 +310,32 @@ const ExpenseStatus = () => {
     );
   }, [getMonthlyExpenseData, createChartData]);
 
-  // 동적 stepSize 계산 함수 (매출 그래프와 동일)
-  const calculateStepSize = useCallback((maxValue) => {
-    if (maxValue <= 0) return 1;
-    
-    // 최대값을 5개 틱으로 나누어 적절한 stepSize 계산
-    const baseStep = maxValue / 5;
-    
-    // 10의 거듭제곱으로 반올림
-    const magnitude = Math.pow(10, Math.floor(Math.log10(baseStep)));
-    const normalizedStep = baseStep / magnitude;
-    
-    let stepSize;
-    if (normalizedStep <= 1) stepSize = 1 * magnitude;
-    else if (normalizedStep <= 2) stepSize = 2 * magnitude;
-    else if (normalizedStep <= 5) stepSize = 5 * magnitude;
-    else stepSize = 10 * magnitude;
-    
-    return Math.max(stepSize, 1);
-  }, []);
-
-  // Chart.js 옵션 생성 (매출 그래프와 동일한 구조)
-  const createChartOptions = useCallback((maxValue, chartType) => {
-    const stepSize = calculateStepSize(maxValue);
-    
-    const baseOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,  // 매출 그래프와 동일하게 범례 숨김
-        },
-        tooltip: {
-          enabled: true,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#fff',
-          bodyColor: '#fff',
-          borderColor: '#ff9800',
-          borderWidth: 1,
-          callbacks: {
-            label: function(context) {
-              return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + '원';
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: stepSize,           // 매출 그래프와 동일한 동적 stepSize
-            maxTicksLimit: 5,             // 매출 그래프와 동일한 최대 틱 제한
-            callback: function(value) {
-              return value.toLocaleString() + '원';
-            }
-          }
-        },
-        x: {
-          ticks: {
-            font: {
-              size: 11
-            }
-          },
-          grid: {
-            display: false
-          }
-        }
-      },
-      layout: {
-        padding: {
-          top: 30,
-          right: 20,
-          bottom: 20,
-          left: 20
-        }
-      }
-    };
-
-    return baseOptions;
-  }, [calculateStepSize]);
-
-  // 월별 차트 옵션 (매출 그래프와 동일한 구조)
+  // 월별 지출 그래프 옵션
   const monthlyChartOptions = useMemo(() => {
-    const expenseData = getMonthlyExpenseData();
-    const maxValue = expenseData.length > 0 ? Math.max(...expenseData) : 0;
-    const baseOptions = createChartOptions(maxValue, 'bar');
-    
-    return {
-      ...baseOptions,
-      plugins: {
-        ...baseOptions.plugins,
-        datalabels: {
-          display: true,
-          color: '#333',
-          font: {
-            weight: 'bold',
-            size: 12
-          },
-          formatter: function(value) {
-            return value > 0 ? value.toLocaleString() + '원' : '';
-          },
-          anchor: 'end',
-          align: 'top',
-          offset: 4
-        }
-      }
-    };
-  }, [getMonthlyExpenseData, createChartOptions]);
+    return createCommonChartOptions(getMonthlyExpenseData());
+  }, [getMonthlyExpenseData, createCommonChartOptions]);
 
   // 월별 손익 그래프 데이터 생성
   const monthlyProfitChartData = useMemo(() => {
     const profitData = getMonthlyProfitData();
-    const baseData = {
-      labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-      datasets: [
-        {
-          label: '월별 손익',
-          data: profitData,
-          backgroundColor: profitData.map(value => 
-            value >= 0 
-              ? 'rgba(54, 162, 235, 0.8)'  // 양수: 파란색
-              : 'rgba(255, 99, 132, 0.8)'   // 음수: 연한 빨간색
-          ),
-          borderColor: profitData.map(value => 
-            value >= 0 
-              ? 'rgba(54, 162, 235, 1)'     // 양수: 파란색 테두리
-              : 'rgba(255, 99, 132, 1)'     // 음수: 빨간색 테두리
-          ),
-          borderWidth: 1,
-          borderRadius: 4,
-          borderSkipped: false,
-          cornerRadius: 4,
-          datalabels: {
-            display: true,
-            color: '#333',
-            font: { weight: 'bold', size: 12 },
-            formatter: function(value) {
-              return value !== 0 ? value.toLocaleString() + '원' : '';
-            },
-            anchor: 'end',
-            align: 'top',
-            offset: 4
-          }
-        },
-      ],
-    };
-    
-    return applyCurrentMonthHighlight(baseData, selectedYear);
-  }, [getMonthlyProfitData, selectedYear, applyCurrentMonthHighlight]);
+    return createProfitChartData(
+      '월별 손익',
+      profitData,
+      'rgba(54, 162, 235, 0.8)',  // 양수: 파란색
+      'rgba(255, 99, 132, 0.8)'    // 음수: 연한 빨간색
+    );
+  }, [getMonthlyProfitData, createProfitChartData]);
 
   // 월별 손익 그래프 옵션
   const monthlyProfitChartOptions = useMemo(() => {
-    const profitData = getMonthlyProfitData();
-    const maxValue = profitData.length > 0 ? Math.max(...profitData.map(Math.abs)) : 0;
-    const baseOptions = createChartOptions(maxValue, 'bar');
-    
-    return {
-      ...baseOptions,
-      plugins: {
-        ...baseOptions.plugins,
-        datalabels: {
-          display: true,
-          color: '#333',
-          font: {
-            weight: 'bold',
-            size: 12
-          },
-          formatter: function(value) {
-            return value !== 0 ? value.toLocaleString() + '원' : '';
-          },
-          anchor: 'end',
-          align: 'top',
-          offset: 4
-        }
-      }
-    };
-  }, [getMonthlyProfitData, createChartOptions]);
+    return createCommonChartOptions(getMonthlyProfitData());
+  }, [getMonthlyProfitData, createCommonChartOptions]);
+
+
+  // 월별 입금 그래프 옵션
+  const monthlyIncomeChartOptions = useMemo(() => {
+    return createCommonChartOptions(getMonthlyIncomeData());
+  }, [getMonthlyIncomeData, createCommonChartOptions]);
 
   // 월별 입금 그래프 데이터 생성
   const monthlyIncomeChartData = useMemo(() => {
@@ -635,30 +453,6 @@ const ExpenseStatus = () => {
     };
   }, [getYearlyProfitData, calculateStepSize]);
 
-  // 월별 입금 그래프 옵션
-  const monthlyIncomeChartOptions = useMemo(() => {
-    const incomeData = getMonthlyIncomeData();
-    const maxValue = incomeData.length > 0 ? Math.max(...incomeData) : 0;
-    const baseOptions = createChartOptions(maxValue, 'bar');
-    
-    return {
-      ...baseOptions,
-      plugins: {
-        ...baseOptions.plugins,
-        datalabels: {
-          display: true,
-          color: '#333',
-          font: { weight: 'bold', size: 12 },
-          formatter: function(value) {
-            return value > 0 ? value.toLocaleString() + '원' : '';
-          },
-          anchor: 'end',
-          align: 'top',
-          offset: 4
-        }
-      }
-    };
-  }, [getMonthlyIncomeData, createChartOptions]);
 
   
   // 현재 날짜 정보
