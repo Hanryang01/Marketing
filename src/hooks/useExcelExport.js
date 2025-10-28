@@ -27,7 +27,7 @@ const useExcelExport = (data, columns, fileName, sheetName, showMessage) => {
         const row = { '순번': index + 1 };
         
         columns.forEach(column => {
-          const { key, label, width, formatter } = column;
+          const { key, label, formatter } = column; // width 제거
           let value = item[key];
           
           // 포맷터가 있으면 적용

@@ -20,9 +20,21 @@ const UserTable = ({
         <UserTableHeader activeTab={activeTab} />
         <tbody>
           {activeTab === '승인' ? (
-            // 승인 이력 탭: companyHistory 데이터 표시
+            // 승인 이력 탭: companyHistory 데이터 표시 (종료일 내림차순 정렬)
             companyHistory && companyHistory.length > 0 ? (
-              companyHistory.map((history, index) => (
+              [...companyHistory]
+                .sort((a, b) => {
+                  // 종료일이 없는 경우 맨 뒤로
+                  if (!a.end_date && !b.end_date) return 0;
+                  if (!a.end_date) return 1;
+                  if (!b.end_date) return -1;
+                  
+                  // 종료일 기준 내림차순 정렬
+                  const dateA = new Date(a.end_date);
+                  const dateB = new Date(b.end_date);
+                  return dateB.getTime() - dateA.getTime();
+                })
+                .map((history, index) => (
                 <UserTableRow
                   key={`history-${index}`}
                   user={history}

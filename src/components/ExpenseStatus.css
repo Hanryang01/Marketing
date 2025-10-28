@@ -132,7 +132,7 @@
 }
 
 .monthly-chart-container canvas {
-  max-height: 400px;
+  height: 450px !important;
 }
 
 .expense-summary {
@@ -167,7 +167,7 @@
 }
 
 .yearly-profit-chart canvas {
-  max-height: 350px;
+  height: 450px !important;
 }
 
 .summary-cards-grid {
@@ -213,6 +213,183 @@
   padding: 40px;
   color: #666;
   font-size: 16px;
+}
+
+/* 표 헤더 및 데이터 셀 스타일 */
+.table-label-column {
+  width: 120px;
+  text-align: left;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.table-month-header {
+  min-width: 60px;
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #e9ecef;
+  font-weight: 600;
+}
+
+.table-month-header.current-month {
+  background: #64b5f6;
+  color: white;
+}
+
+.table-data-cell {
+  min-width: 60px;
+  text-align: center;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e9ecef;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.table-data-cell.current-month {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.table-data-cell.total-row {
+  background: #e8f5e8;
+  font-weight: 600;
+}
+
+/* 월별 활성화 업체 수 표와 동일한 클래스 스타일 */
+.category-header {
+  min-width: 120px;
+  width: 120px;
+  text-align: left;
+  padding-left: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-weight: 700;
+  color: #333;
+}
+
+.month-header {
+  min-width: 60px;
+  font-size: 0.85rem;
+}
+
+.month-header.current-month {
+  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%) !important;
+  color: white !important;
+  font-weight: 800 !important;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.4);
+  border: 2px solid #64b5f6 !important;
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.category-cell {
+  text-align: left;
+  padding-left: 12px;
+  font-weight: 400;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  min-width: 120px;
+  white-space: nowrap;
+  color: #333;
+}
+
+.data-cell {
+  font-weight: 500;
+  background: white !important;
+  border: 1px solid #e9ecef !important;
+  min-width: 60px !important;
+  text-align: center !important;
+}
+
+.data-cell.current-month {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+  border: 2px solid rgba(100, 181, 246, 0.3) !important;
+  font-weight: 800 !important;
+  color: #1565c0 !important;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
+  transform: scale(1.02);
+  z-index: 5;
+}
+
+.data-cell.current-month::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #64b5f6, #42a5f5, #64b5f6);
+  border-radius: 4px;
+  z-index: -1;
+  opacity: 0.1;
+}
+
+.data-cell.current-month::after {
+  content: '●';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  color: #64b5f6;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+/* 표 스타일 - 월별 활성화 업체 수 표와 동일한 설정 */
+.monthly-revenue-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.monthly-revenue-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  background: white;
+  table-layout: fixed;
+}
+
+.monthly-revenue-table th,
+.monthly-revenue-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+
+.monthly-revenue-table th {
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.monthly-revenue-table td {
+  background: white;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.monthly-revenue-table .total-row td {
+  background: #f0f0f0;
+  font-weight: 500;
+}
+
+/* 차트 컨테이너 반응형 처리 */
+.monthly-chart-container {
+  overflow-x: auto;
+}
+
+.monthly-chart-container canvas {
+  max-width: 100%;
+  height: 450px !important;
 }
 
 /* 데스크탑 전용 - 최소 너비 설정 */

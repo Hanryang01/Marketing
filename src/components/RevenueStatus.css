@@ -280,7 +280,7 @@
 }
 
 .charts-grid .chart-container canvas {
-  max-height: 350px;
+  height: 450px !important;
 }
 
 .monthly-chart-header {
@@ -302,7 +302,7 @@
 }
 
 .monthly-chart-container canvas {
-  max-height: 400px;
+  height: 450px !important;
 }
 
 /* 데스크탑 전용 - 최소 너비 설정 */
@@ -361,7 +361,7 @@
 }
 
 .monthly-company-type-chart-container canvas {
-  max-height: 400px;
+  height: 450px !important;
 }
 
 /* 월별 매출 표 스타일 */
@@ -420,9 +420,14 @@
 }
 
 .monthly-revenue-table .category-header {
-  min-width: 100px;
-  text-align: left !important;
-  padding-left: 15px !important;
+  min-width: 120px;
+  width: 120px;
+  text-align: left;
+  padding-left: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-weight: 700;
+  color: #333;
 }
 
 .monthly-revenue-table .month-header {
@@ -439,9 +444,13 @@
 }
 
 .monthly-revenue-table .category-cell {
-  text-align: left !important;
-  padding-left: 15px !important;
-  font-weight: 500;
+  text-align: left;
+  padding-left: 12px;
+  font-weight: 400;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  min-width: 120px;
+  white-space: nowrap;
   color: #333;
 }
 

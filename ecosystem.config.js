@@ -2,11 +2,11 @@ module.exports = {
   apps: [{
     name: 'sihm-marketing',
     script: 'server.js',
-    cwd: 'C:/Users/hchoi/Admin Project/Marketing',
+    cwd: '/home/ubuntu/Marketing',
     instances: process.env.PM2_INSTANCES || 1, // AWS EC2 인스턴스 CPU 코어 수에 맞게 조정
     exec_mode: 'cluster',
     env: {
-      NODE_ENV: 'development',
+      NODE_ENV: 'production',
       PORT: 3003
     },
     env_production: {
@@ -15,7 +15,7 @@ module.exports = {
       DB_HOST: process.env.DB_HOST || 'localhost',
       DB_PORT: process.env.DB_PORT || 3306,
       DB_USER: process.env.DB_USER || 'root',
-      DB_PASSWORD: process.env.DB_PASSWORD || '8123',
+      DB_PASSWORD: process.env.DB_PASSWORD || 'Tech8123!',
       DB_NAME: process.env.DB_NAME || 'sihm_user_management',
       DB_CONNECTION_LIMIT: process.env.DB_CONNECTION_LIMIT || 20,
       CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://marketing.sihm.co.kr'

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react'; // useMemo 제거
 
 /**
  * Chart.js 공통 훅

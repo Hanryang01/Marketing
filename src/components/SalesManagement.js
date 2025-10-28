@@ -47,26 +47,9 @@ const SalesManagement = () => {
   const [currentView, setCurrentView] = useState('list'); // 'list' 또는 'company'
   const [expandedCompanies, setExpandedCompanies] = useState(new Set());
   
-  // 필터링된 매출 데이터를 발행일 기준 내림차순으로 정렬
+  // 필터링된 매출 데이터 (서버에서 이미 발행일 기준으로 정렬됨)
   const sortedFilteredRevenueData = useMemo(() => {
-    return filteredRevenueData.sort((a, b) => {
-      // 발행일 기준으로 내림차순 정렬 (최신순)
-      const getDateValue = (revenue) => {
-        if (!revenue.issueDate) return 0;
-        // 날짜를 8자리 숫자로 변환 (YYYYMMDD)
-        const date = new Date(revenue.issueDate);
-        if (isNaN(date.getTime())) return 0;
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return parseInt(`${year}${month}${day}`);
-      };
-      
-      const dateA = getDateValue(a);
-      const dateB = getDateValue(b);
-      
-      return dateB - dateA; // 내림차순 (최신순)
-    });
+    return filteredRevenueData;
   }, [filteredRevenueData]);
   
   // 메시지 관련 로직을 useMessage 훅으로 분리
@@ -75,7 +58,7 @@ const SalesManagement = () => {
   
   // 날짜 처리 관련 로직을 useCalendar 훅으로 분리
   const calendarProps = useCalendar();
-  const { formatDate, convertTo8Digit } = calendarProps;
+  const { formatDate } = calendarProps;
   
 
 
@@ -557,20 +540,7 @@ const SalesManagement = () => {
               {expandedCompanies.has(company.companyInfo.businessLicense) && (
                 <div className="company-card-body">
                   <div className="transactions-list">
-                    {company.transactions
-                      .sort((a, b) => {
-                        // 발행일 기준으로 내림차순 정렬 (최신순)
-                        const getDateValue = (transaction) => {
-                          if (!transaction.issueDate) return 0;
-                          return convertTo8Digit(transaction.issueDate) || 0;
-                        };
-                        
-                        const dateA = getDateValue(a);
-                        const dateB = getDateValue(b);
-                        
-                        return dateB - dateA; // 내림차순 (최신순)
-                      })
-                      .map((transaction) => (
+                    {company.transactions.map((transaction) => (
                       <div key={transaction.id} className="transaction-item">
                         <div className="transaction-date">{formatDate(transaction.issueDate)}</div>
                         <div className="transaction-item-name">{transaction.item}</div>

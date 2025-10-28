@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
           created_at as createdAt,
           updated_at as updatedAt
         FROM expenses 
-        ORDER BY expense_date DESC, created_at DESC
+        ORDER BY created_at DESC
       `);
       
       res.json(rows);

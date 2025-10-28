@@ -276,7 +276,7 @@
 }
 
 .company-type-users-chart-container canvas {
-  max-height: 350px;
+  height: 450px !important;
 }
 
 /* 월별 활성화 업체 수 그래프 스타일 */
@@ -339,7 +339,7 @@
 
 /* 차트 컨테이너 높이 설정 */
 .monthly-active-companies-chart-container canvas {
-  height: 350px !important;
+  height: 450px !important;
 }
 
 /* 월별 신규 가입자 수 그래프 스타일 */
@@ -353,7 +353,7 @@
 }
 
 .monthly-new-users-chart-container canvas {
-  height: 350px !important;
+  height: 450px !important;
 }
 
 /* 월별 활성화 업체 수 표 스타일 */

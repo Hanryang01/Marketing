@@ -22,7 +22,7 @@ const expenseRoutes = require('./routes/expenses');
 process.env.TZ = 'Asia/Seoul';
 
 // 환경 감지 (개발/프로덕션)
-const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_NAME === 'sihm_local';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 // 설정값 상수화
 const config = {
@@ -33,8 +33,8 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '8123',
-    database: process.env.DB_NAME || 'sihm_local',
+    password: process.env.DB_PASSWORD || 'Tech8123!',
+    database: process.env.DB_NAME || 'sihm_user_management',
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
@@ -618,7 +618,7 @@ const startServer = async () => {
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
+  console.log(`🔧 Environment: PRODUCTION (sihm_user_management)`);
       
       // 서버 시작 시 누락된 처리 복구 - cron job으로 대체됨
       // recoverMissedProcessing();

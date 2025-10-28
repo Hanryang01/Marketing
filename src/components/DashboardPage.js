@@ -228,7 +228,7 @@ const DashboardPage = () => {
     monthData.income.forEach(income => {
       transactions.push({
         id: `income_${income.id}`,
-        date: income.issueDate || income.expenseDate, // issueDate 우선 사용
+        date: income.expenseDate || income.issueDate, // expenseDate 우선 사용
         company: income.companyName,
         item: income.item,
         amount: safeParseFloat(income.totalAmount),
@@ -243,7 +243,7 @@ const DashboardPage = () => {
     monthData.expense.forEach(expense => {
       transactions.push({
         id: `expense_${expense.id}`,
-        date: expense.issueDate || expense.expenseDate, // issueDate 우선 사용
+        date: expense.expenseDate || expense.issueDate, // expenseDate 우선 사용
         company: expense.companyName,
         item: expense.item,
         amount: safeParseFloat(expense.totalAmount),

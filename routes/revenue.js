@@ -29,7 +29,7 @@ router.get('/api/revenue', async (req, res) => {
           payment_method, company_type, item, supply_amount, vat,
           total_amount, created_at, updated_at
         FROM revenue
-        ORDER BY id DESC
+        ORDER BY issue_date DESC, id DESC
       `);
       result = rows;
     }
