@@ -27,7 +27,7 @@ const isDevelopment = process.env.NODE_ENV === 'development' || process.env.DB_N
 // 설정값 상수화
 const config = {
   server: {
-    port: process.env.PORT || 3007
+    port: process.env.PORT || 3003
   },
   database: {
     host: process.env.DB_HOST || 'localhost',
@@ -417,9 +417,6 @@ app.use((req, res, next) => {
   }
 });
 
-// 중복 실행 방지를 위한 상태
-let isProcessingExpiredApprovals = false;
-let lastProcessTime = 0;
 // 알림 관련 변수들은 services/notificationService.js로 이동됨
 
 // 에러 로깅 함수
@@ -444,66 +441,13 @@ async function logError(connection, errorInfo) {
   }
 }
 
-// 알림 발송 함수 (한국시간 09:00에 실행)
-async function scheduleErrorNotification(errorInfo) {
-  try {
-    const now = new Date();
-    const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-    const currentHour = koreaTime.getUTCHours();
-    
-    let notificationTime = new Date(koreaTime);
-    if (currentHour >= 9) {
-      notificationTime.setUTCDate(notificationTime.getUTCDate() + 1);
-    }
-    notificationTime.setUTCHours(9, 0, 0, 0);
-    
-    const utcNotificationTime = new Date(notificationTime.getTime() - (9 * 60 * 60 * 1000));
-    const delayMs = utcNotificationTime.getTime() - now.getTime();
-    
-    logger.info(`에러 알림 스케줄링: ${koreaTime.toISOString()} (${delayMs}ms 후)`);
-    
-    setTimeout(async () => {
-      await sendErrorNotification(errorInfo);
-    }, delayMs);
-    
-  } catch (error) {
-    console.error('❌ 알림 스케줄링 실패:', error.message);
-  }
-}
-
-// 실제 알림 발송 함수
-async function sendErrorNotification(errorInfo) {
-  try {
-    console.log('🚨 만료 처리 실패 알림 발송');
-    console.log('='.repeat(50));
-    console.log(`📅 처리 날짜: ${errorInfo.processingDate}`);
-    console.log(`❌ 에러 타입: ${errorInfo.type}`);
-    console.log(`📝 에러 메시지: ${errorInfo.message}`);
-    console.log(`👤 영향받은 사용자: ${errorInfo.affectedUsers?.length || 0}명`);
-    
-    if (errorInfo.affectedUsers && errorInfo.affectedUsers.length > 0) {
-      console.log('📋 실패한 사용자 목록:');
-      errorInfo.affectedUsers.forEach((user, index) => {
-        console.log(`   ${index + 1}. ${user.company_name} (${user.user_id})`);
-      });
-    }
-    
-    console.log('='.repeat(50));
-    console.log('🔧 수동 처리 방법:');
-    console.log('   1. 사용자 관리 페이지에서 해당 사용자 선택');
-    console.log('   2. 승인 관리 모달에서 개별 처리');
-    console.log('   3. 또는 사용자 상세 모달에서 직접 수정');
-    console.log('='.repeat(50));
-    
-    // 실제 알림 발송 로직은 필요시 구현
-    
-  } catch (error) {
-    console.error('❌ 알림 발송 실패:', error.message);
-  }
-}
 
 // Helper function to check and update expired approvals
 async function checkAndUpdateExpiredApprovals(connection = null) {
+  // 중복 실행 방지를 위한 상태 (함수 내부 변수)
+  let isProcessingExpiredApprovals = false;
+  let lastProcessTime = 0;
+  
   const now = Date.now();
   if (isProcessingExpiredApprovals || (now - lastProcessTime) < 10000) {
     console.log('⏭️ 자동 만료 체크가 이미 진행 중이거나 최근에 실행되었습니다.');
@@ -640,14 +584,6 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
       for (const errorInfo of processingErrors) {
         await logError(conn, errorInfo);
       }
-      
-      await scheduleErrorNotification({
-        type: 'EXPIRED_PROCESSING_PARTIAL_FAILURE',
-        message: `만료 처리 중 ${processingErrors.length}개의 에러 발생`,
-        processingDate: todayString,
-        affectedUsers: expiredUsers,
-        errors: processingErrors
-      });
     }
     
     return totalUpdatedCount;
@@ -661,7 +597,8 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
       details: { error: err.message, stack: err.stack, timestamp: new Date().toISOString() }
     };
     await logError(conn, errorInfo);
-    await scheduleErrorNotification(errorInfo);
+    // 간단한 에러 로그 출력
+    console.error('❌ 만료 처리 전체 실패:', err.message);
     return 0;
   } finally {
     isProcessingExpiredApprovals = false;
@@ -672,31 +609,6 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
 }
 
 
-// 누락된 만료 처리 복구 함수
-const recoverMissedProcessing = async () => {
-  try {
-    logger.info('누락된 만료 처리 복구 시작...');
-    
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = DateUtils.getYesterdayString();
-    
-    logger.info(`어제 날짜 확인: ${yesterdayString}`);
-    
-    // 어제 처리되지 않은 만료 사용자 확인 및 처리
-    const recoveredCount = await checkAndUpdateExpiredApprovals();
-    
-    if (recoveredCount > 0) {
-      console.log(`✅ 누락된 만료 처리 복구 완료: ${recoveredCount}명 처리`);
-    } else {
-      logger.info('복구할 만료된 사용자가 없습니다.');
-    }
-    
-  } catch (error) {
-    console.error('❌ 누락 복구 실패:', error.message);
-  }
-};
 
 
 // 서버 초기화 및 시작
@@ -708,8 +620,8 @@ const startServer = async () => {
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
   console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
       
-      // 서버 시작 시 누락된 처리 복구
-      recoverMissedProcessing();
+      // 서버 시작 시 누락된 처리 복구 - cron job으로 대체됨
+      // recoverMissedProcessing();
       
       console.log('✅ 서버가 준비되었습니다.');
       console.log('⏰ 알림 시스템: Cron Job으로 관리됩니다.');

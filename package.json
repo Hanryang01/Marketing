@@ -25,16 +25,16 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "cross-env PORT=3000 REACT_APP_API_BASE_URL=http://localhost:3007 react-scripts start",
-    "start:3000": "cross-env PORT=3000 REACT_APP_API_BASE_URL=http://localhost:3007 craco start",
+    "start": "cross-env PORT=3000 REACT_APP_API_BASE_URL=http://localhost:3003 react-scripts start",
+    "start:3000": "cross-env PORT=3000 REACT_APP_API_BASE_URL=http://localhost:3003 craco start",
     "build": "react-scripts build",
-    "build:dev": "cross-env REACT_APP_API_BASE_URL=http://localhost:3007 react-scripts build",
-    "build:prod": "cross-env REACT_APP_API_BASE_URL=http://localhost:3007 react-scripts build",
+    "build:dev": "cross-env REACT_APP_API_BASE_URL=http://localhost:3003 react-scripts build",
+    "build:prod": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server:mysql": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3007 node --no-deprecation --no-warnings --trace-warnings=false server.js",
-    "server:dev": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3007 node --no-deprecation --no-warnings --trace-warnings=false server.js",
-    "server:prod": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3007 node --no-deprecation --no-warnings --trace-warnings=false server.js",
+    "server:mysql": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3003 node --no-deprecation --no-warnings --trace-warnings=false server.js",
+    "server:dev": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3003 node --no-deprecation --no-warnings --trace-warnings=false server.js",
+    "server:prod": "cross-env DB_NAME=sihm_local DB_PASSWORD=8123 PORT=3003 node --no-deprecation --no-warnings --trace-warnings=false server.js",
     "dev": "concurrently \"npm run server:dev\" \"npm run start:3000\"",
     "prod": "npm run build:prod && npm run server:prod"
   },

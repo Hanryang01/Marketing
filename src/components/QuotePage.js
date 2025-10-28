@@ -133,8 +133,8 @@ const QuotePage = () => {
       try {
         console.log('서버에서 PDF 생성 요청 시작...');
         
-        // 환경변수에서 API 베이스 URL 가져오기 (개발: 3007, 운영: 3003)
-        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3007';
+        // 환경변수에서 API 베이스 URL 가져오기 (운영: 3003)
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003';
         
         const response = await fetch(`${API_BASE_URL}/api/generate-pdf`, {
           method: 'POST',
