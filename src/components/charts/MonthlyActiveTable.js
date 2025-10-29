@@ -65,7 +65,7 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
                       minWidth: '60px',
                       textAlign: 'center',
                       padding: '12px',
-                      background: isCurrent ? '#e3f2fd' : 'white',
+                      background: isCurrent ? '#bbdefb' : 'white',
                       border: '1px solid #e9ecef',
                       fontWeight: '400',
                       fontSize: '14px'
@@ -88,7 +88,7 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
                       minWidth: '60px',
                       textAlign: 'center',
                       padding: '12px',
-                      background: isCurrent ? '#e3f2fd' : 'white',
+                      background: isCurrent ? '#bbdefb' : 'white',
                       border: '1px solid #e9ecef',
                       fontWeight: '400',
                       fontSize: '14px'
@@ -111,7 +111,7 @@ const MonthlyActiveTable = ({ data, selectedYear, onYearChange }) => {
                       minWidth: '60px',
                       textAlign: 'center',
                       padding: '12px',
-                      background: isCurrent ? '#e3f2fd' : '#f0f0f0',
+                      background: isCurrent ? '#bbdefb' : '#f0f0f0',
                       border: '1px solid #e9ecef',
                       fontWeight: '500',
                       fontSize: '14px'

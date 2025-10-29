@@ -276,7 +276,7 @@
 }
 
 .company-type-users-chart-container canvas {
-  height: 450px !important;
+  height: 350px !important;
 }
 
 /* 월별 활성화 업체 수 그래프 스타일 */
@@ -429,7 +429,7 @@
 
 .monthly-active-table th,
 .monthly-active-table td {
-  padding: 12px 8px;
+  padding: 14px 8px;
   text-align: center;
   border: 1px solid #e9ecef;
 }

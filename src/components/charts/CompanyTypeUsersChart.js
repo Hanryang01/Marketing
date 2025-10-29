@@ -73,9 +73,15 @@ const CompanyTypeUsersChart = ({ consultingUsers, generalUsers }) => {
       y: {
         beginAtZero: true,
         ticks: {
+          font: { size: 13 },
           callback: function(value) {
             return value + '명';
           }
+        }
+      },
+      x: {
+        ticks: {
+          font: { size: 13 }
         }
       }
     },

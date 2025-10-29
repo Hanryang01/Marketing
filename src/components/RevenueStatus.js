@@ -458,9 +458,15 @@ const RevenueStatus = () => {
           ticks: {
             stepSize: stepSize,
             maxTicksLimit: 5,
+            font: { size: 13 },
             callback: function(value) {
               return value.toLocaleString() + '원';
             }
+          }
+        },
+        x: {
+          ticks: {
+            font: { size: 13 }
           }
         }
       },
@@ -524,14 +530,22 @@ const RevenueStatus = () => {
 
   const doughnutChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    elements: {
+      arc: {
+        borderWidth: 0
+      }
+    },
     plugins: {
       legend: {
         position: 'right',
+        align: 'center',
         labels: {
           usePointStyle: true,
           padding: 20,
           font: {
-            size: 12
+            size: 13
           }
         }
       }
@@ -550,9 +564,9 @@ const RevenueStatus = () => {
     },
     layout: {
       padding: {
-        top: 30,
+        top: 20,
         right: 20,
-        bottom: 20,
+        bottom: 25,
         left: 20
       }
     }
@@ -717,7 +731,14 @@ const RevenueStatus = () => {
                     return (
                       <th 
                         key={i} 
-                        className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#64b5f6' : '#f8f9fa',
+                          color: isCurrent ? 'white' : '#333',
+                          border: '1px solid #e9ecef'
+                        }}
                       >
                         {month}월
                       </th>
@@ -734,7 +755,15 @@ const RevenueStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -749,7 +778,15 @@ const RevenueStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -764,7 +801,15 @@ const RevenueStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -783,7 +828,7 @@ const RevenueStatus = () => {
                           minWidth: '60px',
                           textAlign: 'center',
                           padding: '12px',
-                          background: isCurrent ? '#e3f2fd' : '#f0f0f0',
+                          background: isCurrent ? '#bbdefb' : '#f0f0f0',
                           border: '1px solid #e9ecef',
                           fontWeight: '500',
                           fontSize: '14px'
@@ -806,7 +851,7 @@ const RevenueStatus = () => {
                           minWidth: '60px',
                           textAlign: 'center',
                           padding: '12px',
-                          background: isCurrent ? '#e3f2fd' : '#e8f5e8',
+                          background: isCurrent ? '#bbdefb' : '#f0f0f0',
                           border: '1px solid #e9ecef',
                           fontWeight: '500',
                           fontSize: '14px'

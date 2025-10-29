@@ -33,8 +33,8 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'Tech8123!',
-    database: process.env.DB_NAME || 'sihm_user_management',
+    password: process.env.DB_PASSWORD || '8123',
+    database: process.env.DB_NAME || 'sihm_local',
     waitForConnections: true,
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
     queueLimit: 0,
@@ -618,7 +618,7 @@ const startServer = async () => {
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  console.log(`🔧 Environment: PRODUCTION (sihm_user_management)`);
+  console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
       
       // 서버 시작 시 누락된 처리 복구 - cron job으로 대체됨
       // recoverMissedProcessing();

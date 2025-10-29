@@ -98,9 +98,7 @@
 }
 
 /* 공통 차트 컨테이너 스타일 */
-.chart-container,
-.yearly-revenue-chart,
-.monthly-chart-container {
+.chart-container {
   background: white;
   border-radius: 12px;
   padding: 20px;
@@ -110,10 +108,44 @@
   position: relative;
 }
 
+.yearly-revenue-chart {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  height: 430px;
+  position: relative;
+  width: 100%;
+}
+
+.yearly-revenue-chart h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.yearly-revenue-chart canvas {
+  height: 350px !important;
+}
+
+.monthly-chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  position: relative;
+}
+
 .chart-container h3,
 .yearly-revenue-chart h3,
 .monthly-chart-container h3 {
-  margin: 0 0 20px 0;
+  margin: 0 0 10px 0;
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
@@ -280,7 +312,16 @@
 }
 
 .charts-grid .chart-container canvas {
-  height: 450px !important;
+  height: 350px !important;
+}
+
+/* 도넛 차트 가운데 정렬 */
+.charts-grid .chart-container:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
 }
 
 .monthly-chart-header {
@@ -403,11 +444,12 @@
   border-collapse: collapse;
   background: white;
   min-width: 600px;
+  table-layout: fixed;
 }
 
 .revenue-status .monthly-revenue-table th,
 .revenue-status .monthly-revenue-table td {
-  padding: 12px 8px;
+  padding: 14px 8px;
   text-align: center;
   border: 1px solid #e9ecef;
 }
@@ -422,17 +464,12 @@
 .monthly-revenue-table .category-header {
   min-width: 120px;
   width: 120px;
-  text-align: left;
-  padding-left: 12px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  font-weight: 700;
-  color: #333;
-}
-
-.monthly-revenue-table .month-header {
-  min-width: 60px;
-  font-size: 0.85rem;
+  text-align: left !important;
+  padding-left: 15px !important;
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  font-weight: 700 !important;
+  color: #333 !important;
 }
 
 .monthly-revenue-table tbody tr:nth-child(even) {
@@ -473,64 +510,4 @@
 .monthly-revenue-table .total-data {
   font-weight: 700 !important;
   color: #333 !important;
-}
-
-/* 현재 월 강조 스타일 */
-.monthly-revenue-table .month-header.current-month {
-  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%) !important;
-  color: white !important;
-  font-weight: 800 !important;
-  position: relative;
-  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.4);
-  border: 2px solid #64b5f6 !important;
-  transform: scale(1.05);
-  z-index: 10;
-}
-
-.monthly-revenue-table .month-header.current-month .current-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 12px;
-  margin-left: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.monthly-revenue-table .data-cell.current-month {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
-  border: 2px solid rgba(100, 181, 246, 0.3) !important;
-  font-weight: 800 !important;
-  color: #1565c0 !important;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
-  transform: scale(1.02);
-  z-index: 5;
-}
-
-.monthly-revenue-table .data-cell.current-month::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #64b5f6, #42a5f5, #64b5f6);
-  border-radius: 4px;
-  z-index: -1;
-  opacity: 0.1;
-}
-
-.monthly-revenue-table .data-cell.current-month::after {
-  content: '●';
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  color: #64b5f6;
-  font-size: 8px;
-  font-weight: bold;
 }

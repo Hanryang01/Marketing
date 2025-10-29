@@ -125,13 +125,14 @@ const useChart = ({ monthLabels, applyCurrentMonthHighlight, selectedYear }) => 
           ticks: {
             stepSize: stepSize,
             maxTicksLimit: 5,
+            font: { size: 13 },
             callback: function(value) {
               return value.toLocaleString() + '원';
             }
           }
         },
         x: {
-          ticks: { font: { size: 11 } },
+          ticks: { font: { size: 13 } },
           grid: { display: false }
         }
       },

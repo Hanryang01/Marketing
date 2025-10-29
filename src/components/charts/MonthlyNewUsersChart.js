@@ -108,7 +108,7 @@ const MonthlyNewUsersChart = ({ data, selectedYear, onYearChange }) => {
         },
         ticks: {
           font: {
-            size: 11,
+            size: 13,
             weight: 'bold'
           },
           color: '#666'
@@ -125,7 +125,7 @@ const MonthlyNewUsersChart = ({ data, selectedYear, onYearChange }) => {
         },
         ticks: {
           font: {
-            size: 11,
+            size: 13,
             weight: 'bold'
           },
           color: '#666',

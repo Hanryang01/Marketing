@@ -415,8 +415,18 @@ const ExpenseStatus = () => {
           ticks: {
             stepSize: stepSize,
             maxTicksLimit: 5,
+            font: {
+              size: 13
+            },
             callback: function(value) {
               return value.toLocaleString() + '원';
+            }
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              size: 13
             }
           }
         }
@@ -440,7 +450,7 @@ const ExpenseStatus = () => {
           color: '#333',
           font: {
             weight: 'bold',
-            size: 12
+            size: 13
           },
           formatter: function(value) {
             return value !== 0 ? value.toLocaleString() + '원' : '';
@@ -563,7 +573,14 @@ const ExpenseStatus = () => {
                     return (
                       <th 
                         key={i} 
-                        className={`month-header ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#64b5f6' : '#f8f9fa',
+                          color: isCurrent ? 'white' : '#333',
+                          border: '1px solid #e9ecef'
+                        }}
                       >
                         {month}월
                       </th>
@@ -580,7 +597,15 @@ const ExpenseStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -595,7 +620,15 @@ const ExpenseStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -610,7 +643,15 @@ const ExpenseStatus = () => {
                     return (
                       <td 
                         key={index} 
-                        className={`data-cell ${isCurrent ? 'current-month' : ''}`}
+                        style={{
+                          minWidth: '60px',
+                          textAlign: 'center',
+                          padding: '12px',
+                          background: isCurrent ? '#bbdefb' : 'white',
+                          border: '1px solid #e9ecef',
+                          fontWeight: '400',
+                          fontSize: '14px'
+                        }}
                       >
                         {amount.toLocaleString()}원
                       </td>
@@ -629,7 +670,7 @@ const ExpenseStatus = () => {
                           minWidth: '60px',
                           textAlign: 'center',
                           padding: '12px',
-                          background: isCurrent ? '#e3f2fd' : '#e8f5e8',
+                          background: isCurrent ? '#bbdefb' : '#f0f0f0',
                           border: '1px solid #e9ecef',
                           fontWeight: '500',
                           fontSize: '14px'
