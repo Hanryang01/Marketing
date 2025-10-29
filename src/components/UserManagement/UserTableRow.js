@@ -197,7 +197,7 @@ const UserTableRow = ({
 
   return (
     <tr 
-      onDoubleClick={() => handleDoubleClick(user)} 
+      onDoubleClick={activeTab === '승인' ? undefined : () => handleDoubleClick(user)} 
       style={{ cursor: activeTab === '승인' ? 'default' : 'pointer' }}
       className="user-row"
     >

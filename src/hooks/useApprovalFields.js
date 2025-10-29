@@ -18,10 +18,11 @@ const useApprovalFields = (
   handleDateInputChange, 
   handleOpenCalendar, 
   setEditedUser, 
-  isEditable = true
+  isEditable = true,
+  activeTab = '전체'
 ) => {
-  // 무료 사용자 여부 확인 (탈퇴 사용자는 제외)
-  const isFreeUser = editedUser?.companyType === '무료 사용자';
+  // 무료 사용자 여부 확인 (탈퇴 사용자도 포함)
+  const isFreeUser = editedUser?.companyType === '무료 사용자' || editedUser?.companyType === '탈퇴 사용자';
 
   // 비활성화 스타일 반환
   const getDisabledStyle = useCallback((isDisabled) => {
@@ -35,7 +36,7 @@ const useApprovalFields = (
   // 달력 아이콘 클릭 핸들러
   const handleCalendarClick = useCallback((field, e) => {
     const currentCompanyType = editedUser?.companyType || user?.companyType;
-    const isDisabled = currentCompanyType === '무료 사용자' || !isEditable;
+    const isDisabled = currentCompanyType === '무료 사용자' || currentCompanyType === '탈퇴 사용자' || !isEditable || activeTab === '탈퇴';
     
     if (isDisabled) {
       return;
@@ -44,14 +45,14 @@ const useApprovalFields = (
     const inputElement = e.target.previousElementSibling;
     const currentDate = editedUser?.[field] || user?.[field];
     handleOpenCalendar(field === 'startDate' ? 'start' : 'end', inputElement, currentDate);
-  }, [editedUser, user, handleOpenCalendar, isEditable]);
+  }, [editedUser, user, handleOpenCalendar, isEditable, activeTab]);
 
   // 달력 아이콘 스타일
   const getCalendarIconStyle = useCallback((field) => {
     const currentCompanyType = editedUser?.companyType || user?.companyType;
-    const isDisabled = currentCompanyType === '무료 사용자' || !isEditable;
+    const isDisabled = currentCompanyType === '무료 사용자' || currentCompanyType === '탈퇴 사용자' || !isEditable || activeTab === '탈퇴';
     return isDisabled ? { opacity: 0.3, cursor: 'not-allowed' } : {};
-  }, [editedUser, user, isEditable]);
+  }, [editedUser, user, isEditable, activeTab]);
 
   // 업체 형태 변경 핸들러
   const handleCompanyTypeChange = useCallback((value) => {

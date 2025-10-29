@@ -14,7 +14,8 @@ const DetailModeView = ({
   handleOpenCalendar,
   showMessage,
   onUserUpdate,
-  setEditedUser
+  setEditedUser,
+  activeTab = '전체'
 }) => {
   // JSX 최적화 함수들
   const renderInputField = (label, name, value, onChange, options = {}) => (
@@ -69,6 +70,7 @@ const DetailModeView = ({
         handleOpenCalendar={handleOpenCalendar}
         isEditable={isEditable}
         setEditedUser={setEditedUser}
+        activeTab={activeTab}
       />
 
       {/* 사용량 정보 섹션 */}

@@ -12,7 +12,8 @@ const UserDetailModal = ({
   onSave,
   isEditable = true,
   showFooter = true,
-  showMessage: parentShowMessage
+  showMessage: parentShowMessage,
+  activeTab = '전체'
 }) => {
   const [editedUser, setEditedUser] = useState(null);
   const prevUserRef = React.useRef(null);
@@ -330,6 +331,7 @@ const UserDetailModal = ({
             showMessage={showMessage}
             onUserUpdate={onSave}
             setEditedUser={setEditedUser}
+            activeTab={activeTab}
           />
         </div>
         

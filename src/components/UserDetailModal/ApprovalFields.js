@@ -15,7 +15,8 @@ const ApprovalFields = ({
   setEditedUser,
   showLabels = true,
   compactMode = false,
-  fieldsToShow = ['companyType', 'pricingPlan', 'startDate', 'endDate', 'approvalStatus']
+  fieldsToShow = ['companyType', 'pricingPlan', 'startDate', 'endDate', 'approvalStatus'],
+  activeTab = '전체'
 }) => {
   const {
     isFreeUser,
@@ -33,7 +34,8 @@ const ApprovalFields = ({
     handleDateInputChange, 
     handleOpenCalendar, 
     setEditedUser, 
-    isEditable
+    isEditable,
+    activeTab
   );
 
   return (
@@ -64,9 +66,9 @@ const ApprovalFields = ({
           <select
             value={editedUser?.pricingPlan || '무료'}
             onChange={(e) => handlePricingPlanChange(e.target.value)}
-            disabled={!isEditable || isFreeUser}
-            className={(!isEditable || isFreeUser) ? 'readonly-input' : ''}
-            style={getDisabledStyle(!isEditable || isFreeUser)}
+            disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+            className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
+            style={getDisabledStyle(!isEditable || isFreeUser || activeTab === '탈퇴')}
           >
             <option value="무료">무료</option>
             <option value="스탠다드">스탠다드</option>
@@ -86,8 +88,8 @@ const ApprovalFields = ({
               onChange={(e) => handleDateChange('startDate', e.target.value)}
               placeholder="YYYY-MM-DD"
               maxLength="10"
-              disabled={!isEditable || isFreeUser}
-              className={(!isEditable || isFreeUser) ? 'readonly-input' : ''}
+              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
               style={{ 
                 backgroundColor: 'white', 
                 border: '1px solid #ccc'
@@ -115,8 +117,8 @@ const ApprovalFields = ({
               onChange={(e) => handleDateChange('endDate', e.target.value)}
               placeholder="YYYY-MM-DD"
               maxLength="10"
-              disabled={!isEditable || isFreeUser}
-              className={(!isEditable || isFreeUser) ? 'readonly-input' : ''}
+              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
               style={{ 
                 backgroundColor: 'white', 
                 border: '1px solid #ccc'

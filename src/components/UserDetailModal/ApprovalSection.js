@@ -12,7 +12,8 @@ const ApprovalSection = ({
   handleDateInputChange,
   handleOpenCalendar,
   isEditable = true,
-  setEditedUser
+  setEditedUser,
+  activeTab = '전체'
 }) => {
   return (
     <div className="form-section approval-info-section">
@@ -30,6 +31,7 @@ const ApprovalSection = ({
           showLabels={true}
           compactMode={false}
           fieldsToShow={['companyType', 'pricingPlan']}
+          activeTab={activeTab}
         />
       </div>
       
@@ -45,6 +47,7 @@ const ApprovalSection = ({
           showLabels={true}
           compactMode={false}
           fieldsToShow={['startDate', 'endDate']}
+          activeTab={activeTab}
         />
       </div>
       
@@ -60,6 +63,7 @@ const ApprovalSection = ({
           showLabels={true}
           compactMode={false}
           fieldsToShow={['approvalStatus']}
+          activeTab={activeTab}
         />
       </div>
     </div>
