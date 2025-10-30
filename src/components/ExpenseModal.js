@@ -167,14 +167,14 @@ const ExpenseModal = ({
       if (transactionType === 'income') {
         return {
           companyName: '입금처명',
-          issueDate: '입금일',
+          expenseDate: '입금일',
           item: '입금 항목',
           supplyAmount: '입금액'
         };
       } else {
         return {
           companyName: '회사명',
-          issueDate: '결제일',
+          expenseDate: '지출일',
           item: '항목',
           supplyAmount: '공급가액'
         };
@@ -184,7 +184,7 @@ const ExpenseModal = ({
     const labels = getFieldLabels();
     const requiredFields = [
       { field: 'companyName', message: `${labels.companyName}을 입력해주세요.` },
-      { field: 'issueDate', message: `${labels.issueDate}을 입력해주세요.` },
+      { field: 'expenseDate', message: `${labels.expenseDate}을 입력해주세요.` },
       { field: 'item', message: `${labels.item}을 입력해주세요.` },
       { field: 'supplyAmount', message: `${labels.supplyAmount}을 입력해주세요.` }
     ];
@@ -500,33 +500,7 @@ const ExpenseModal = ({
 
             <div className="form-row">
               <div className="form-group">
-                <label>{getUITexts().issueDateLabel}<span className="required-asterisk">*</span></label>
-                <div className="date-input-container">
-                  <input
-                    type="text"
-                    name="issueDate"
-                    value={formData.issueDate}
-                    onChange={(e) => {
-                      handleDateInputChange('issueDate', e.target.value, setFormData);
-                    }}
-                    placeholder="YYYY-MM-DD"
-                    maxLength="10"
-                    required
-                    className="date-input"
-                  />
-                  <div 
-                    className="calendar-icon" 
-                    onClick={(e) => {
-                      const inputElement = e.target.previousElementSibling;
-                      handleOpenCalendar('issue', inputElement, formData.issueDate);
-                    }}
-                  >
-                    📅
-                  </div>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>{getUITexts().expenseDateLabel}</label>
+                <label>{getUITexts().expenseDateLabel}<span className="required-asterisk">*</span></label>
                 <div className="date-input-container">
                   <input
                     type="text"
@@ -537,6 +511,7 @@ const ExpenseModal = ({
                     }}
                     placeholder="YYYY-MM-DD"
                     maxLength="10"
+                    required
                     className="date-input"
                   />
                   <div 
@@ -544,6 +519,31 @@ const ExpenseModal = ({
                     onClick={(e) => {
                       const inputElement = e.target.previousElementSibling;
                       handleOpenCalendar('payment', inputElement, formData.expenseDate);
+                    }}
+                  >
+                    📅
+                  </div>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>{getUITexts().issueDateLabel}</label>
+                <div className="date-input-container">
+                  <input
+                    type="text"
+                    name="issueDate"
+                    value={formData.issueDate}
+                    onChange={(e) => {
+                      handleDateInputChange('issueDate', e.target.value, setFormData);
+                    }}
+                    placeholder="YYYY-MM-DD"
+                    maxLength="10"
+                    className="date-input"
+                  />
+                  <div 
+                    className="calendar-icon" 
+                    onClick={(e) => {
+                      const inputElement = e.target.previousElementSibling;
+                      handleOpenCalendar('issue', inputElement, formData.issueDate);
                     }}
                   >
                     📅

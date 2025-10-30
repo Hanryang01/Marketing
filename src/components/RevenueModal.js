@@ -91,10 +91,25 @@ const RevenueModal = ({
       }
       
       if (field === 'supplyAmount') {
-        // 숫자만 추출
-        const numericValue = value.replace(/[^0-9]/g, '');
-        const supplyAmount = parseFloat(numericValue) || 0;
-        const vat = Math.floor(supplyAmount * 0.1);
+        // 마이너스 기호와 숫자만 허용 (천 단위 구분자 제거)
+        let cleanValue = value.replace(/[^0-9-]/g, '');
+        
+        // 마이너스 기호가 여러 개인 경우 첫 번째만 유지
+        if (cleanValue.includes('-')) {
+          const minusIndex = cleanValue.indexOf('-');
+          cleanValue = '-' + cleanValue.substring(minusIndex + 1).replace(/-/g, '');
+        }
+        
+        // 빈 문자열이거나 마이너스만 있는 경우 처리
+        if (cleanValue === '' || cleanValue === '-') {
+          newData.supplyAmount = cleanValue;
+          newData.vat = '';
+          newData.totalAmount = '';
+          return newData;
+        }
+        
+        const supplyAmount = parseFloat(cleanValue) || 0;
+        const vat = Math.floor(Math.abs(supplyAmount) * 0.1) * (supplyAmount < 0 ? -1 : 1);
         const totalAmount = supplyAmount + vat;
         
         // 천 단위 구분자 추가

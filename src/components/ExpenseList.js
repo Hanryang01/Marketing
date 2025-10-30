@@ -130,11 +130,11 @@ const ExpenseList = () => {
   const excelColumns = [
     { key: 'companyName', label: '회사명', width: 20 },
     { key: 'businessLicense', label: '사업자등록번호', width: 15, formatter: (value) => value ? formatBusinessLicense(value) : '' },
+    { key: 'expenseDate', label: activeTab === 'expense' ? '지출일' : '입금일', width: 12, formatter: (value) => formatDate(value) },
     { key: 'issueDate', label: '결제일', width: 12, formatter: (value) => formatDate(value) },
-    { key: 'expenseDate', label: '지출일', width: 12, formatter: (value) => formatDate(value) },
     { key: 'paymentMethod', label: '결제 방법', width: 12 },
     { key: 'item', label: '항목', width: 20 },
-    { key: 'supplyAmount', label: '공급가액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() },
+    { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() },
     { key: 'vatAmount', label: '부가세', width: 12, formatter: (value) => Math.round(value || 0).toLocaleString() },
     { key: 'totalAmount', label: '합계금액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() }
   ];
@@ -203,8 +203,8 @@ const ExpenseList = () => {
                 <tr>
                   <th>회사명</th>
                   <th>사업자등록번호</th>
-                  <th>{activeTab === 'expense' ? '결제일' : '결제일'}</th>
                   <th>{activeTab === 'expense' ? '지출일' : '입금일'}</th>
+                  <th>{activeTab === 'expense' ? '결제일' : '결제일'}</th>
                   <th>결제 방법</th>
                   <th>항목</th>
                   <th>{activeTab === 'expense' ? '공급가액' : '입금액'}</th>
@@ -222,8 +222,8 @@ const ExpenseList = () => {
                     <tr key={expense.id} onDoubleClick={() => handleEditExpense(expense)}>
                       <td>{expense.companyName}</td>
                       <td>{expense.businessLicense ? formatBusinessLicense(expense.businessLicense) : '-'}</td>
-                      <td>{formatDate(expense.issueDate)}</td>
                       <td>{formatDate(expense.expenseDate)}</td>
+                      <td>{formatDate(expense.issueDate)}</td>
                       <td>{expense.paymentMethod}</td>
                       <td>{expense.item}</td>
                       <td className={`amount ${isIncome ? 'income-amount' : 'expense-amount'}`}>

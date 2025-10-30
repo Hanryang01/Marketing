@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
           created_at as createdAt,
           updated_at as updatedAt
         FROM expenses 
-        ORDER BY created_at DESC
+        ORDER BY expense_date DESC, created_at DESC
       `);
       
       res.json(rows);
@@ -107,8 +107,8 @@ router.post('/', async (req, res) => {
       transactionType
     } = req.body;
 
-    // 필수 필드 검증 (expenseDate는 선택 사항)
-    if (!companyName || !issueDate || !item || !paymentMethod || 
+    // 필수 필드 검증 (expenseDate는 필수, issueDate는 선택 사항)
+    if (!companyName || !expenseDate || !item || !paymentMethod || 
         supplyAmount === undefined) {
       return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
     }
@@ -194,8 +194,8 @@ router.put('/:id', async (req, res) => {
       transactionType
     } = req.body;
 
-    // 필수 필드 검증 (expenseDate는 선택 사항)
-    if (!companyName || !issueDate || !item || !paymentMethod || 
+    // 필수 필드 검증 (expenseDate는 필수, issueDate는 선택 사항)
+    if (!companyName || !expenseDate || !item || !paymentMethod || 
         supplyAmount === undefined) {
       return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
     }
