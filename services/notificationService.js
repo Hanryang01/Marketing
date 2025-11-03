@@ -112,7 +112,7 @@ class NotificationService {
         try {
           await connection.execute(`
             INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-            VALUES (?, 'end_date_14days', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+            VALUES (?, 'end_date_14days', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
           `, [
             user.id,
             '서비스 종료 예정 알림',
@@ -130,7 +130,7 @@ class NotificationService {
         try {
           await connection.execute(`
             INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-            VALUES (?, 'end_date_1day', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+            VALUES (?, 'end_date_1day', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
           `, [
             user.id,
             '서비스 종료 임박 알림',
@@ -155,7 +155,7 @@ class NotificationService {
           try {
             await connection.execute(`
               INSERT INTO notifications (user_id, type, title, message, created_at, expires_at)
-              VALUES (0, 'tax_invoice', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+              VALUES (0, 'tax_invoice', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
             `, [
               '세금계산서 발행일 알림',
               `【${setting.company_name}】의 세금계산서 발행일입니다.`
@@ -172,7 +172,7 @@ class NotificationService {
       
       logger.success(`알림 생성 완료: ${notificationCount}개 생성`);
       
-      // 만료된 알림 삭제 (7일 이상 된 알림)
+      // 만료된 알림 삭제 (14일 이상 된 알림)
       const [deleteResult] = await connection.execute(`
         DELETE FROM notifications 
         WHERE expires_at < NOW()
