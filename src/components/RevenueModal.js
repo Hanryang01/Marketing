@@ -42,23 +42,26 @@ const RevenueModal = ({
   } = useCalendar();
 
   useEffect(() => {
-    if (isOpen && initialData) {
-      
-      setRevenueData(prev => ({
-        ...prev,
-        companyName: initialData.companyName || '',
-        businessLicense: initialData.businessLicense || '',
-        companyType: initialData.companyType || '',
-        issueDate: initialData.issueDate || '',
-        paymentDate: initialData.paymentDate || '',
-        paymentMethod: initialData.paymentMethod || '세금계산서',
-        item: initialData.item || '',
-        supplyAmount: formatAmount(initialData.supplyAmount),
-        vat: formatAmount(initialData.vat),
-        totalAmount: formatAmount(initialData.totalAmount)
-      }));
-    } else if (!isOpen) {
-      // Reset form when modal closes
+    if (isOpen) {
+      if (initialData && Object.keys(initialData).length > 0) {
+        // 편집 모드: initialData가 있을 때만 설정
+        setRevenueData(prev => ({
+          ...prev,
+          companyName: initialData.companyName || '',
+          businessLicense: initialData.businessLicense || '',
+          companyType: initialData.companyType || '',
+          issueDate: initialData.issueDate || '',
+          paymentDate: initialData.paymentDate || '',
+          paymentMethod: initialData.paymentMethod || '세금계산서',
+          item: initialData.item || '',
+          supplyAmount: formatAmount(initialData.supplyAmount),
+          vat: formatAmount(initialData.vat),
+          totalAmount: formatAmount(initialData.totalAmount)
+        }));
+      }
+      // 추가 모드: initialData가 없으면 현재 상태 유지 (폼 초기화하지 않음)
+    } else {
+      // 모달이 닫힐 때만 폼 초기화
       setRevenueData({
         companyName: '',
         businessLicense: '',

@@ -259,6 +259,14 @@ input:focus::placeholder {
 
 .button-group {
   display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 10px !important;
+}
+
+.footer-right-buttons {
+  display: flex !important;
   gap: 10px !important;
   margin-left: auto !important;
 }
@@ -291,6 +299,24 @@ input:focus::placeholder {
 .submit-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+/* 매출 버튼 스타일 (매출 추가 버튼과 동일) */
+.add-revenue-button {
+  padding: 8px 20px;
+  background: #36a2eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.add-revenue-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(54, 162, 235, 0.4);
 }
 
 .submit-button:disabled {

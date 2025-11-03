@@ -4,6 +4,7 @@ import { useCalendar } from '../hooks/useCalendar';
 import { handleBusinessLicenseInput, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 import DatePicker from './DatePicker';
 import DetailModeView from './UserDetailModal/DetailModeView';
+import UserRevenueModal from './UserRevenueModal';
 
 const UserDetailModal = ({ 
   isOpen, 
@@ -17,6 +18,7 @@ const UserDetailModal = ({
 }) => {
   const [editedUser, setEditedUser] = useState(null);
   const prevUserRef = React.useRef(null);
+  const [showRevenueModal, setShowRevenueModal] = useState(false);
   
   // useCalendar 훅 사용
   const {
@@ -339,14 +341,23 @@ const UserDetailModal = ({
         {showFooter && (
           <div className="modal-footer">
             <div className="button-group">
-              <button className="cancel-button" onClick={onClose}>
-                취소
+              <button 
+                className="add-revenue-button" 
+                onClick={() => setShowRevenueModal(true)}
+                title="매출 내역 조회"
+              >
+                매출
               </button>
-              {isEditable && (
-                <button className="submit-button" onClick={handleSave}>
-                  저장
+              <div className="footer-right-buttons">
+                <button className="cancel-button" onClick={onClose}>
+                  취소
                 </button>
-              )}
+                {isEditable && (
+                  <button className="submit-button" onClick={handleSave}>
+                    저장
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -431,6 +442,13 @@ const UserDetailModal = ({
           </div>
         </div>
       )}
+
+      {/* 사용자별 매출 내역 모달 */}
+      <UserRevenueModal
+        isOpen={showRevenueModal}
+        onClose={() => setShowRevenueModal(false)}
+        user={user || editedUser}
+      />
     </div>
   );
 };
