@@ -6,7 +6,9 @@ import { useCalendar } from './useCalendar';
 /**
  * 엑셀 추출 공통 훅
  * @param {Array} data - 추출할 데이터 배열
- * @param {Array} columns - 컬럼 정의 배열 [{ key, label, width, formatter? }]
+ * @param {Array} columns - 컬럼 정의 배열 [{ key, label, width, formatter?, isNumber? }]
+ *   - formatter: 값 포맷팅 함수 (isNumber가 true면 적용 안됨)
+ *   - isNumber: 숫자 형식으로 저장할지 여부 (true면 천단위 구분자 형식 적용)
  * @param {string} fileName - 파일명 (확장자 제외)
  * @param {string} sheetName - 시트명
  * @param {Function} showMessage - 메시지 표시 함수
@@ -27,12 +29,16 @@ const useExcelExport = (data, columns, fileName, sheetName, showMessage) => {
         const row = { '순번': index + 1 };
         
         columns.forEach(column => {
-          const { key, label, formatter } = column; // width 제거
+          const { key, label, formatter, isNumber } = column;
           let value = item[key];
           
-          // 포맷터가 있으면 적용
-          if (formatter) {
+          // 숫자 형식이 아닌 경우에만 formatter 적용
+          // isNumber가 true면 원본 숫자 값을 유지 (엑셀에서 숫자로 인식되도록)
+          if (!isNumber && formatter) {
             value = formatter(value, item);
+          } else if (isNumber) {
+            // 숫자 형식인 경우 명시적으로 숫자로 변환
+            value = typeof value === 'number' ? value : (parseFloat(value) || 0);
           }
           
           row[label] = value;
@@ -53,6 +59,41 @@ const useExcelExport = (data, columns, fileName, sheetName, showMessage) => {
         ...columns.map(col => ({ wch: col.width || 15 }))
       ];
       worksheet['!cols'] = columnWidths;
+
+      // 숫자 형식 적용 (천단위 구분자)
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      
+      // 헤더를 제외한 데이터 행에 숫자 형식 적용
+      for (let row = 1; row <= range.e.r; row++) {
+        let colIndex = 1; // 순번 컬럼 제외하고 시작
+        
+        columns.forEach((column, colIdx) => {
+          if (column.isNumber) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+            const dataRow = excelData[row - 1];
+            
+            // 원본 데이터에서 숫자 값 가져오기
+            if (dataRow && dataRow[column.label] !== undefined) {
+              const numValue = typeof dataRow[column.label] === 'number' 
+                ? dataRow[column.label] 
+                : parseFloat(dataRow[column.label]);
+              
+              if (!isNaN(numValue)) {
+                // 셀 생성 또는 가져오기
+                if (!worksheet[cellAddress]) {
+                  worksheet[cellAddress] = {};
+                }
+                
+                // 숫자 타입과 값을 명확히 설정
+                worksheet[cellAddress].t = 'n'; // number type
+                worksheet[cellAddress].v = numValue; // 숫자 값
+                worksheet[cellAddress].z = '#,##0'; // 천단위 구분자 형식
+              }
+            }
+          }
+          colIndex++;
+        });
+      }
 
       // 워크북에 워크시트 추가
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);

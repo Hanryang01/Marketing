@@ -134,9 +134,9 @@ const ExpenseList = () => {
     { key: 'issueDate', label: '결제일', width: 12, formatter: (value) => formatDate(value) },
     { key: 'paymentMethod', label: '결제 방법', width: 12 },
     { key: 'item', label: '항목', width: 20 },
-    { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() },
-    { key: 'vatAmount', label: '부가세', width: 12, formatter: (value) => Math.round(value || 0).toLocaleString() },
-    { key: 'totalAmount', label: '합계금액', width: 15, formatter: (value) => Math.round(value || 0).toLocaleString() }
+    { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, isNumber: true }, // 숫자 형식 적용
+    { key: 'vatAmount', label: '부가세', width: 12, isNumber: true }, // 숫자 형식 적용
+    { key: 'totalAmount', label: '합계금액', width: 15, isNumber: true } // 숫자 형식 적용
   ];
 
   // 공통 엑셀 추출 훅 사용

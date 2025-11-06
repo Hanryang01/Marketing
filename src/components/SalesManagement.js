@@ -111,9 +111,9 @@ const SalesManagement = () => {
     { key: 'companyName', label: '회사명', width: 25 },
     { key: 'businessLicense', label: '사업자등록번호', width: 18, formatter: (value) => formatBusinessLicense(value) || '' },
     { key: 'item', label: '항목', width: 20 },
-    { key: 'supplyAmount', label: '공급가액', width: 12, formatter: (value) => (value || 0).toLocaleString() },
-    { key: 'vat', label: '부가세', width: 10, formatter: (value) => (value || 0).toLocaleString() },
-    { key: 'totalAmount', label: '총금액', width: 12, formatter: (value) => (value || 0).toLocaleString() }
+    { key: 'supplyAmount', label: '공급가액', width: 12, isNumber: true }, // 숫자 형식 적용
+    { key: 'vat', label: '부가세', width: 10, isNumber: true }, // 숫자 형식 적용
+    { key: 'totalAmount', label: '총금액', width: 12, isNumber: true } // 숫자 형식 적용
   ];
 
   // 현재 필터링된 데이터 또는 전체 데이터 사용
