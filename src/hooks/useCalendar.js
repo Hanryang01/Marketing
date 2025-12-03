@@ -69,11 +69,15 @@ export const useCalendar = () => {
     
     // 기존 날짜가 있으면 그 날짜를 사용하고, 없으면 오늘 날짜 사용
     let targetDate;
-    if (currentDate) {
+    if (currentDate && currentDate !== '' && currentDate !== null && currentDate !== undefined) {
       // YYYY-MM-DD 형식의 문자열을 Date 객체로 변환
       if (typeof currentDate === 'string' && currentDate.includes('-')) {
         const [year, month, day] = currentDate.split('-').map(Number);
         targetDate = new Date(year, month - 1, day);
+        // 유효하지 않은 날짜인지 확인
+        if (isNaN(targetDate.getTime()) || targetDate.getFullYear() !== year || targetDate.getMonth() !== month - 1 || targetDate.getDate() !== day) {
+          targetDate = getCurrentKoreaDate();
+        }
       } else if (typeof currentDate === 'number') {
         // 8자리 숫자 형식 (YYYYMMDD)을 Date 객체로 변환
         const dateStr = currentDate.toString();
@@ -82,6 +86,10 @@ export const useCalendar = () => {
           const month = parseInt(dateStr.substring(4, 6));
           const day = parseInt(dateStr.substring(6, 8));
           targetDate = new Date(year, month - 1, day);
+          // 유효하지 않은 날짜인지 확인
+          if (isNaN(targetDate.getTime()) || targetDate.getFullYear() !== year || targetDate.getMonth() !== month - 1 || targetDate.getDate() !== day) {
+            targetDate = getCurrentKoreaDate();
+          }
         } else {
           targetDate = getCurrentKoreaDate();
         }
@@ -205,6 +213,12 @@ export const useCalendar = () => {
     } else if (type === 'detailEnd') {
       date = detailEndDatePickerDate;
     }
+    
+    // date가 유효하지 않으면 오늘 날짜 사용
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      date = getCurrentKoreaDate();
+    }
+    
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     return `${year}년 ${month}월`;
@@ -225,6 +239,11 @@ export const useCalendar = () => {
       date = detailStartDatePickerDate;
     } else if (type === 'detailEnd') {
       date = detailEndDatePickerDate;
+    }
+    
+    // date가 유효하지 않으면 오늘 날짜 사용
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      date = getCurrentKoreaDate();
     }
     
     const year = date.getFullYear();
