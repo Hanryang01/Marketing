@@ -11,21 +11,21 @@ const DashboardPage = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // 지출 수정 모달 상태
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
-  
+
   // 수입 수정 모달 상태
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(null);
-  
+
   // useCalendar 훅 사용
   const { parseKoreaDate, formatDate } = useCalendar();
-  
+
   // 거래내역 더블클릭 핸들러
   const handleTransactionDoubleClick = (transaction) => {
-    
+
     if (transaction.type === 'expense') {
       // 지출 데이터 구조 변환
       // 원본 데이터에서 모든 필드를 가져와서 매핑
@@ -82,7 +82,7 @@ const DashboardPage = () => {
         const day = parts.find(part => part.type === 'day').value;
         return `${year}-${month}-${day}`;
       };
-      
+
       // 원본 데이터에서 모든 필드를 가져와서 매핑
       const originalData = transaction.originalData || {};
       const revenueData = {
@@ -103,11 +103,11 @@ const DashboardPage = () => {
     } else {
     }
   };
-  
+
   // 지출 수정 완료 핸들러
   const handleExpenseUpdated = async (expenseData) => {
     try {
-      
+
       // 서버 형식에 맞게 데이터 변환 (숫자 필드는 숫자로 변환)
       const serverData = {
         companyName: expenseData.companyName,
@@ -121,8 +121,8 @@ const DashboardPage = () => {
         vatAmount: parseFloat(expenseData.vatAmount?.toString().replace(/,/g, '') || '0'),
         transactionType: expenseData.transactionType
       };
-      
-      
+
+
       // API 호출로 지출 데이터 수정
       const response = await apiCall(API_ENDPOINTS.EXPENSE_DETAIL(expenseData.id), {
         method: 'PUT',
@@ -131,8 +131,8 @@ const DashboardPage = () => {
         },
         body: JSON.stringify(serverData),
       });
-      
-      
+
+
       if (response.success === true || (response.success !== false && response.message && response.message.includes('성공'))) {
         console.log('Expense updated successfully');
         // 모달 닫기
@@ -147,11 +147,11 @@ const DashboardPage = () => {
       console.error('Error updating expense:', error);
     }
   };
-  
+
   // 수입 수정 완료 핸들러
   const handleRevenueUpdated = async (revenueData) => {
     try {
-      
+
       // 서버 형식에 맞게 데이터 변환 (숫자 필드는 숫자로 변환)
       const serverData = {
         company_name: revenueData.companyName,
@@ -165,8 +165,8 @@ const DashboardPage = () => {
         vat: parseFloat(revenueData.vat?.toString().replace(/,/g, '') || '0'),
         total_amount: parseFloat(revenueData.totalAmount?.toString().replace(/,/g, '') || '0')
       };
-      
-      
+
+
       // API 호출로 매출 데이터 수정
       const response = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(revenueData.id), {
         method: 'PUT',
@@ -175,8 +175,8 @@ const DashboardPage = () => {
         },
         body: JSON.stringify(serverData),
       });
-      
-      
+
+
       if (response.success === true || (response.success !== false && response.message && response.message.includes('성공'))) {
         console.log('Revenue updated successfully');
         // 모달 닫기
@@ -191,7 +191,7 @@ const DashboardPage = () => {
       console.error('Error updating revenue:', error);
     }
   };
-  
+
   // 안전한 숫자 변환 함수
   const safeParseFloat = useCallback((value) => {
     if (value === null || value === undefined || value === '') return 0;
@@ -202,7 +202,7 @@ const DashboardPage = () => {
   // 거래내역 생성 함수 (중복 로직 제거)
   const createTransactions = useCallback((monthData) => {
     const transactions = [];
-    
+
     // 매출 데이터 추가
     monthData.revenue.forEach(revenue => {
       transactions.push({
@@ -223,7 +223,7 @@ const DashboardPage = () => {
         originalData: revenue
       });
     });
-    
+
     // 입금 데이터 추가
     monthData.income.forEach(income => {
       transactions.push({
@@ -238,7 +238,7 @@ const DashboardPage = () => {
         originalData: income
       });
     });
-    
+
     // 지출 데이터 추가
     monthData.expense.forEach(expense => {
       transactions.push({
@@ -253,83 +253,85 @@ const DashboardPage = () => {
         originalData: expense
       });
     });
-    
+
     // 날짜 기준으로 내림차순 정렬
     transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
+
     return transactions;
   }, [safeParseFloat]);
 
   // 이전 연도 누적 손익 계산 (공통 함수)
   const calculatePreviousYearCumulative = useCallback((targetYear) => {
+    const startYear = 2024;
     let previousYearCumulative = 0;
-    const previousYear = targetYear - 1;
-    
-    for (let month = 1; month <= 12; month++) {
-      // 이전 연도의 매출 (입금일 기준)
-      const revenueAmount = Array.isArray(revenueData) ? revenueData
-        .filter(revenue => {
-          const paymentDate = revenue.payment_date || revenue.paymentDate;
-          if (!paymentDate) return false;
-          
-          const dateObj = parseKoreaDate(paymentDate);
-          if (!dateObj) return false;
-          
-          const itemYear = dateObj.getFullYear();
-          const itemMonth = dateObj.getMonth() + 1;
-          
-          return itemMonth === month && itemYear === previousYear;
-        })
-        .reduce((sum, revenue) => sum + safeParseFloat(revenue.total_amount), 0) : 0;
-      
-      // 이전 연도의 입금 (지출 데이터에서)
-      const incomeFromExpenses = Array.isArray(expenseData) ? expenseData
-        .filter(expense => {
-          if (!expense.expenseDate) return false;
-          if (expense.transactionType !== 'income') return false;
-          
-          const dateObj = parseKoreaDate(expense.expenseDate);
-          if (!dateObj) return false;
-          
-          const itemYear = dateObj.getFullYear();
-          const itemMonth = dateObj.getMonth() + 1;
-          
-          return itemMonth === month && itemYear === previousYear;
-        })
-        .reduce((sum, expense) => sum + safeParseFloat(expense.totalAmount), 0) : 0;
-      
-      const totalIncome = revenueAmount + incomeFromExpenses;
-      
-      // 이전 연도의 지출
-      const totalExpense = Array.isArray(expenseData) ? expenseData
-        .filter(expense => {
-          if (!expense.expenseDate) return false;
-          if (expense.transactionType !== 'expense') return false;
-          
-          const dateObj = parseKoreaDate(expense.expenseDate);
-          if (!dateObj) return false;
-          
-          const itemYear = dateObj.getFullYear();
-          const itemMonth = dateObj.getMonth() + 1;
-          
-          return itemMonth === month && itemYear === previousYear;
-        })
-        .reduce((sum, expense) => sum + safeParseFloat(expense.totalAmount), 0) : 0;
-      
-      const profit = totalIncome - totalExpense;
-      previousYearCumulative += profit;
+
+    for (let year = startYear; year < targetYear; year++) {
+      for (let month = 1; month <= 12; month++) {
+        // 해당 연도/월의 매출 (입금일 기준)
+        const revenueAmount = Array.isArray(revenueData) ? revenueData
+          .filter(revenue => {
+            const paymentDate = revenue.payment_date || revenue.paymentDate;
+            if (!paymentDate) return false;
+
+            const dateObj = parseKoreaDate(paymentDate);
+            if (!dateObj) return false;
+
+            const itemYear = dateObj.getFullYear();
+            const itemMonth = dateObj.getMonth() + 1;
+
+            return itemMonth === month && itemYear === year;
+          })
+          .reduce((sum, revenue) => sum + safeParseFloat(revenue.total_amount), 0) : 0;
+
+        // 해당 연도/월의 입금 (지출 데이터에서)
+        const incomeFromExpenses = Array.isArray(expenseData) ? expenseData
+          .filter(expense => {
+            if (!expense.expenseDate) return false;
+            if (expense.transactionType !== 'income') return false;
+
+            const dateObj = parseKoreaDate(expense.expenseDate);
+            if (!dateObj) return false;
+
+            const itemYear = dateObj.getFullYear();
+            const itemMonth = dateObj.getMonth() + 1;
+
+            return itemMonth === month && itemYear === year;
+          })
+          .reduce((sum, expense) => sum + safeParseFloat(expense.totalAmount), 0) : 0;
+
+        const totalIncome = revenueAmount + incomeFromExpenses;
+
+        // 해당 연도/월의 지출
+        const totalExpense = Array.isArray(expenseData) ? expenseData
+          .filter(expense => {
+            if (!expense.expenseDate) return false;
+            if (expense.transactionType !== 'expense') return false;
+
+            const dateObj = parseKoreaDate(expense.expenseDate);
+            if (!dateObj) return false;
+
+            const itemYear = dateObj.getFullYear();
+            const itemMonth = dateObj.getMonth() + 1;
+
+            return itemMonth === month && itemYear === year;
+          })
+          .reduce((sum, expense) => sum + safeParseFloat(expense.totalAmount), 0) : 0;
+
+        const profit = totalIncome - totalExpense;
+        previousYearCumulative += profit;
+      }
     }
-    
+
     return previousYearCumulative;
   }, [revenueData, expenseData, parseKoreaDate, safeParseFloat]);
-  
+
   // 날짜 문자열을 년월로 변환하는 함수 (useCalendar 훅 사용)
   const getDateYearMonth = useCallback((dateString) => {
     if (!dateString) return null;
-    
+
     const dateObj = parseKoreaDate(dateString);
     if (!dateObj) return null;
-    
+
     return {
       year: dateObj.getFullYear(),
       month: dateObj.getMonth() + 1
@@ -340,7 +342,7 @@ const DashboardPage = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // 매출 데이터 로드
       const revenueResult = await apiCall('/api/revenue');
       if (revenueResult && revenueResult.success && Array.isArray(revenueResult.data)) {
@@ -349,7 +351,7 @@ const DashboardPage = () => {
 
       // 지출 데이터 로드
       const expenseResult = await apiCall('/api/expenses');
-      
+
       // 지출 API는 배열을 직접 반환하는 것 같음
       if (Array.isArray(expenseResult)) {
         setExpenseData(expenseResult);
@@ -369,16 +371,16 @@ const DashboardPage = () => {
 
   // 선택된 월의 데이터 계산
   const getMonthData = useCallback((year, month) => {
-    
+
     // 매출 데이터 필터링 (payment_date 기준)
     const monthRevenue = revenueData.filter(revenue => {
       const paymentDate = revenue.payment_date || revenue.paymentDate;
       if (!paymentDate) return false;
-      
+
       // 날짜에서 년월 추출
       const dateInfo = getDateYearMonth(paymentDate);
       if (!dateInfo) return false;
-      
+
       const isMatch = dateInfo.year === year && dateInfo.month === month;
       return isMatch;
     });
@@ -386,11 +388,11 @@ const DashboardPage = () => {
     // 지출 데이터 필터링 (expenseDate 기준)
     const monthExpenses = expenseData.filter(expense => {
       if (!expense.expenseDate) return false;
-      
+
       // 날짜에서 년월 추출
       const dateInfo = getDateYearMonth(expense.expenseDate);
       if (!dateInfo) return false;
-      
+
       const isMatch = dateInfo.year === year && dateInfo.month === month;
       return isMatch;
     });
@@ -398,7 +400,7 @@ const DashboardPage = () => {
     // 입금/지출 분리
     const income = monthExpenses.filter(expense => expense.transactionType === 'income');
     const expense = monthExpenses.filter(expense => expense.transactionType === 'expense');
-    
+
 
     // 금액 계산
     const revenueAmount = monthRevenue.reduce((sum, r) => sum + safeParseFloat(r.total_amount), 0);
@@ -425,45 +427,43 @@ const DashboardPage = () => {
     return getMonthData(selectedYear, selectedMonth);
   }, [selectedYear, selectedMonth, getMonthData]);
 
-  // 지난달 데이터
-  const lastMonthData = useMemo(() => {
-    const lastMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
-    const lastYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
-    return getMonthData(lastYear, lastMonth);
+  // 다음달 데이터
+  const nextMonthData = useMemo(() => {
+    const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
+    const nextYear = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
+    return getMonthData(nextYear, nextMonth);
   }, [selectedYear, selectedMonth, getMonthData]);
 
-  // 지난달 누적 손익 계산 (월별 손익 표와 동일한 로직)
-  const lastMonthCumulativeProfit = useMemo(() => {
-    const lastMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
-    const lastYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
-    
-    // 이전 연도의 누적 손익 계산
-    const previousYearCumulative = calculatePreviousYearCumulative(lastYear);
-    
-    // 지난달 연도의 누적 손익 계산 (지난달까지)
-    let cumulative = previousYearCumulative;
-    for (let month = 1; month <= lastMonth; month++) {
-      const monthData = getMonthData(lastYear, month);
-      cumulative += monthData.netProfit;
-    }
-    
-    return cumulative;
-  }, [selectedYear, selectedMonth, calculatePreviousYearCumulative, getMonthData]);
-
-  // 누적 손익 계산 (월별 손익 표와 동일한 로직)
-  const cumulativeProfit = useMemo(() => {
+  // 이번달 누적 손익 계산 (기존의 cumulativeProfit 로직 활용)
+  const thisMonthCumulativeProfit = useMemo(() => {
     // 이전 연도의 누적 손익 계산
     const previousYearCumulative = calculatePreviousYearCumulative(selectedYear);
-    
+
     // 현재 연도의 누적 손익 계산 (선택된 월까지)
     let cumulative = previousYearCumulative;
     for (let month = 1; month <= selectedMonth; month++) {
       const monthData = getMonthData(selectedYear, month);
       cumulative += monthData.netProfit;
     }
-    
+
     return cumulative;
   }, [selectedYear, selectedMonth, calculatePreviousYearCumulative, getMonthData]);
+
+  // 다음달 누적 손익 계산
+  const nextMonthCumulativeProfit = useMemo(() => {
+    const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
+    const nextYear = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
+
+    // 만약 다음달이 내년인 경우
+    if (nextYear > selectedYear) {
+      const previousYearCumulative = calculatePreviousYearCumulative(nextYear);
+      const monthData = getMonthData(nextYear, 1);
+      return previousYearCumulative + monthData.netProfit;
+    } else {
+      // 같은 연도인 경우 이번달 누적에 다음달 손익 더함
+      return thisMonthCumulativeProfit + nextMonthData.netProfit;
+    }
+  }, [selectedYear, selectedMonth, calculatePreviousYearCumulative, getMonthData, thisMonthCumulativeProfit, nextMonthData.netProfit]);
 
 
   // 연도 변경 핸들러 (ExpenseStatus와 동일)
@@ -474,8 +474,8 @@ const DashboardPage = () => {
   // 연도 선택 컴포넌트 (ExpenseStatus와 동일)
   const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
     return (
-      <select 
-        value={selectedYear} 
+      <select
+        value={selectedYear}
         onChange={(e) => onYearChange(parseInt(e.target.value))}
         className={className}
       >
@@ -504,13 +504,13 @@ const DashboardPage = () => {
       <div className="dashboard-header">
         <h1>월별 입출금</h1>
         <div className="date-selector">
-          <YearSelector 
-            selectedYear={selectedYear} 
+          <YearSelector
+            selectedYear={selectedYear}
             onYearChange={handleYearChange}
             className="year-select"
           />
-          <select 
-            value={selectedMonth} 
+          <select
+            value={selectedMonth}
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
             className="month-select"
           >
@@ -525,86 +525,17 @@ const DashboardPage = () => {
 
       {/* 월별 비교 섹션 */}
       <div className="monthly-comparison">
-        {/* 지난달 */}
-        <div className="month-section last-month">
-          <div className="month-header">
-            <h2>지난달 ({selectedMonth === 1 ? selectedYear - 1 : selectedYear}년 {selectedMonth === 1 ? 12 : selectedMonth - 1}월)</h2>
-            <div className="month-balance-card">
-              <div className={`card-amount ${lastMonthCumulativeProfit >= 0 ? 'profit' : 'loss'}`}>
-                {lastMonthCumulativeProfit.toLocaleString()}원
-              </div>
-            </div>
-          </div>
-          
-          <div className="month-summary">
-            <div className="summary-card">
-              <div className="card-title">입금</div>
-              <div className="card-amount income">{lastMonthData.totalIncome.toLocaleString()}원</div>
-            </div>
-            <div className="summary-card">
-              <div className="card-title">지출</div>
-              <div className="card-amount expense">{lastMonthData.expenseAmount.toLocaleString()}원</div>
-            </div>
-            <div className="summary-card">
-              <div className="card-title">손익</div>
-              <div className={`card-amount ${lastMonthData.netProfit >= 0 ? 'profit' : 'loss'}`}>
-                {lastMonthData.netProfit >= 0 ? '+' : ''}{lastMonthData.netProfit.toLocaleString()}원
-              </div>
-            </div>
-          </div>
-
-          {/* 지난달 거래내역 */}
-          <div className="transaction-list">
-            <h3>거래내역</h3>
-            <div className="list-container">
-              {(() => {
-                const transactions = createTransactions(lastMonthData);
-                
-                return transactions.length > 0 ? (
-                  transactions.map((transaction) => (
-                    <div 
-                      key={transaction.id} 
-                      className={`transaction-item ${transaction.type === 'income' || transaction.type === 'revenue' ? 'income' : 'expense'}`}
-                      onDoubleClick={() => handleTransactionDoubleClick(transaction)}
-                      style={{ cursor: (transaction.type === 'expense' || transaction.type === 'income' || transaction.type === 'revenue') ? 'pointer' : 'default' }}
-                      title={(transaction.type === 'expense' || transaction.type === 'income' || transaction.type === 'revenue') ? '더블클릭하여 수정' : ''}
-                    >
-                      <div className="transaction-date">
-                        {formatDate(transaction.date)}
-                      </div>
-                      <div className="transaction-company">
-                        {transaction.company}
-                      </div>
-                      <div className="transaction-item-name">
-                        {transaction.item}
-                      </div>
-                      <div className={`transaction-amount ${transaction.type === 'income' || transaction.type === 'revenue' ? 'income' : 'expense'}`}>
-                        {transaction.type === 'income' || transaction.type === 'revenue' ? '+' : '-'}{transaction.amount.toLocaleString()}원
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                    거래내역이 없습니다.
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-
-        </div>
-
         {/* 이번달 */}
         <div className="month-section current-month">
           <div className="month-header">
             <h2>이번달 ({selectedYear}년 {selectedMonth}월)</h2>
             <div className="month-balance-card">
-              <div className={`card-amount ${cumulativeProfit >= 0 ? 'profit' : 'loss'}`}>
-                {cumulativeProfit.toLocaleString()}원
+              <div className={`card-amount ${thisMonthCumulativeProfit >= 0 ? 'profit' : 'loss'}`}>
+                {thisMonthCumulativeProfit.toLocaleString()}원
               </div>
             </div>
           </div>
-          
+
           <div className="month-summary">
             <div className="summary-card">
               <div className="card-title">입금</div>
@@ -628,11 +559,80 @@ const DashboardPage = () => {
             <div className="list-container">
               {(() => {
                 const transactions = createTransactions(thisMonthData);
-                
+
                 return transactions.length > 0 ? (
                   transactions.map((transaction) => (
-                    <div 
-                      key={transaction.id} 
+                    <div
+                      key={transaction.id}
+                      className={`transaction-item ${transaction.type === 'income' || transaction.type === 'revenue' ? 'income' : 'expense'}`}
+                      onDoubleClick={() => handleTransactionDoubleClick(transaction)}
+                      style={{ cursor: (transaction.type === 'expense' || transaction.type === 'income' || transaction.type === 'revenue') ? 'pointer' : 'default' }}
+                      title={(transaction.type === 'expense' || transaction.type === 'income' || transaction.type === 'revenue') ? '더블클릭하여 수정' : ''}
+                    >
+                      <div className="transaction-date">
+                        {formatDate(transaction.date)}
+                      </div>
+                      <div className="transaction-company">
+                        {transaction.company}
+                      </div>
+                      <div className="transaction-item-name">
+                        {transaction.item}
+                      </div>
+                      <div className={`transaction-amount ${transaction.type === 'income' || transaction.type === 'revenue' ? 'income' : 'expense'}`}>
+                        {transaction.type === 'income' || transaction.type === 'revenue' ? '+' : '-'}{transaction.amount.toLocaleString()}원
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    거래내역이 없습니다.
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+        </div>
+
+        {/* 다음달 */}
+        <div className="month-section next-month">
+          <div className="month-header">
+            <h2>다음달 ({selectedMonth === 12 ? selectedYear + 1 : selectedYear}년 {selectedMonth === 12 ? 1 : selectedMonth + 1}월)</h2>
+            <div className="month-balance-card">
+              <div className={`card-amount ${nextMonthCumulativeProfit >= 0 ? 'profit' : 'loss'}`}>
+                {nextMonthCumulativeProfit.toLocaleString()}원
+              </div>
+            </div>
+          </div>
+
+          <div className="month-summary">
+            <div className="summary-card">
+              <div className="card-title">입금</div>
+              <div className="card-amount income">{nextMonthData.totalIncome.toLocaleString()}원</div>
+            </div>
+            <div className="summary-card">
+              <div className="card-title">지출</div>
+              <div className="card-amount expense">{nextMonthData.expenseAmount.toLocaleString()}원</div>
+            </div>
+            <div className="summary-card">
+              <div className="card-title">손익</div>
+              <div className={`card-amount ${nextMonthData.netProfit >= 0 ? 'profit' : 'loss'}`}>
+                {nextMonthData.netProfit >= 0 ? '+' : ''}{nextMonthData.netProfit.toLocaleString()}원
+              </div>
+            </div>
+          </div>
+
+          {/* 다음달 거래내역 */}
+          <div className="transaction-list">
+            <h3>거래내역</h3>
+            <div className="list-container">
+              {(() => {
+                const transactions = createTransactions(nextMonthData);
+
+                return transactions.length > 0 ? (
+                  transactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
                       className={`transaction-item ${transaction.type === 'income' || transaction.type === 'revenue' ? 'income' : 'expense'}`}
                       onDoubleClick={() => handleTransactionDoubleClick(transaction)}
                       style={{ cursor: (transaction.type === 'expense' || transaction.type === 'income' || transaction.type === 'revenue') ? 'pointer' : 'default' }}
@@ -663,7 +663,7 @@ const DashboardPage = () => {
 
         </div>
       </div>
-      
+
       {/* 지출 수정 모달 */}
       <ExpenseModal
         isOpen={showExpenseModal}
@@ -672,7 +672,7 @@ const DashboardPage = () => {
         initialData={editingExpense}
         onSave={handleExpenseUpdated}
       />
-      
+
       {/* 수입 수정 모달 */}
       <RevenueModal
         isOpen={showRevenueModal}

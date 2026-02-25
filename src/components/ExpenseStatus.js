@@ -31,8 +31,8 @@ if (!ChartJS.registry.getPlugin('datalabels')) {
 // YearSelector 컴포넌트 분리
 const YearSelector = ({ selectedYear, onYearChange, className = "" }) => {
   return (
-    <select 
-      value={selectedYear} 
+    <select
+      value={selectedYear}
       onChange={(e) => onYearChange(parseInt(e.target.value))}
       className={className}
     >
@@ -72,11 +72,11 @@ const ExpenseStatus = () => {
         .filter(revenue => {
           const paymentDate = revenue.payment_date || revenue.paymentDate;
           if (!paymentDate) return false;
-          
+
           const date = new Date(paymentDate);
           const itemYear = date.getFullYear();
           const itemMonth = date.getMonth() + 1;
-          
+
           return itemMonth === month && itemYear === year;
         })
         .reduce((sum, revenue) => sum + parseAmount(revenue.total_amount), 0) : 0;
@@ -88,11 +88,11 @@ const ExpenseStatus = () => {
         .filter(expense => {
           if (!expense.expenseDate) return false;
           if (expense.transactionType !== 'income') return false;
-          
+
           const date = new Date(expense.expenseDate);
           const itemYear = date.getFullYear();
           const itemMonth = date.getMonth() + 1;
-          
+
           return itemMonth === month && itemYear === year;
         })
         .reduce((sum, expense) => sum + parseAmount(expense.totalAmount), 0) : 0;
@@ -104,11 +104,11 @@ const ExpenseStatus = () => {
         .filter(expense => {
           if (!expense.expenseDate) return false;
           if (expense.transactionType !== 'expense') return false;
-          
+
           const date = new Date(expense.expenseDate);
           const itemYear = date.getFullYear();
           const itemMonth = date.getMonth() + 1;
-          
+
           return itemMonth === month && itemYear === year;
         })
         .reduce((sum, expense) => sum + parseAmount(expense.totalAmount), 0) : 0;
@@ -180,25 +180,28 @@ const ExpenseStatus = () => {
     const expenseData = Array(12).fill(0);
     const profitData = Array(12).fill(0);
     const cumulativeData = Array(12).fill(0);
-    
+
     for (let month = 1; month <= 12; month++) {
       const data = calculateMonthlyData(selectedYear, month, 'profit');
-      
+
       const monthIndex = month - 1;
       incomeData[monthIndex] = data.totalIncome;
       expenseData[monthIndex] = data.totalExpense;
       profitData[monthIndex] = data.profit;
     }
-    
+
     // 누적 손익 계산 (이전 연도 포함)
     let previousYearCumulative = 0;
-    
-    // 이전 연도(selectedYear - 1)의 누적 손익 계산
-    for (let month = 1; month <= 12; month++) {
-      const data = calculateMonthlyData(selectedYear - 1, month, 'profit');
-      previousYearCumulative += data.profit;
+    const startYear = 2024;
+
+    // 2024년부터 이전 연도(selectedYear - 1)까지의 누적 손익 계산
+    for (let year = startYear; year < selectedYear; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const data = calculateMonthlyData(year, month, 'profit');
+        previousYearCumulative += data.profit;
+      }
     }
-    
+
     // 현재 연도의 누적 손익 계산
     for (let month = 1; month <= 12; month++) {
       let cumulative = previousYearCumulative;
@@ -214,7 +217,7 @@ const ExpenseStatus = () => {
       const monthIndex = month - 1;
       cumulativeData[monthIndex] = cumulative;
     }
-    
+
     return {
       income: incomeData,
       expense: expenseData,
@@ -228,10 +231,10 @@ const ExpenseStatus = () => {
   // 연도별 손익 데이터 계산
   const getYearlyProfitData = useCallback(() => {
     const startYear = 2024;
-    
+
     // 실제 데이터에서 존재하는 모든 연도 추출
     const existingYears = new Set();
-    
+
     // 매출 데이터에서 연도 추출
     revenueList.forEach(item => {
       const paymentDate = item.payment_date || item.paymentDate;
@@ -243,7 +246,7 @@ const ExpenseStatus = () => {
         }
       }
     });
-    
+
     // 지출 데이터에서 연도 추출
     expenseList.forEach(item => {
       if (item.expenseDate) {
@@ -254,33 +257,33 @@ const ExpenseStatus = () => {
         }
       }
     });
-    
+
     // 2024년부터 현재 연도까지의 연도와 실제 데이터 연도를 모두 포함
     const currentYear = new Date().getFullYear();
     const allYears = new Set();
-    
+
     // 2024년부터 현재 연도까지 추가
     for (let year = startYear; year <= currentYear; year++) {
       allYears.add(year);
     }
-    
+
     // 실제 데이터에 있는 연도들 추가
     existingYears.forEach(year => allYears.add(year));
-    
+
     const years = Array.from(allYears).sort();
-    
+
     const yearlyData = years.map(year => {
       let yearlyProfit = 0;
-      
+
       // 해당 연도의 1월부터 12월까지 손익 계산
       for (let month = 1; month <= 12; month++) {
         const data = calculateMonthlyData(year, month, 'profit');
         yearlyProfit += data.profit;
       }
-      
+
       return yearlyProfit;
     });
-    
+
     return {
       years: years.map(year => `${year}년`),
       profitData: yearlyData
@@ -350,20 +353,20 @@ const ExpenseStatus = () => {
   // 연도별 손익 그래프 데이터 생성
   const yearlyProfitChartData = useMemo(() => {
     const { years, profitData } = getYearlyProfitData();
-    
+
     return {
       labels: years,
       datasets: [
         {
           label: '연도별 손익',
           data: profitData,
-          backgroundColor: profitData.map(value => 
-            value >= 0 
+          backgroundColor: profitData.map(value =>
+            value >= 0
               ? 'rgba(54, 162, 235, 0.8)'  // 양수: 파란색
               : 'rgba(255, 99, 132, 0.8)'   // 음수: 연한 빨간색
           ),
-          borderColor: profitData.map(value => 
-            value >= 0 
+          borderColor: profitData.map(value =>
+            value >= 0
               ? 'rgba(54, 162, 235, 1)'     // 양수: 파란색 테두리
               : 'rgba(255, 99, 132, 1)'     // 음수: 빨간색 테두리
           ),
@@ -375,7 +378,7 @@ const ExpenseStatus = () => {
             display: true,
             color: '#333',
             font: { weight: 'bold', size: 12 },
-            formatter: function(value) {
+            formatter: function (value) {
               return value !== 0 ? value.toLocaleString() + '원' : '';
             },
             anchor: 'end',
@@ -392,7 +395,7 @@ const ExpenseStatus = () => {
     const { profitData } = getYearlyProfitData();
     const maxValue = profitData.length > 0 ? Math.max(...profitData.map(Math.abs)) : 0;
     const stepSize = calculateStepSize(maxValue);
-    
+
     return {
       responsive: true,
       maintainAspectRatio: true,
@@ -418,7 +421,7 @@ const ExpenseStatus = () => {
             font: {
               size: 13
             },
-            callback: function(value) {
+            callback: function (value) {
               return value.toLocaleString() + '원';
             }
           }
@@ -452,7 +455,7 @@ const ExpenseStatus = () => {
             weight: 'bold',
             size: 13
           },
-          formatter: function(value) {
+          formatter: function (value) {
             return value !== 0 ? value.toLocaleString() + '원' : '';
           },
           anchor: 'end',
@@ -464,7 +467,7 @@ const ExpenseStatus = () => {
   }, [getYearlyProfitData, calculateStepSize]);
 
 
-  
+
   // 현재 날짜 정보
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1; // 1부터 시작
@@ -479,13 +482,13 @@ const ExpenseStatus = () => {
   const thisYearData = useMemo(() => {
     let totalIncome = 0;
     let totalExpense = 0;
-    
+
     for (let month = 1; month <= 12; month++) {
       const data = calculateMonthlyData(currentYear, month, 'profit');
       totalIncome += data.totalIncome;
       totalExpense += data.totalExpense;
     }
-    
+
     return { totalIncome, totalExpense };
   }, [currentYear, calculateMonthlyData]);
 
@@ -498,7 +501,7 @@ const ExpenseStatus = () => {
       {/* 지출 현황 상세 분석 섹션 */}
       <div className="expense-charts-section">
         <h2>지출 현황 상세</h2>
-        
+
         {/* 요약 통계 섹션 */}
         <div className="expense-summary">
           <div className="summary-layout">
@@ -541,9 +544,9 @@ const ExpenseStatus = () => {
             <h3>월별 손익</h3>
             <div className="monthly-year-selector">
               <label>연도 선택:</label>
-              <YearSelector 
-                selectedYear={selectedYear} 
-                onYearChange={handleYearChange} 
+              <YearSelector
+                selectedYear={selectedYear}
+                onYearChange={handleYearChange}
               />
             </div>
           </div>
@@ -556,9 +559,9 @@ const ExpenseStatus = () => {
             <h3>월별 손익 (표)</h3>
             <div className="monthly-year-selector">
               <label>연도 선택:</label>
-              <YearSelector 
-                selectedYear={selectedYear} 
-                onYearChange={handleYearChange} 
+              <YearSelector
+                selectedYear={selectedYear}
+                onYearChange={handleYearChange}
               />
             </div>
           </div>
@@ -571,8 +574,8 @@ const ExpenseStatus = () => {
                     const month = i + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
-                      <th 
-                        key={i} 
+                      <th
+                        key={i}
                         style={{
                           minWidth: '60px',
                           textAlign: 'center',
@@ -595,8 +598,8 @@ const ExpenseStatus = () => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
-                      <td 
-                        key={index} 
+                      <td
+                        key={index}
                         style={{
                           minWidth: '60px',
                           textAlign: 'center',
@@ -618,8 +621,8 @@ const ExpenseStatus = () => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
-                      <td 
-                        key={index} 
+                      <td
+                        key={index}
                         style={{
                           minWidth: '60px',
                           textAlign: 'center',
@@ -641,8 +644,8 @@ const ExpenseStatus = () => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
-                      <td 
-                        key={index} 
+                      <td
+                        key={index}
                         style={{
                           minWidth: '60px',
                           textAlign: 'center',
@@ -664,8 +667,8 @@ const ExpenseStatus = () => {
                     const month = index + 1;
                     const isCurrent = isCurrentMonth(month, selectedYear);
                     return (
-                      <td 
-                        key={index} 
+                      <td
+                        key={index}
                         style={{
                           minWidth: '60px',
                           textAlign: 'center',
@@ -692,9 +695,9 @@ const ExpenseStatus = () => {
             <h3>월별 지출</h3>
             <div className="monthly-year-selector">
               <label>연도 선택:</label>
-              <YearSelector 
-                selectedYear={selectedYear} 
-                onYearChange={handleYearChange} 
+              <YearSelector
+                selectedYear={selectedYear}
+                onYearChange={handleYearChange}
               />
             </div>
           </div>
@@ -707,9 +710,9 @@ const ExpenseStatus = () => {
             <h3>월별 입금</h3>
             <div className="monthly-year-selector">
               <label>연도 선택:</label>
-              <YearSelector 
-                selectedYear={selectedYear} 
-                onYearChange={handleYearChange} 
+              <YearSelector
+                selectedYear={selectedYear}
+                onYearChange={handleYearChange}
               />
             </div>
           </div>
