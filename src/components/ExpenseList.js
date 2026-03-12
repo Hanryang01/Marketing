@@ -163,15 +163,12 @@ const ExpenseList = () => {
 
   // 엑셀 추출을 위한 컬럼 정의
   const excelColumns = [
-    { key: 'companyName', label: '회사명', width: 20 },
-    { key: 'businessLicense', label: '사업자등록번호', width: 15, formatter: (value) => value ? formatBusinessLicense(value) : '' },
     { key: 'expenseDate', label: activeTab === 'expense' ? '지출일' : '입금일', width: 12, formatter: (value) => formatDate(value) },
-    { key: 'issueDate', label: '결제일', width: 12, formatter: (value) => formatDate(value) },
-    { key: 'paymentMethod', label: '결제 방법', width: 12 },
+    { key: 'companyName', label: '회사명', width: 20 },
     { key: 'item', label: '항목', width: 20 },
-    { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, isNumber: true }, // 숫자 형식 적용
-    { key: 'vatAmount', label: '부가세', width: 12, isNumber: true }, // 숫자 형식 적용
-    { key: 'totalAmount', label: '합계금액', width: 15, isNumber: true } // 숫자 형식 적용
+    { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, isNumber: true },
+    { key: 'vatAmount', label: '부가세', width: 12, isNumber: true },
+    { key: 'totalAmount', label: '합계금액', width: 15, isNumber: true }
   ];
 
   // 공통 엑셀 추출 훅 사용 (엑셀 추출 시 오름차순 정렬)
