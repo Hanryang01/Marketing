@@ -4,10 +4,8 @@ import { apiCall, API_ENDPOINTS } from '../config/api';
 import useExcelExport from '../hooks/useExcelExport';
 import { useCalendar } from '../hooks/useCalendar';
 import { useMessage } from '../hooks/useMessage';
-import useSearchFilters from '../hooks/useSearchFilters';
 import MessageModal from './MessageModal';
 import RevenueModal from './RevenueModal';
-import SearchFilters from './common/SearchFilters';
 import { formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 
 const SalesManagement = () => {
@@ -16,18 +14,57 @@ const SalesManagement = () => {
   const [showAddRevenueModal, setShowAddRevenueModal] = useState(false);
   const [showEditRevenueModal, setShowEditRevenueModal] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(null);
-  // 검색 필터 필드 정의
-  const salesFilterFields = [
-    { name: 'companyName', placeholder: '회사명 검색' },
-    { name: 'businessLicense', placeholder: '사업자등록번호 검색' },
-    { name: 'item', placeholder: '항목 검색' }
-  ];
+  // 검색 필터 상태
+  const [companyNameFilter, setCompanyNameFilter] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
+  const [companyTypeFilter, setCompanyTypeFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [datePreset, setDatePreset] = useState('');
 
-  // 공통 검색 필터 훅 사용
-  const { searchFilters, handleFilterChange, filteredData: filteredRevenueData } = useSearchFilters(
-    salesFilterFields,
-    revenueData
-  );
+  // 날짜 프리셋 변경 핸들러
+  const handleDatePresetChange = useCallback((preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === 'thisMonth') {
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+      setStartDate(`${year}-${month}-01`);
+      setEndDate(`${year}-${month}-${String(lastDay).padStart(2, '0')}`);
+    } else if (preset === 'thisYear') {
+      const year = now.getFullYear();
+      setStartDate(`${year}-01-01`);
+      setEndDate(`${year}-12-31`);
+    } else {
+      // 전체
+      setStartDate('');
+      setEndDate('');
+    }
+  }, []);
+
+  // 커스텀 필터링 로직
+  const filteredRevenueData = useMemo(() => {
+    if (!revenueData || revenueData.length === 0) return [];
+    return revenueData.filter(item => {
+      // 업체명 필터
+      if (companyNameFilter) {
+        const name = (item.companyName || '').toLowerCase();
+        if (!name.includes(companyNameFilter.toLowerCase())) return false;
+      }
+      // 결제 방법 필터
+      if (paymentMethodFilter && item.paymentMethod !== paymentMethodFilter) return false;
+      // 업체 형태 필터
+      if (companyTypeFilter && item.companyType !== companyTypeFilter) return false;
+      // 조회 기간 필터 (발행일 기준)
+      if (startDate || endDate) {
+        const issueDate = (item.issueDate || '').substring(0, 10);
+        if (startDate && issueDate < startDate) return false;
+        if (endDate && issueDate > endDate) return false;
+      }
+      return true;
+    });
+  }, [revenueData, companyNameFilter, paymentMethodFilter, companyTypeFilter, startDate, endDate]);
 
   // useCalendar 훅 사용
   const {
@@ -116,8 +153,11 @@ const SalesManagement = () => {
     { key: 'totalAmount', label: '총금액', width: 12, isNumber: true } // 숫자 형식 적용
   ];
 
-  // 현재 필터링된 데이터 또는 전체 데이터 사용
-  const dataToExport = sortedFilteredRevenueData.length > 0 ? sortedFilteredRevenueData : revenueData;
+  // 현재 필터링된 데이터 또는 전체 데이터 사용 (엑셀 추출 시 오름차순 정렬)
+  const dataToExport = useMemo(() => {
+    const source = sortedFilteredRevenueData.length > 0 ? sortedFilteredRevenueData : revenueData;
+    return [...source].sort((a, b) => (a.issueDate || '').localeCompare(b.issueDate || ''));
+  }, [sortedFilteredRevenueData, revenueData]);
   
   // 공통 엑셀 추출 훅 사용
   const exportToExcel = useExcelExport(
@@ -448,11 +488,96 @@ const SalesManagement = () => {
       </div>
 
       {/* 검색 필터 */}
-      <SearchFilters 
-        filters={searchFilters}
-        onFilterChange={handleFilterChange}
-        fields={salesFilterFields}
-      />
+      <div className="sales-search-area">
+        <div className="sales-search-row">
+          <div className="sales-search-group">
+            <label className="sales-search-label">업체명</label>
+            <input
+              type="text"
+              className="sales-search-input"
+              placeholder="업체명 검색"
+              value={companyNameFilter}
+              onChange={(e) => setCompanyNameFilter(e.target.value)}
+            />
+          </div>
+          <div className="sales-search-group">
+            <label className="sales-search-label">결제 방법</label>
+            <div className="sales-dropdown-wrapper">
+              <select
+                className="sales-search-dropdown"
+                value={paymentMethodFilter}
+                onChange={(e) => setPaymentMethodFilter(e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="세금계산서">세금계산서</option>
+                <option value="신용카드">신용카드</option>
+              </select>
+              <span className="sales-dropdown-icon">▼</span>
+            </div>
+          </div>
+          <div className="sales-search-group">
+            <label className="sales-search-label">업체 형태</label>
+            <div className="sales-dropdown-wrapper">
+              <select
+                className="sales-search-dropdown"
+                value={companyTypeFilter}
+                onChange={(e) => setCompanyTypeFilter(e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="컨설팅 업체">컨설팅업체</option>
+                <option value="일반 업체">일반업체</option>
+              </select>
+              <span className="sales-dropdown-icon">▼</span>
+            </div>
+          </div>
+          <div className="sales-search-group">
+            <label className="sales-search-label">조회 기간</label>
+            <div className="sales-date-range">
+              <div className="sales-date-input-container">
+                <input
+                  type="text"
+                  className="sales-date-input"
+                  placeholder="YYYY-MM-DD"
+                  value={startDate}
+                  maxLength="10"
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setDatePreset('');
+                  }}
+                />
+                <span className="sales-date-icon">📅</span>
+              </div>
+              <span className="sales-date-separator">~</span>
+              <div className="sales-date-input-container">
+                <input
+                  type="text"
+                  className="sales-date-input"
+                  placeholder="YYYY-MM-DD"
+                  value={endDate}
+                  maxLength="10"
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setDatePreset('');
+                  }}
+                />
+                <span className="sales-date-icon">📅</span>
+              </div>
+              <div className="sales-dropdown-wrapper">
+                <select
+                  className="sales-search-dropdown"
+                  value={datePreset}
+                  onChange={(e) => handleDatePresetChange(e.target.value)}
+                >
+                  <option value="">전체</option>
+                  <option value="thisMonth">이번달</option>
+                  <option value="thisYear">올해</option>
+                </select>
+                <span className="sales-dropdown-icon">▼</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* 매출 목록 테이블 또는 업체별 현황 */}
       {currentView === 'list' ? (

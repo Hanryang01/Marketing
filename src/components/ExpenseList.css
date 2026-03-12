@@ -6,6 +6,137 @@
   overflow-x: auto;
 }
 
+/* ===== 입출금 리스트 검색 영역 (매출 리스트와 동일 스타일) ===== */
+.expense-list-container .sales-search-area {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 15px;
+}
+
+.expense-list-container .sales-search-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.expense-list-container .sales-search-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expense-list-container .sales-search-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.expense-list-container .sales-search-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 200px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.expense-list-container .sales-search-input:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.expense-list-container .sales-search-input::placeholder {
+  color: #adb5bd;
+}
+
+.expense-list-container .sales-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.expense-list-container .sales-search-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 110px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.expense-list-container .sales-search-dropdown:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.expense-list-container .sales-dropdown-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  color: #e67e22;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+.expense-list-container .sales-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expense-list-container .sales-date-separator {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  padding: 0 2px;
+}
+
+.expense-list-container .sales-date-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.expense-list-container .sales-date-input {
+  padding: 8px 32px 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 130px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.expense-list-container .sales-date-input:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.expense-list-container .sales-date-input::placeholder {
+  color: #adb5bd;
+}
+
+.expense-list-container .sales-date-icon {
+  position: absolute;
+  right: 8px;
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+  pointer-events: none;
+}
+
 /* 사용자 탭 스타일 */
 .user-tabs {
   display: flex;

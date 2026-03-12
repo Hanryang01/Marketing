@@ -70,6 +70,145 @@
   background-color: #28a745;
 }
 
+/* ===== 매출 리스트 검색 영역 ===== */
+.sales-search-area {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 15px;
+}
+
+.sales-search-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.sales-search-row + .sales-search-row {
+  margin-top: 12px;
+}
+
+.sales-search-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sales-search-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+/* 업체명 텍스트 입력 */
+.sales-search-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 200px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sales-search-input:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.sales-search-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 드롭다운 래퍼 */
+.sales-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sales-search-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 110px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sales-search-dropdown:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.sales-dropdown-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  color: #e67e22;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+/* 조회 기간 날짜 범위 */
+.sales-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sales-date-separator {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  padding: 0 2px;
+}
+
+/* 날짜 입력 컨테이너 (발행일 스타일과 동일) */
+.sales-date-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sales-date-input {
+  padding: 8px 32px 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 130px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sales-date-input:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.sales-date-input::placeholder {
+  color: #adb5bd;
+}
+
+.sales-date-icon {
+  position: absolute;
+  right: 8px;
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+  pointer-events: none;
+}
+
 /* 검색 필터 */
 .search-filters {
   display: flex;
