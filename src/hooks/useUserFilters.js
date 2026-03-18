@@ -3,9 +3,11 @@ import { isUserActive } from '../utils/userUtils';
 
 const useUserFilters = (users) => {
   const [searchFilters, setSearchFilters] = useState({
-    id: '',
-    name: '',
-    companyName: ''
+    companyName: '',
+    userId: '',
+    companyType: '',
+    pricingPlan: '',
+    approvalStatus: ''
   });
   const [activeTab, setActiveTab] = useState('전체');
 
@@ -72,19 +74,29 @@ const useUserFilters = (users) => {
     }
 
     // 검색 필터 적용
-    if (searchFilters.id) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.userId && user.userId.toLowerCase().includes(searchFilters.id.toLowerCase())
-      );
-    }
-    if (searchFilters.name) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.userName && user.userName.toLowerCase().includes(searchFilters.name.toLowerCase())
-      );
-    }
     if (searchFilters.companyName) {
       filteredUsers = filteredUsers.filter(user => 
         user.companyName && user.companyName.toLowerCase().includes(searchFilters.companyName.toLowerCase())
+      );
+    }
+    if (searchFilters.userId) {
+      filteredUsers = filteredUsers.filter(user => 
+        user.userId && user.userId.toLowerCase().includes(searchFilters.userId.toLowerCase())
+      );
+    }
+    if (searchFilters.companyType) {
+      filteredUsers = filteredUsers.filter(user => 
+        user.companyType === searchFilters.companyType
+      );
+    }
+    if (searchFilters.pricingPlan) {
+      filteredUsers = filteredUsers.filter(user => 
+        user.pricingPlan === searchFilters.pricingPlan
+      );
+    }
+    if (searchFilters.approvalStatus) {
+      filteredUsers = filteredUsers.filter(user => 
+        user.approvalStatus === searchFilters.approvalStatus
       );
     }
 

@@ -6,7 +6,6 @@ import UserDetailModal from './UserDetailModal';
 import AddUserModal from './AddUserModal';
 import MessageModal from './MessageModal';
 import RevenueModal from './RevenueModal';
-import SearchFilters from './common/SearchFilters';
 import UserTable from './UserManagement/UserTable';
 
 // 커스텀 훅들
@@ -157,12 +156,6 @@ const UserManagement = () => {
   const calendarProps = useCalendar();
   const { formatDate } = calendarProps;
   
-  // 필터 필드 설정
-  const userFilterFields = [
-    { name: 'id', placeholder: '사용자 ID 검색' },
-    { name: 'name', placeholder: '이름 검색' },
-    { name: 'companyName', placeholder: '회사명 검색' }
-  ];
 
 
   // 사용자 상세 저장 (백업 파일에서 복원)
@@ -443,11 +436,77 @@ const UserManagement = () => {
         </div>
 
       {/* 검색 필터 */}
-      <SearchFilters 
-        filters={searchFilters}
-        onFilterChange={handleFilterChange}
-        fields={userFilterFields}
-      />
+      <div className="user-search-area">
+        <div className="user-search-row">
+          <div className="user-search-group">
+            <label className="user-search-label">업체명</label>
+            <input
+              type="text"
+              className="user-search-input"
+              placeholder="업체명 검색"
+              value={searchFilters.companyName}
+              onChange={(e) => handleFilterChange('companyName', e.target.value)}
+            />
+          </div>
+          <div className="user-search-group">
+            <label className="user-search-label">사용자 ID</label>
+            <input
+              type="text"
+              className="user-search-input"
+              placeholder="사용자 ID 검색"
+              value={searchFilters.userId}
+              onChange={(e) => handleFilterChange('userId', e.target.value)}
+            />
+          </div>
+          <div className="user-search-group">
+            <label className="user-search-label">업체 형태</label>
+            <div className="user-dropdown-wrapper">
+              <select
+                className="user-search-dropdown"
+                value={searchFilters.companyType}
+                onChange={(e) => handleFilterChange('companyType', e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="컨설팅 업체">컨설팅업체</option>
+                <option value="일반 업체">일반업체</option>
+              </select>
+              <span className="user-dropdown-icon">▼</span>
+            </div>
+          </div>
+          <div className="user-search-group">
+            <label className="user-search-label">요금제</label>
+            <div className="user-dropdown-wrapper">
+              <select
+                className="user-search-dropdown"
+                value={searchFilters.pricingPlan}
+                onChange={(e) => handleFilterChange('pricingPlan', e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="무료">무료</option>
+                <option value="스탠다드">스탠다드</option>
+                <option value="프리미엄">프리미엄</option>
+              </select>
+              <span className="user-dropdown-icon">▼</span>
+            </div>
+          </div>
+          <div className="user-search-group">
+            <label className="user-search-label">승인상태</label>
+            <div className="user-dropdown-wrapper">
+              <select
+                className="user-search-dropdown"
+                value={searchFilters.approvalStatus}
+                onChange={(e) => handleFilterChange('approvalStatus', e.target.value)}
+              >
+                <option value="">전체</option>
+                <option value="승인 완료">승인완료</option>
+                <option value="승인 예정">승인예정</option>
+                <option value="탈퇴">탈퇴</option>
+              </select>
+              <span className="user-dropdown-icon">▼</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* 사용자 테이블 */}
       <UserTable 

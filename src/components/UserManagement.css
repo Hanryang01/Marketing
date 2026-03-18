@@ -102,26 +102,94 @@
   background-color: #28a745;
 }
 
-/* 검색 필터 */
-.search-filters {
-  display: flex;
-  gap: 15px;
+/* ===== 사용자 리스트 검색 영역 ===== */
+.user-search-area {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 18px 20px;
   margin-bottom: 15px;
+}
+
+.user-search-row {
+  display: flex;
   align-items: center;
+  gap: 24px;
   flex-wrap: wrap;
 }
 
-.filter-group {
-  flex: 1;
-  min-width: 200px;
+.user-search-row + .user-search-row {
+  margin-top: 12px;
 }
 
-.filter-group input {
-  width: 100%;
-  padding: 10px 15px;
+.user-search-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-search-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+/* 텍스트 입력 */
+.user-search-input {
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
+  width: 200px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-search-input:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.user-search-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 드롭다운 래퍼 */
+.user-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.user-search-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 110px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-search-dropdown:focus {
+  outline: none;
+  border-color: #f39c12;
+  box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+}
+
+.user-dropdown-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  color: #e67e22;
+  pointer-events: none;
+  font-weight: bold;
 }
 
 .add-user-button {
