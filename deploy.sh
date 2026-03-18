@@ -16,9 +16,9 @@ npm install
 echo "🔨 React 앱 빌드..."
 NODE_ENV=production npm run build
 
-# 4. PM2로 서버 재시작
+# 4. Systemd로 서버 재시작
 echo "🔄 서버 재시작..."
-pm2 restart sihm-marketing
+sudo systemctl restart sihm-marketing
 
 # 5. Nginx 설정 리로드
 echo "🌐 Nginx 설정 리로드..."
@@ -26,5 +26,5 @@ sudo nginx -t && sudo systemctl reload nginx
 
 echo "✅ 배포 완료!"
 echo "🌍 사이트: https://marketing.sihm.co.kr"
-echo "📊 PM2 상태: pm2 status"
-echo "📝 로그 확인: pm2 logs sihm-marketing"
+echo "📊 서버 상태: sudo systemctl status sihm-marketing"
+echo "📝 로그 확인: sudo journalctl -u sihm-marketing -f"

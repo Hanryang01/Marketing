@@ -142,22 +142,13 @@ mysql-schema.sql       # MySQL 데이터베이스 스키마
 npm run build
 ```
 
-### PM2를 사용한 배포
+### Systemd를 사용한 배포
 ```bash
-# PM2 설치 (전역)
-npm install -g pm2
-
-# 프로덕션 환경으로 시작
-pm2 start ecosystem.config.js --env production
-
-# 상태 확인
-pm2 status
+# 서비스 상태 확인
+sudo systemctl status sihm-marketing
 
 # 로그 확인
-pm2 logs sihm-marketing
-
-# 모니터링
-pm2 monit
+sudo journalctl -u sihm-marketing -f
 ```
 
 ### 자동 배포 스크립트
@@ -171,14 +162,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-#### Windows
-```cmd
-# 배포 실행
-deploy-windows.bat
 
-# 앱 시작
-start-windows.bat
-```
 
 ### SSL 인증서 설정
 ```bash
@@ -200,7 +184,6 @@ chmod +x setup-ssl.sh
 ## 📚 추가 문서
 
 - [데이터베이스 스키마](mysql-schema.sql)
-- [서버 설정](ecosystem.config.js)
 
 ## 🤝 기여하기
 

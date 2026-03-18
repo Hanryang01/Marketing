@@ -65,12 +65,6 @@ log_info "MySQL 서비스 시작 중..."
 sudo systemctl start mysql
 sudo systemctl enable mysql
 
-# PM2 설치 확인
-log_info "PM2 설치 확인 중..."
-if ! command -v pm2 &> /dev/null; then
-    log_info "PM2 설치 중..."
-    npm install -g pm2
-fi
 
 # 환경 변수 파일 확인
 log_info "환경 변수 파일 확인 중..."
@@ -110,23 +104,22 @@ sudo mkdir -p /var/www/marketing.sihm.co.kr
 sudo cp -r build/* /var/www/marketing.sihm.co.kr/
 sudo chown -R www-data:www-data /var/www/marketing.sihm.co.kr
 
-# 5. PM2로 앱 중지
+# 5. 기존 앱 중지
 log_info "기존 앱 중지 중..."
-pm2 stop sihm-marketing || true
-pm2 delete sihm-marketing || true
+sudo systemctl stop sihm-marketing || true
 
-# 6. PM2로 앱 시작
-log_info "PM2로 앱 시작 중..."
-pm2 start ecosystem.config.js --env production
+# 6. Systemd로 앱 시작
+log_info "Systemd로 앱 시작 중..."
+sudo systemctl daemon-reload
+sudo systemctl restart sihm-marketing
 
-# 7. PM2 상태 확인
-log_info "PM2 상태 확인 중..."
-pm2 status
+# 7. Systemd 상태 확인
+log_info "Systemd 상태 확인 중..."
+sudo systemctl status sihm-marketing --no-pager || true
 
-# 8. PM2 자동 시작 설정
-log_info "PM2 자동 시작 설정 중..."
-pm2 startup
-pm2 save
+# 8. 자동 시작 설정
+log_info "자동 시작 설정 중..."
+sudo systemctl enable sihm-marketing
 
 # 9. Nginx 설치 확인
 log_info "Nginx 설치 확인 중..."
@@ -163,8 +156,8 @@ log_info "서비스 상태 확인 중..."
 echo "MySQL 상태:"
 sudo systemctl status mysql --no-pager -l
 
-echo "PM2 상태:"
-pm2 status sihm-marketing
+echo "Systemd (Node 앱) 상태:"
+sudo systemctl status sihm-marketing --no-pager -l || true
 
 echo "Nginx 상태:"
 sudo systemctl status nginx --no-pager -l
@@ -191,9 +184,3 @@ log_info "API 테스트: https://marketing.sihm.co.kr/api/test"
 log_warn "⚠️  SSL 인증서 설정이 필요합니다:"
 log_warn "   ./setup-ssl.sh 실행하여 Let's Encrypt SSL 인증서를 설정하세요."
 
-# PM2 모니터링 시작 (선택사항)
-read -p "PM2 모니터링을 시작하시겠습니까? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    pm2 monit
-fi

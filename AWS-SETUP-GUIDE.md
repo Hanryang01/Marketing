@@ -51,9 +51,7 @@ sudo apt-get install -y nodejs
 # Git 설치
 sudo apt install git
 
-# PM2 전역 설치
-sudo npm install -g pm2
-```
+
 
 ### 3. 프로젝트 클론 및 설정
 ```bash
@@ -100,7 +98,7 @@ chmod +x deploy-aws.sh
 - MySQL 설치 및 보안 설정
 - 데이터베이스 생성 및 스키마 적용
 - Node.js 애플리케이션 빌드 및 배포
-- PM2 설정 및 자동 시작
+- Systemd 설정 및 자동 시작
 - Nginx 설정 및 웹 서버 구성
 - 방화벽 설정
 
@@ -126,10 +124,10 @@ sudo netstat -tlnp | grep :3001
 sudo netstat -tlnp | grep :80
 ```
 
-### 2. PM2 로그 확인
+### 2. Systemd 로그 확인
 ```bash
-pm2 logs sihm-marketing
-pm2 monit
+sudo journalctl -u sihm-marketing -f
+sudo journalctl -u sihm-marketing -n 100 --no-pager
 ```
 
 ### 3. Nginx 로그 확인
@@ -163,14 +161,11 @@ netstat -tlnp
 
 ### 2. 애플리케이션 모니터링
 ```bash
-# PM2 상태
-pm2 status
-
-# PM2 모니터링
-pm2 monit
+# 서비스 상태
+sudo systemctl status sihm-marketing
 
 # 로그 실시간 확인
-pm2 logs sihm-marketing --lines 100
+sudo journalctl -u sihm-marketing -f
 ```
 
 ## 🔒 보안 체크리스트
@@ -190,6 +185,6 @@ pm2 logs sihm-marketing --lines 100
 1. EC2 보안 그룹 설정
 2. MySQL 서비스 상태 (`sudo systemctl status mysql`)
 3. 데이터베이스 연결 상태
-4. PM2 및 Nginx 로그
+4. 애플리케이션 로그 (`sudo journalctl -u sihm-marketing -n 50`) 및 Nginx 로그
 5. 방화벽 설정
 6. 환경 변수 설정 (`.env.production` 파일)
