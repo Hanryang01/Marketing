@@ -1,8 +1,6 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// 환경 감지 (개발/프로덕션)
-const isDevelopment = process.env.NODE_ENV === 'development';
 
 // MySQL Database configuration (server.js와 동일한 설정 사용)
 const dbConfig = {

@@ -451,7 +451,6 @@ const DashboardPage = () => {
 
   // 다음달 누적 손익 계산
   const nextMonthCumulativeProfit = useMemo(() => {
-    const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
     const nextYear = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
 
     // 만약 다음달이 내년인 경우
