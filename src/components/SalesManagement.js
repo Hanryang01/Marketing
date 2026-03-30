@@ -634,17 +634,15 @@ const SalesManagement = () => {
           <table className="revenue-table">
             <thead>
               <tr>
-                <th>회사명</th>
-                <th>사업자등록번호</th>
                 <th>발행일</th>
                 <th>입금일</th>
+                <th>회사명</th>
+                <th>사업자등록번호</th>
                 <th>항목</th>
                 <th>결제 방법</th>
                 <th>업체 형태</th>
-                <th>공급가액</th>
-                <th>부가세</th>
                 <th>합계 금액</th>
-                <th>삭제</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -655,19 +653,17 @@ const SalesManagement = () => {
                   onDoubleClick={() => handleEditRevenue(revenue)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <td>{revenue.companyName}</td>
-                  <td>{formatBusinessLicense(revenue.businessLicense)}</td>
                   <td>{formatDate(revenue.issueDate)}</td>
                   <td>{formatDate(revenue.paymentDate)}</td>
+                  <td>{revenue.companyName}</td>
+                  <td>{formatBusinessLicense(revenue.businessLicense)}</td>
                   <td>{revenue.item || '-'}</td>
                   <td>{revenue.paymentMethod || '-'}</td>
                   <td>{revenue.companyType || '-'}</td>
-                  <td>{revenue.supplyAmount?.toLocaleString()}원</td>
-                  <td>{revenue.vat?.toLocaleString()}원</td>
                   <td>{revenue.totalAmount?.toLocaleString()}원</td>
                   <td>
                     <button
-                      className="status-button copy-blue"
+                      className="status-button copy-green"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyRevenue(revenue);

@@ -41,22 +41,16 @@ const useUserFilters = (users) => {
           user.approvalStatus === '승인 예정'
         );
         break;
-      case '컨설팅':
+      case '구독중':
         filteredUsers = users.filter(user => 
-          user.companyType === '컨설팅 업체' &&
-          user.approvalStatus === '승인 완료'
-        );
-        break;
-      case '일반':
-        filteredUsers = users.filter(user => 
-          user.companyType === '일반 업체' &&
-          isUserActive({
+          (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
+          (user.companyType === '일반 업체' && isUserActive({
             approvalStatus: user.approvalStatus,
             companyType: user.companyType,
             pricingPlan: user.pricingPlan,
             startDate: user.startDate,
             endDate: user.endDate
-          })
+          }))
         );
         break;
       case '승인':
@@ -101,7 +95,7 @@ const useUserFilters = (users) => {
     }
 
     // 탭별 정렬 적용
-    if (activeTab === '컨설팅' || activeTab === '일반') {
+    if (activeTab === '구독중') {
       // 종료일이 빠른 순서대로 정렬 (종료일이 없는 경우 맨 뒤로)
       filteredUsers = filteredUsers.sort((a, b) => {
         const dateA = a.endDate ? new Date(a.endDate) : new Date('9999-12-31');

@@ -167,7 +167,7 @@ const ExpenseModal = ({
       if (transactionType === 'income') {
         return {
           companyName: '입금처명',
-          expenseDate: '입금일',
+          expenseDate: '발행일',
           item: '입금 항목',
           supplyAmount: '입금액'
         };
@@ -301,8 +301,8 @@ const ExpenseModal = ({
     const isIncome = transactionType === 'income';
     return {
       companyLabel: isIncome ? '입금처명' : '회사명',
-      issueDateLabel: isIncome ? '결제일' : '결제일',
-      expenseDateLabel: isIncome ? '입금일' : '지출일',
+      issueDateLabel: isIncome ? '입금일' : '발행일',
+      expenseDateLabel: isIncome ? '발행일' : '지출일',
       itemLabel: isIncome ? '입금 항목' : '항목',
       amountLabel: isIncome ? '입금액' : '공급가액',
       buttonText: isIncome ? '입금' : '지출',
@@ -498,59 +498,115 @@ const ExpenseModal = ({
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>{getUITexts().expenseDateLabel}<span className="required-asterisk">*</span></label>
-                <div className="date-input-container">
-                  <input
-                    type="text"
-                    name="expenseDate"
-                    value={formData.expenseDate}
-                    onChange={(e) => {
-                      handleDateInputChange('expenseDate', e.target.value, setFormData);
-                    }}
-                    placeholder="YYYY-MM-DD"
-                    maxLength="10"
-                    required
-                    className="date-input"
-                  />
-                  <div 
-                    className="calendar-icon" 
-                    onClick={(e) => {
-                      const inputElement = e.target.previousElementSibling;
-                      handleOpenCalendar('payment', inputElement, formData.expenseDate);
-                    }}
-                  >
-                    📅
+            {transactionType === 'income' ? (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>{getUITexts().expenseDateLabel}<span className="required-asterisk">*</span></label>
+                  <div className="date-input-container">
+                    <input
+                      type="text"
+                      name="expenseDate"
+                      value={formData.expenseDate}
+                      onChange={(e) => {
+                        handleDateInputChange('expenseDate', e.target.value, setFormData);
+                      }}
+                      placeholder="YYYY-MM-DD"
+                      maxLength="10"
+                      required
+                      className="date-input"
+                    />
+                    <div 
+                      className="calendar-icon" 
+                      onClick={(e) => {
+                        const inputElement = e.target.previousElementSibling;
+                        handleOpenCalendar('payment', inputElement, formData.expenseDate);
+                      }}
+                    >
+                      📅
+                    </div>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>{getUITexts().issueDateLabel}</label>
+                  <div className="date-input-container">
+                    <input
+                      type="text"
+                      name="issueDate"
+                      value={formData.issueDate}
+                      onChange={(e) => {
+                        handleDateInputChange('issueDate', e.target.value, setFormData);
+                      }}
+                      placeholder="YYYY-MM-DD"
+                      maxLength="10"
+                      className="date-input"
+                    />
+                    <div 
+                      className="calendar-icon" 
+                      onClick={(e) => {
+                        const inputElement = e.target.previousElementSibling;
+                        handleOpenCalendar('issue', inputElement, formData.issueDate);
+                      }}
+                    >
+                      📅
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="form-group">
-                <label>{getUITexts().issueDateLabel}</label>
-                <div className="date-input-container">
-                  <input
-                    type="text"
-                    name="issueDate"
-                    value={formData.issueDate}
-                    onChange={(e) => {
-                      handleDateInputChange('issueDate', e.target.value, setFormData);
-                    }}
-                    placeholder="YYYY-MM-DD"
-                    maxLength="10"
-                    className="date-input"
-                  />
-                  <div 
-                    className="calendar-icon" 
-                    onClick={(e) => {
-                      const inputElement = e.target.previousElementSibling;
-                      handleOpenCalendar('issue', inputElement, formData.issueDate);
-                    }}
-                  >
-                    📅
+            ) : (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>{getUITexts().issueDateLabel}</label>
+                  <div className="date-input-container">
+                    <input
+                      type="text"
+                      name="issueDate"
+                      value={formData.issueDate}
+                      onChange={(e) => {
+                        handleDateInputChange('issueDate', e.target.value, setFormData);
+                      }}
+                      placeholder="YYYY-MM-DD"
+                      maxLength="10"
+                      className="date-input"
+                    />
+                    <div 
+                      className="calendar-icon" 
+                      onClick={(e) => {
+                        const inputElement = e.target.previousElementSibling;
+                        handleOpenCalendar('issue', inputElement, formData.issueDate);
+                      }}
+                    >
+                      📅
+                    </div>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>{getUITexts().expenseDateLabel}<span className="required-asterisk">*</span></label>
+                  <div className="date-input-container">
+                    <input
+                      type="text"
+                      name="expenseDate"
+                      value={formData.expenseDate}
+                      onChange={(e) => {
+                        handleDateInputChange('expenseDate', e.target.value, setFormData);
+                      }}
+                      placeholder="YYYY-MM-DD"
+                      maxLength="10"
+                      required
+                      className="date-input"
+                    />
+                    <div 
+                      className="calendar-icon" 
+                      onClick={(e) => {
+                        const inputElement = e.target.previousElementSibling;
+                        handleOpenCalendar('payment', inputElement, formData.expenseDate);
+                      }}
+                    >
+                      📅
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="form-row">
               <div className="form-group">

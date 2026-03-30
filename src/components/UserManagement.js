@@ -380,36 +380,27 @@ const UserManagement = () => {
               👥 전체 ({users.length}명)
             </button>
             <button 
+              className={`tab-button ${activeTab === '구독중' ? 'active' : ''}`}
+              onClick={() => handleTabChange('구독중')}
+            >
+              🏢 구독중 ({users.filter(user => 
+                (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
+                (user.companyType === '일반 업체' && isUserActive({
+                  approvalStatus: user.approvalStatus,
+                  companyType: user.companyType,
+                  pricingPlan: user.pricingPlan,
+                  startDate: user.startDate,
+                  endDate: user.endDate
+                }))
+              ).length}명)
+            </button>
+            <button 
               className={`tab-button ${activeTab === '무료' ? 'active' : ''}`}
               onClick={() => handleTabChange('무료')}
             >
               💰 무료 ({users.filter(user => 
                 // 업체 형태와 상관없이 승인 예정 상태인 모든 사용자
                 user.approvalStatus === '승인 예정'
-              ).length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '컨설팅' ? 'active' : ''}`}
-              onClick={() => handleTabChange('컨설팅')}
-            >
-              🏢 컨설팅 ({users.filter(user => 
-                user.companyType === '컨설팅 업체' &&
-                user.approvalStatus === '승인 완료'
-              ).length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '일반' ? 'active' : ''}`}
-              onClick={() => handleTabChange('일반')}
-            >
-              🏭 일반 ({users.filter(user => 
-                user.companyType === '일반 업체' &&
-                isUserActive({
-                  approvalStatus: user.approvalStatus,
-                  companyType: user.companyType,
-                  pricingPlan: user.pricingPlan,
-                  startDate: user.startDate,
-                  endDate: user.endDate
-                })
               ).length}명)
             </button>
             <button 

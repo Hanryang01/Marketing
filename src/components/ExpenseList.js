@@ -196,7 +196,7 @@ const ExpenseList = () => {
 
   // 엑셀 추출을 위한 컬럼 정의
   const excelColumns = [
-    { key: 'expenseDate', label: activeTab === 'expense' ? '지출일' : '입금일', width: 12, formatter: (value) => formatDate(value) },
+    { key: 'expenseDate', label: activeTab === 'expense' ? '지출일' : '발행일', width: 12, formatter: (value) => formatDate(value) },
     { key: 'companyName', label: '회사명', width: 20 },
     { key: 'item', label: '항목', width: 20 },
     { key: 'supplyAmount', label: activeTab === 'expense' ? '공급가액' : '입금액', width: 15, isNumber: true },
@@ -369,16 +369,14 @@ const ExpenseList = () => {
             <table className="expense-table">
               <thead>
                 <tr>
-                  <th>회사명</th>
-                  <th>사업자등록번호</th>
+                  <th>발행일</th>
                   <th>{activeTab === 'expense' ? '지출일' : '입금일'}</th>
-                  <th>{activeTab === 'expense' ? '결제일' : '결제일'}</th>
+                  <th>회사명</th>
+                  {activeTab === 'expense' && <th>사업자등록번호</th>}
                   <th>결제 방법</th>
                   <th>항목</th>
-                  <th>{activeTab === 'expense' ? '공급가액' : '입금액'}</th>
-                  {activeTab === 'expense' && <th>부가세</th>}
                   <th>합계금액</th>
-                  <th>작업</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -388,24 +386,18 @@ const ExpenseList = () => {
                   
                   return (
                     <tr key={expense.id} onDoubleClick={() => handleEditExpense(expense)}>
+                      <td>{activeTab === 'expense' ? formatDate(expense.issueDate) : formatDate(expense.expenseDate)}</td>
+                      <td>{activeTab === 'expense' ? formatDate(expense.expenseDate) : formatDate(expense.issueDate)}</td>
                       <td>{expense.companyName}</td>
-                      <td>{expense.businessLicense ? formatBusinessLicense(expense.businessLicense) : '-'}</td>
-                      <td>{formatDate(expense.expenseDate)}</td>
-                      <td>{formatDate(expense.issueDate)}</td>
+                      {activeTab === 'expense' && <td>{expense.businessLicense ? formatBusinessLicense(expense.businessLicense) : '-'}</td>}
                       <td>{expense.paymentMethod}</td>
                       <td>{expense.item}</td>
-                      <td className={`amount ${isIncome ? 'income-amount' : 'expense-amount'}`}>
-                        {parseFloat(expense.supplyAmount || 0).toLocaleString()}원
-                      </td>
-                      {!isIncome && (
-                        <td className="amount">{parseFloat(expense.vatAmount || 0).toLocaleString()}원</td>
-                      )}
                       <td className={`amount ${isIncome ? 'income-amount' : 'expense-amount'}`}>
                         {parseFloat(expense.totalAmount || 0).toLocaleString()}원
                       </td>
                       <td className="actions">
                         <button
-                          className="status-button copy-blue"
+                          className="status-button copy-green"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCopyExpense(expense);
