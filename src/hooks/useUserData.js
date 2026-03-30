@@ -11,7 +11,7 @@ const useUserData = () => {
     try {
       setLoading(true);
       const result = await apiCall(API_ENDPOINTS.USERS);
-      
+
       if (result && result.success && Array.isArray(result.data)) {
         const formattedUsers = result.data.map(user => {
           const formattedUser = {
@@ -48,11 +48,11 @@ const useUserData = () => {
             createdAt: user.created_at,
             updatedAt: user.updated_at
           };
-          
-          
+
+
           return formattedUser;
         });
-        
+
         setUsers(formattedUsers);
       }
     } catch (error) {
@@ -70,7 +70,7 @@ const useUserData = () => {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (result && result.success && result.data && result.data.history && Array.isArray(result.data.history)) {
         // 종료일이 늦은 순서대로 정렬
         const sortedHistory = result.data.history.sort((a, b) => {
@@ -78,7 +78,7 @@ const useUserData = () => {
           const dateB = b.end_date ? new Date(b.end_date) : new Date('1900-01-01');
           return dateB - dateA; // 내림차순 (늦은 날짜가 먼저)
         });
-        
+
         // active_days가 없는 경우 계산해서 추가
         const processedHistory = sortedHistory.map(history => {
           if (!history.active_days && history.start_date && history.end_date) {
@@ -90,7 +90,7 @@ const useUserData = () => {
           }
           return history;
         });
-        
+
         setCompanyHistory(processedHistory);
       } else {
         console.error('승인 이력 데이터 형식 오류:', result);

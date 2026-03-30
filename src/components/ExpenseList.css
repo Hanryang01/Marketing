@@ -134,7 +134,6 @@
   font-size: 16px;
   color: #666;
   cursor: pointer;
-  pointer-events: none;
 }
 
 /* 사용자 탭 스타일 */
@@ -340,6 +339,11 @@
 .status-button.delete-red {
   background-color: rgba(220, 53, 69, 0.3) !important;
   color: #721c24 !important;
+}
+
+.status-button.copy-blue {
+  background-color: rgba(0, 123, 255, 0.3) !important;
+  color: #0056b3 !important;
 }
 
 .loading {

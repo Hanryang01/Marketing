@@ -47,7 +47,7 @@ const ExpenseModal = ({
 
   // 초기 데이터 설정
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
+    if ((mode === 'edit' || mode === 'copy') && initialData) {
       const type = initialData.transactionType || 'expense';
       setTransactionType(type);
       setFormData({
@@ -449,7 +449,7 @@ const ExpenseModal = ({
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>{mode === 'add' ? `${getUITexts().modalTitle} 입력` : `${getUITexts().modalTitle} 수정`}</h2>
+          <h2>{mode === 'edit' ? `${getUITexts().modalTitle} 수정` : `${getUITexts().modalTitle} 입력`}</h2>
           <button className="close-button" onClick={handleCloseModal}>×</button>
         </div>
         
@@ -598,7 +598,7 @@ const ExpenseModal = ({
             disabled={isLoading}
           >
             {isLoading ? '처리중...' : 
-              `${getUITexts().buttonText} ${mode === 'add' ? '추가' : '수정'}`
+              `${getUITexts().buttonText} ${mode === 'edit' ? '수정' : '추가'}`
             }
           </button>
         </div>

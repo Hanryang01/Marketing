@@ -14,6 +14,7 @@ const SalesManagement = () => {
   const [showAddRevenueModal, setShowAddRevenueModal] = useState(false);
   const [showEditRevenueModal, setShowEditRevenueModal] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(null);
+  const [revenueModalMode, setRevenueModalMode] = useState('add');
   // 검색 필터 상태
   const [companyNameFilter, setCompanyNameFilter] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
@@ -72,7 +73,12 @@ const SalesManagement = () => {
     setShowIssueDatePicker,
     showPaymentDatePicker,
     setShowPaymentDatePicker,
+    showStartDatePicker,
+    setShowStartDatePicker,
+    showEndDatePicker,
+    setShowEndDatePicker,
     calendarPosition,
+    handleOpenCalendar,
     handleDateSelect,
     handleMonthChange,
     getCurrentMonthYear,
@@ -80,23 +86,29 @@ const SalesManagement = () => {
     goToToday,
   } = useCalendar();
 
+  const handleDateChange = (field, value) => {
+    if (field === 'startDate') setStartDate(value);
+    if (field === 'endDate') setEndDate(value);
+    setDatePreset('');
+  };
+
   // 업체별 현황 관련 상태
   const [currentView, setCurrentView] = useState('list'); // 'list' 또는 'company'
   const [expandedCompanies, setExpandedCompanies] = useState(new Set());
-  
+
   // 필터링된 매출 데이터 (서버에서 이미 발행일 기준으로 정렬됨)
   const sortedFilteredRevenueData = useMemo(() => {
     return filteredRevenueData;
   }, [filteredRevenueData]);
-  
+
   // 메시지 관련 로직을 useMessage 훅으로 분리
   const messageProps = useMessage();
   const { showMessage } = messageProps;
-  
+
   // 날짜 처리 관련 로직을 useCalendar 훅으로 분리
   const calendarProps = useCalendar();
   const { formatDate } = calendarProps;
-  
+
 
 
 
@@ -104,8 +116,8 @@ const SalesManagement = () => {
   const fetchRevenueData = useCallback(async () => {
     try {
       setLoading(true);
-            const result = await apiCall(API_ENDPOINTS.REVENUE);
-            if (result && result.success && Array.isArray(result.data)) {
+      const result = await apiCall(API_ENDPOINTS.REVENUE);
+      if (result && result.success && Array.isArray(result.data)) {
         // DB 데이터를 프론트엔드 형식으로 변환 (snake_case → camelCase)
         const formattedData = result.data.map(revenue => ({
           id: revenue.id,
@@ -122,9 +134,9 @@ const SalesManagement = () => {
           createdAt: revenue.created_at,
           updatedAt: revenue.updated_at
         }));
-        
-                setRevenueData(formattedData);
-              } else {
+
+        setRevenueData(formattedData);
+      } else {
         console.error('매출 데이터 로드 실패:', result.error);
       }
     } catch (error) {
@@ -158,7 +170,7 @@ const SalesManagement = () => {
     const source = sortedFilteredRevenueData.length > 0 ? sortedFilteredRevenueData : revenueData;
     return [...source].sort((a, b) => (a.issueDate || '').localeCompare(b.issueDate || ''));
   }, [sortedFilteredRevenueData, revenueData]);
-  
+
   // 공통 엑셀 추출 훅 사용
   const exportToExcel = useExcelExport(
     dataToExport,
@@ -171,7 +183,7 @@ const SalesManagement = () => {
   // 업체별 매출 데이터 그룹핑
   const groupRevenueByCompany = useCallback(() => {
     const grouped = {};
-    
+
     revenueData.forEach(revenue => {
       const key = revenue.businessLicense;
       if (!grouped[key]) {
@@ -188,22 +200,22 @@ const SalesManagement = () => {
           }
         };
       }
-      
+
       grouped[key].transactions.push(revenue);
       grouped[key].summary.totalRevenue += revenue.supplyAmount;
       grouped[key].summary.transactionCount += 1;
     });
-    
+
     // 총매출액 기준으로 정렬
-    const sortedCompanies = Object.values(grouped).sort((a, b) => 
+    const sortedCompanies = Object.values(grouped).sort((a, b) =>
       b.summary.totalRevenue - a.summary.totalRevenue
     );
-    
+
     // 순위 부여
     sortedCompanies.forEach((company, index) => {
       company.rank = index + 1;
     });
-    
+
     return sortedCompanies;
   }, [revenueData]);
 
@@ -237,6 +249,8 @@ const SalesManagement = () => {
 
   // 매출 추가 모달 열기
   const handleOpenAddRevenueModal = () => {
+    setRevenueModalMode('add');
+    setEditingRevenue(null);
     setShowAddRevenueModal(true);
   };
 
@@ -244,6 +258,8 @@ const SalesManagement = () => {
   // 매출 추가 모달 닫기
   const handleCloseAddRevenueModal = () => {
     setShowAddRevenueModal(false);
+    setEditingRevenue(null);
+    setRevenueModalMode('add');
   };
 
   // 새 매출 추가
@@ -253,7 +269,7 @@ const SalesManagement = () => {
       showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.');
       return;
     }
-    
+
     // 필수 필드 검증 (필수 항목 표시가 되어 있는 모든 항목)
     if (!revenueData.companyName || !revenueData.businessLicense || !revenueData.issueDate || !revenueData.paymentMethod || !revenueData.companyType || !revenueData.item || !revenueData.supplyAmount) {
       showMessage('error', '오류', '필수 항목을 모두 입력해주세요.');
@@ -264,7 +280,7 @@ const SalesManagement = () => {
       // 날짜 형식 변환 (8자리 숫자를 DATE 형식으로 변환)
       let formattedIssueDate = revenueData.issueDate || null;
       let formattedPaymentDate = revenueData.paymentDate && revenueData.paymentDate !== '-' ? revenueData.paymentDate : null; // '-'일 때 null로 처리
-      
+
       // 콤마 제거하고 숫자로 변환
       const serverData = {
         company_name: revenueData.companyName,
@@ -308,6 +324,7 @@ const SalesManagement = () => {
 
   // 매출 수정 모달 열기
   const handleEditRevenue = (revenue) => {
+    setRevenueModalMode('edit');
     // useCalendar의 formatDate 함수 사용 (한국 시간대 처리)
     const editingData = {
       ...revenue,
@@ -315,9 +332,23 @@ const SalesManagement = () => {
       paymentDate: revenue.paymentDate ? formatDate(revenue.paymentDate) : null, // null일 때는 null 유지
       companyType: revenue.companyType || '무료 사용자' // 기본값 설정
     };
-    
+
     setEditingRevenue(editingData);
     setShowEditRevenueModal(true);
+  };
+
+  // 매출 복사
+  const handleCopyRevenue = (revenue) => {
+    setRevenueModalMode('copy');
+    const copiedData = {
+      ...revenue,
+      issueDate: formatDate(revenue.issueDate),
+      paymentDate: revenue.paymentDate ? formatDate(revenue.paymentDate) : null,
+      companyType: revenue.companyType || '무료 사용자'
+    };
+    delete copiedData.id;
+    setEditingRevenue(copiedData);
+    setShowAddRevenueModal(true);
   };
 
 
@@ -330,10 +361,10 @@ const SalesManagement = () => {
         showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.');
         return;
       }
-      
+
       // 필수 항목 유효성 검사
       const missingFields = [];
-      
+
       if (!revenueData.companyName || revenueData.companyName.trim() === '') {
         missingFields.push('회사명');
       }
@@ -355,12 +386,12 @@ const SalesManagement = () => {
       if (!revenueData.companyType || revenueData.companyType === '') {
         missingFields.push('업체 형태');
       }
-      
+
       if (missingFields.length > 0) {
         showMessage('error', '오류', `다음 필수 항목을 입력해주세요: ${missingFields.join(', ')}`);
         return;
       }
-      
+
       // 콤마 제거하고 숫자로 변환
       const serverData = {
         company_name: revenueData.companyName,
@@ -375,7 +406,7 @@ const SalesManagement = () => {
         total_amount: parseFloat(revenueData.totalAmount.toString().replace(/,/g, '')) || 0
       };
 
-                  const result = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(editingRevenue.id), {
+      const result = await apiCall(API_ENDPOINTS.REVENUE_DETAIL(editingRevenue.id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -384,16 +415,16 @@ const SalesManagement = () => {
       });
 
       if (result && result.success) {
-                showMessage('success', '성공', '매출이 성공적으로 수정되었습니다.', {
+        showMessage('success', '성공', '매출이 성공적으로 수정되었습니다.', {
           showCancel: false,
           confirmText: '확인'
         });
         setShowEditRevenueModal(false);
         setEditingRevenue(null);
-        
+
         // 즉시 리스트 새로고침
-                await fetchRevenueData();
-              } else {
+        await fetchRevenueData();
+      } else {
         console.error('매출 수정 실패:', result);
         showMessage('error', '오류', '매출 수정에 실패했습니다. 다시 시도해주세요.');
       }
@@ -457,13 +488,13 @@ const SalesManagement = () => {
       {/* 뷰 전환 탭 */}
       <div className="view-tabs">
         <div className="view-tabs-left">
-          <button 
+          <button
             className={`view-tab ${currentView === 'list' ? 'active' : ''}`}
             onClick={() => setCurrentView('list')}
           >
             📋 매출 리스트 ({sortedFilteredRevenueData.length}건)
           </button>
-          <button 
+          <button
             className={`view-tab ${currentView === 'company' ? 'active' : ''}`}
             onClick={() => setCurrentView('company')}
           >
@@ -471,14 +502,14 @@ const SalesManagement = () => {
           </button>
         </div>
         <div className="view-tabs-right">
-          <button 
+          <button
             className="export-excel-button"
             onClick={exportToExcel}
             title="매출 리스트를 엑셀 파일로 다운로드"
           >
             엑셀 추출
           </button>
-          <button 
+          <button
             className="add-revenue-button"
             onClick={handleOpenAddRevenueModal}
           >
@@ -545,7 +576,16 @@ const SalesManagement = () => {
                     setDatePreset('');
                   }}
                 />
-                <span className="sales-date-icon">📅</span>
+                <span
+                  className="sales-date-icon"
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    const inputElement = e.target.previousElementSibling;
+                    handleOpenCalendar('start', inputElement, startDate);
+                  }}
+                >
+                  📅
+                </span>
               </div>
               <span className="sales-date-separator">~</span>
               <div className="sales-date-input-container">
@@ -560,7 +600,16 @@ const SalesManagement = () => {
                     setDatePreset('');
                   }}
                 />
-                <span className="sales-date-icon">📅</span>
+                <span
+                  className="sales-date-icon"
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    const inputElement = e.target.previousElementSibling;
+                    handleOpenCalendar('end', inputElement, endDate);
+                  }}
+                >
+                  📅
+                </span>
               </div>
               <div className="sales-dropdown-wrapper">
                 <select
@@ -600,7 +649,7 @@ const SalesManagement = () => {
             </thead>
             <tbody>
               {sortedFilteredRevenueData.map((revenue) => (
-                <tr 
+                <tr
                   key={revenue.id}
                   className="revenue-row"
                   onDoubleClick={() => handleEditRevenue(revenue)}
@@ -617,7 +666,17 @@ const SalesManagement = () => {
                   <td>{revenue.vat?.toLocaleString()}원</td>
                   <td>{revenue.totalAmount?.toLocaleString()}원</td>
                   <td>
-                    <button 
+                    <button
+                      className="status-button copy-blue"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyRevenue(revenue);
+                      }}
+                      style={{ marginRight: '5px' }}
+                    >
+                      복사
+                    </button>
+                    <button
                       className="status-button delete-red"
                       onClick={(e) => {
                         e.stopPropagation(); // 더블클릭 이벤트 전파 방지
@@ -640,10 +699,10 @@ const SalesManagement = () => {
                 <div className="company-header-top">
                   <div className="company-name">{company.companyInfo.name}</div>
                   <div className="company-rank">
-                    {company.rank === 1 ? '🥇 1위' : 
-                     company.rank === 2 ? '🥈 2위' : 
-                     company.rank === 3 ? '🥉 3위' : 
-                     `${company.rank}위`}
+                    {company.rank === 1 ? '🥇 1위' :
+                      company.rank === 2 ? '🥈 2위' :
+                        company.rank === 3 ? '🥉 3위' :
+                          `${company.rank}위`}
                   </div>
                 </div>
                 <div className="company-header-bottom">
@@ -653,7 +712,7 @@ const SalesManagement = () => {
                 <div className="company-summary">
                   <div className="summary-row">
                     <div className="total-revenue">총 매출: {company.summary.totalRevenue.toLocaleString()}원</div>
-                    <button 
+                    <button
                       className="transaction-count-button"
                       onClick={() => toggleCompanyExpansion(company.companyInfo.businessLicense)}
                     >
@@ -684,8 +743,8 @@ const SalesManagement = () => {
       {/* 발행일 달력 팝업창 */}
       {showIssueDatePicker && (
         <div className="date-picker-overlay" onClick={() => setShowIssueDatePicker(false)}>
-          <div 
-            className="date-picker" 
+          <div
+            className="date-picker"
             onClick={(e) => e.stopPropagation()}
             style={{
               position: 'absolute',
@@ -694,10 +753,10 @@ const SalesManagement = () => {
               zIndex: 9999
             }}
           >
-                          <div className="date-picker-header">
-                <button className="today-button" onClick={() => goToToday('issue')}>오늘</button>
-                <button className="close-button" onClick={() => setShowIssueDatePicker(false)}>×</button>
-              </div>
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('issue')}>오늘</button>
+              <button className="close-button" onClick={() => setShowIssueDatePicker(false)}>×</button>
+            </div>
             <div className="date-picker-body">
               <div className="calendar-grid">
                 <div className="calendar-header">
@@ -734,8 +793,8 @@ const SalesManagement = () => {
       {/* 입금일 달력 팝업창 */}
       {showPaymentDatePicker && (
         <div className="date-picker-overlay" onClick={() => setShowPaymentDatePicker(false)}>
-          <div 
-            className="date-picker" 
+          <div
+            className="date-picker"
             onClick={(e) => e.stopPropagation()}
             style={{
               position: 'absolute',
@@ -744,10 +803,10 @@ const SalesManagement = () => {
               zIndex: 9999
             }}
           >
-                          <div className="date-picker-header">
-                <button className="today-button" onClick={() => goToToday('payment')}>오늘</button>
-                <button className="close-button" onClick={() => setShowPaymentDatePicker(false)}>×</button>
-              </div>
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('payment')}>오늘</button>
+              <button className="close-button" onClick={() => setShowPaymentDatePicker(false)}>×</button>
+            </div>
             <div className="date-picker-body">
               <div className="calendar-grid">
                 <div className="calendar-header">
@@ -786,8 +845,8 @@ const SalesManagement = () => {
         isOpen={showAddRevenueModal}
         onClose={handleCloseAddRevenueModal}
         onSave={handleAddRevenue}
-        mode="add"
-        initialData={{}}
+        mode={revenueModalMode}
+        initialData={revenueModalMode === 'copy' ? editingRevenue : {}}
         title="매출 입력"
       />
 
@@ -809,6 +868,83 @@ const SalesManagement = () => {
         onCancel={messageProps.handleMessageCancel}
       />
 
+      {/* 시작일 달력 팝업창 */}
+      {showStartDatePicker && (
+        <div className="date-picker-overlay" onClick={() => setShowStartDatePicker(false)}>
+          <div
+            className="date-picker"
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
+          >
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('start')}>오늘</button>
+              <button className="close-button" onClick={() => setShowStartDatePicker(false)}>×</button>
+            </div>
+            <div className="date-picker-body">
+              <div className="calendar-grid">
+                <div className="calendar-header">
+                  <button onClick={() => handleMonthChange('start', -1)}>&lt;</button>
+                  <span>{getCurrentMonthYear('start')}</span>
+                  <button onClick={() => handleMonthChange('start', 1)}>&gt;</button>
+                </div>
+                <div className="calendar-weekdays">
+                  <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                </div>
+                <div className="calendar-days">
+                  {getCalendarDays('start', startDate).map((day, index) => (
+                    <div
+                      key={index}
+                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'start', handleDateChange)}
+                    >
+                      {day.day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 종료일 달력 팝업창 */}
+      {showEndDatePicker && (
+        <div className="date-picker-overlay" onClick={() => setShowEndDatePicker(false)}>
+          <div
+            className="date-picker"
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
+          >
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('end')}>오늘</button>
+              <button className="close-button" onClick={() => setShowEndDatePicker(false)}>×</button>
+            </div>
+            <div className="date-picker-body">
+              <div className="calendar-grid">
+                <div className="calendar-header">
+                  <button onClick={() => handleMonthChange('end', -1)}>&lt;</button>
+                  <span>{getCurrentMonthYear('end')}</span>
+                  <button onClick={() => handleMonthChange('end', 1)}>&gt;</button>
+                </div>
+                <div className="calendar-weekdays">
+                  <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                </div>
+                <div className="calendar-days">
+                  {getCalendarDays('end', endDate).map((day, index) => (
+                    <div
+                      key={index}
+                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'end', handleDateChange)}
+                    >
+                      {day.day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

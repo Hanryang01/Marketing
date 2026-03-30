@@ -14,6 +14,7 @@ const ExpenseList = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit' | 'copy'
   const [activeTab, setActiveTab] = useState('expense'); // 'expense' | 'income'
   // 검색 필터 상태
   const [companyNameFilter, setCompanyNameFilter] = useState('');
@@ -24,7 +25,26 @@ const ExpenseList = () => {
   const [datePreset, setDatePreset] = useState('');
 
   const messageProps = useMessage();
-  const { formatDate } = useCalendar();
+  const {
+    showStartDatePicker,
+    setShowStartDatePicker,
+    showEndDatePicker,
+    setShowEndDatePicker,
+    calendarPosition,
+    handleOpenCalendar,
+    handleDateSelect,
+    handleMonthChange,
+    getCurrentMonthYear,
+    getCalendarDays,
+    goToToday,
+    formatDate
+  } = useCalendar();
+
+  const handleDateChange = (field, value) => {
+    if (field === 'startDate') setStartDate(value);
+    if (field === 'endDate') setEndDate(value);
+    setDatePreset('');
+  };
 
   // 날짜 프리셋 변경 핸들러
   const handleDatePresetChange = useCallback((preset) => {
@@ -107,13 +127,25 @@ const ExpenseList = () => {
 
   // 지출 추가 모달 열기
   const handleAddExpense = () => {
+    setModalMode('add');
+    setEditingExpense(null);
     setShowAddModal(true);
   };
 
   // 지출 수정 모달 열기
   const handleEditExpense = (expense) => {
+    setModalMode('edit');
     setEditingExpense(expense);
     setShowEditModal(true);
+  };
+
+  // 지출 복사 모달 열기
+  const handleCopyExpense = (expense) => {
+    setModalMode('copy');
+    const copiedData = { ...expense };
+    delete copiedData.id;
+    setEditingExpense(copiedData);
+    setShowAddModal(true);
   };
 
   // 지출 삭제
@@ -152,6 +184,7 @@ const ExpenseList = () => {
     setShowAddModal(false);
     setShowEditModal(false);
     setEditingExpense(null);
+    setModalMode('add');
   };
 
   // 저장 후 콜백
@@ -274,7 +307,16 @@ const ExpenseList = () => {
                     setDatePreset('');
                   }}
                 />
-                <span className="sales-date-icon">📅</span>
+                <span 
+                  className="sales-date-icon" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    const inputElement = e.target.previousElementSibling;
+                    handleOpenCalendar('start', inputElement, startDate);
+                  }}
+                >
+                  📅
+                </span>
               </div>
               <span className="sales-date-separator">~</span>
               <div className="sales-date-input-container">
@@ -289,7 +331,16 @@ const ExpenseList = () => {
                     setDatePreset('');
                   }}
                 />
-                <span className="sales-date-icon">📅</span>
+                <span 
+                  className="sales-date-icon" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    const inputElement = e.target.previousElementSibling;
+                    handleOpenCalendar('end', inputElement, endDate);
+                  }}
+                >
+                  📅
+                </span>
               </div>
               <div className="sales-dropdown-wrapper">
                 <select
@@ -354,8 +405,22 @@ const ExpenseList = () => {
                       </td>
                       <td className="actions">
                         <button
+                          className="status-button copy-blue"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyExpense(expense);
+                          }}
+                          title="복사"
+                          style={{ marginRight: '5px' }}
+                        >
+                          복사
+                        </button>
+                        <button
                           className="status-button delete-red"
-                          onClick={() => handleDeleteClick(expense.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(expense.id);
+                          }}
                           title="삭제"
                         >
                           삭제
@@ -374,7 +439,8 @@ const ExpenseList = () => {
       <ExpenseModal
         isOpen={showAddModal}
         onClose={handleCloseModal}
-        mode="add"
+        mode={modalMode}
+        initialData={modalMode === 'copy' ? editingExpense : null}
         onSave={handleSaveSuccess}
       />
 
@@ -394,8 +460,86 @@ const ExpenseList = () => {
         onConfirm={messageProps.handleMessageConfirm}
         onCancel={messageProps.handleMessageCancel}
       />
-                </div>
-              );
-            };
 
-            export default ExpenseList;
+      {/* 시작일 달력 팝업창 */}
+      {showStartDatePicker && (
+        <div className="date-picker-overlay" onClick={() => setShowStartDatePicker(false)}>
+          <div 
+            className="date-picker" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
+          >
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('start')}>오늘</button>
+              <button className="close-button" onClick={() => setShowStartDatePicker(false)}>×</button>
+            </div>
+            <div className="date-picker-body">
+              <div className="calendar-grid">
+                <div className="calendar-header">
+                  <button onClick={() => handleMonthChange('start', -1)}>&lt;</button>
+                  <span>{getCurrentMonthYear('start')}</span>
+                  <button onClick={() => handleMonthChange('start', 1)}>&gt;</button>
+                </div>
+                <div className="calendar-weekdays">
+                  <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                </div>
+                <div className="calendar-days">
+                  {getCalendarDays('start', startDate).map((day, index) => (
+                    <div
+                      key={index}
+                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'start', (date) => { setStartDate(date); setDatePreset(''); })}
+                    >
+                      {day.day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 종료일 달력 팝업창 */}
+      {showEndDatePicker && (
+        <div className="date-picker-overlay" onClick={() => setShowEndDatePicker(false)}>
+          <div 
+            className="date-picker" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
+          >
+            <div className="date-picker-header">
+              <button className="today-button" onClick={() => goToToday('end')}>오늘</button>
+              <button className="close-button" onClick={() => setShowEndDatePicker(false)}>×</button>
+            </div>
+            <div className="date-picker-body">
+              <div className="calendar-grid">
+                <div className="calendar-header">
+                  <button onClick={() => handleMonthChange('end', -1)}>&lt;</button>
+                  <span>{getCurrentMonthYear('end')}</span>
+                  <button onClick={() => handleMonthChange('end', 1)}>&gt;</button>
+                </div>
+                <div className="calendar-weekdays">
+                  <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                </div>
+                <div className="calendar-days">
+                  {getCalendarDays('end', endDate).map((day, index) => (
+                    <div
+                      key={index}
+                      className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'end', (date) => { setEndDate(date); setDatePreset(''); })}
+                    >
+                      {day.day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ExpenseList;
