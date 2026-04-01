@@ -6,12 +6,12 @@ import { formatAmount } from '../utils/helpers';
 import { handleBusinessLicenseInput, formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 import './ExpenseModal.css';
 
-const ExpenseModal = ({ 
-  isOpen, 
-  onClose, 
+const ExpenseModal = ({
+  isOpen,
+  onClose,
   mode = 'add', // 'add' or 'edit'
   initialData = null,
-  onSave 
+  onSave
 }) => {
   const { showMessage } = useMessage();
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +65,7 @@ const ExpenseModal = ({
     } else {
       resetForm();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, initialData]); // formatDateForInput 제거하여 무한 루프 방지
 
   const resetForm = () => {
@@ -104,7 +104,7 @@ const ExpenseModal = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // 사업자등록번호 특별 처리
     if (name === 'businessLicense') {
       const processedValue = handleBusinessLicenseInput(value);
@@ -114,16 +114,16 @@ const ExpenseModal = ({
       }));
       return;
     }
-    
+
     // 금액 필드인 경우 천 단위 구분자 추가
     if (['totalAmount', 'supplyAmount', 'vatAmount'].includes(name)) {
       const numericValue = value.replace(/,/g, '');
       if (numericValue === '' || /^\d+$/.test(numericValue)) {
         const formattedValue = numericValue === '' ? '' : formatAmount(numericValue);
-        
+
         setFormData(prev => {
           const newData = { ...prev, [name]: formattedValue };
-          
+
           if (transactionType === 'income') {
             // 입금 모드: 단순 금액 입력 (부가세 없음)
             if (name === 'supplyAmount') {
@@ -144,7 +144,7 @@ const ExpenseModal = ({
               newData.totalAmount = formatAmount(supplyAmount + vatAmount);
             }
           }
-          
+
           return newData;
         });
       }
@@ -249,7 +249,7 @@ const ExpenseModal = ({
       const isEdit = mode === 'edit';
       const url = isEdit ? `${API_ENDPOINTS.EXPENSES}/${initialData.id}` : API_ENDPOINTS.EXPENSES;
       const method = isEdit ? 'PUT' : 'POST';
-      
+
       const result = await apiCall(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -395,8 +395,8 @@ const ExpenseModal = ({
     const currentDate = isIssue ? formData.issueDate : formData.expenseDate;
     return showPicker && (
       <div className="date-picker-overlay" onClick={() => setShowPicker(false)}>
-        <div 
-          className="date-picker" 
+        <div
+          className="date-picker"
           onClick={(e) => e.stopPropagation()}
           style={{
             position: 'absolute',
@@ -452,17 +452,17 @@ const ExpenseModal = ({
           <h2>{mode === 'edit' ? `${getUITexts().modalTitle} 수정` : `${getUITexts().modalTitle} 입력`}</h2>
           <button className="close-button" onClick={handleCloseModal}>×</button>
         </div>
-        
+
         {/* 거래 유형 토글 스위치 */}
         <div className="transaction-type-toggle">
-          <button 
+          <button
             className={`toggle-btn ${transactionType === 'expense' ? 'active' : ''}`}
             onClick={() => handleTransactionTypeChange('expense')}
             type="button"
           >
             💸 지출
           </button>
-          <button 
+          <button
             className={`toggle-btn ${transactionType === 'income' ? 'active' : ''}`}
             onClick={() => handleTransactionTypeChange('income')}
             type="button"
@@ -471,7 +471,7 @@ const ExpenseModal = ({
           </button>
         </div>
 
-        
+
         <div className="modal-body">
           <form onSubmit={handleSave} className="expense-form">
             <div className="form-row">
@@ -515,8 +515,8 @@ const ExpenseModal = ({
                       required
                       className="date-input"
                     />
-                    <div 
-                      className="calendar-icon" 
+                    <div
+                      className="calendar-icon"
                       onClick={(e) => {
                         const inputElement = e.target.previousElementSibling;
                         handleOpenCalendar('payment', inputElement, formData.expenseDate);
@@ -540,8 +540,8 @@ const ExpenseModal = ({
                       maxLength="10"
                       className="date-input"
                     />
-                    <div 
-                      className="calendar-icon" 
+                    <div
+                      className="calendar-icon"
                       onClick={(e) => {
                         const inputElement = e.target.previousElementSibling;
                         handleOpenCalendar('issue', inputElement, formData.issueDate);
@@ -568,8 +568,8 @@ const ExpenseModal = ({
                       maxLength="10"
                       className="date-input"
                     />
-                    <div 
-                      className="calendar-icon" 
+                    <div
+                      className="calendar-icon"
                       onClick={(e) => {
                         const inputElement = e.target.previousElementSibling;
                         handleOpenCalendar('issue', inputElement, formData.issueDate);
@@ -594,8 +594,8 @@ const ExpenseModal = ({
                       required
                       className="date-input"
                     />
-                    <div 
-                      className="calendar-icon" 
+                    <div
+                      className="calendar-icon"
                       onClick={(e) => {
                         const inputElement = e.target.previousElementSibling;
                         handleOpenCalendar('payment', inputElement, formData.expenseDate);
@@ -653,7 +653,7 @@ const ExpenseModal = ({
             onClick={handleSave}
             disabled={isLoading}
           >
-            {isLoading ? '처리중...' : 
+            {isLoading ? '처리중...' :
               `${getUITexts().buttonText} ${mode === 'edit' ? '수정' : '추가'}`
             }
           </button>

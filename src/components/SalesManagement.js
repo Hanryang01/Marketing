@@ -26,7 +26,8 @@ const SalesManagement = () => {
   // 날짜 프리셋 변경 핸들러
   const handleDatePresetChange = useCallback((preset) => {
     setDatePreset(preset);
-    const now = new Date();
+    const koreaTimeStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+    const now = new Date(koreaTimeStr);
     if (preset === 'thisMonth') {
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -44,28 +45,7 @@ const SalesManagement = () => {
     }
   }, []);
 
-  // 커스텀 필터링 로직
-  const filteredRevenueData = useMemo(() => {
-    if (!revenueData || revenueData.length === 0) return [];
-    return revenueData.filter(item => {
-      // 업체명 필터
-      if (companyNameFilter) {
-        const name = (item.companyName || '').toLowerCase();
-        if (!name.includes(companyNameFilter.toLowerCase())) return false;
-      }
-      // 결제 방법 필터
-      if (paymentMethodFilter && item.paymentMethod !== paymentMethodFilter) return false;
-      // 업체 형태 필터
-      if (companyTypeFilter && item.companyType !== companyTypeFilter) return false;
-      // 조회 기간 필터 (발행일 기준)
-      if (startDate || endDate) {
-        const issueDate = (item.issueDate || '').substring(0, 10);
-        if (startDate && issueDate < startDate) return false;
-        if (endDate && issueDate > endDate) return false;
-      }
-      return true;
-    });
-  }, [revenueData, companyNameFilter, paymentMethodFilter, companyTypeFilter, startDate, endDate]);
+
 
   // useCalendar 훅 사용
   const {
@@ -84,6 +64,8 @@ const SalesManagement = () => {
     getCurrentMonthYear,
     getCalendarDays,
     goToToday,
+    formatDate,
+    handleDateInputChange
   } = useCalendar();
 
   const handleDateChange = (field, value) => {
@@ -96,6 +78,29 @@ const SalesManagement = () => {
   const [currentView, setCurrentView] = useState('list'); // 'list' 또는 'company'
   const [expandedCompanies, setExpandedCompanies] = useState(new Set());
 
+  // 커스텀 필터링 로직
+  const filteredRevenueData = useMemo(() => {
+    if (!revenueData || revenueData.length === 0) return [];
+    return revenueData.filter(item => {
+      // 업체명 필터
+      if (companyNameFilter) {
+        const name = (item.companyName || '').toLowerCase();
+        if (!name.includes(companyNameFilter.toLowerCase())) return false;
+      }
+      // 결제 방법 필터
+      if (paymentMethodFilter && item.paymentMethod !== paymentMethodFilter) return false;
+      // 업체 형태 필터
+      if (companyTypeFilter && item.companyType !== companyTypeFilter) return false;
+      // 조회 기간 필터 (발행일 기준)
+      if (startDate || endDate) {
+        const issueDate = formatDate(item.issueDate);
+        if (startDate && issueDate < startDate) return false;
+        if (endDate && issueDate > endDate) return false;
+      }
+      return true;
+    });
+  }, [revenueData, companyNameFilter, paymentMethodFilter, companyTypeFilter, startDate, endDate, formatDate]);
+
   // 필터링된 매출 데이터 (서버에서 이미 발행일 기준으로 정렬됨)
   const sortedFilteredRevenueData = useMemo(() => {
     return filteredRevenueData;
@@ -105,9 +110,7 @@ const SalesManagement = () => {
   const messageProps = useMessage();
   const { showMessage } = messageProps;
 
-  // 날짜 처리 관련 로직을 useCalendar 훅으로 분리
-  const calendarProps = useCalendar();
-  const { formatDate } = calendarProps;
+  // 날짜 처리 관련 로직을 useCalendar 훅으로 분리 (상단에서 이미 가져옴)
 
 
 
@@ -572,7 +575,7 @@ const SalesManagement = () => {
                   value={startDate}
                   maxLength="10"
                   onChange={(e) => {
-                    setStartDate(e.target.value);
+                    handleDateInputChange('startDate', e.target.value, (fn) => setStartDate(fn({ startDate }).startDate));
                     setDatePreset('');
                   }}
                 />
@@ -596,7 +599,7 @@ const SalesManagement = () => {
                   value={endDate}
                   maxLength="10"
                   onChange={(e) => {
-                    setEndDate(e.target.value);
+                    handleDateInputChange('endDate', e.target.value, (fn) => setEndDate(fn({ endDate }).endDate));
                     setDatePreset('');
                   }}
                 />

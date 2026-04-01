@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(dbConfig);
-    
+
     try {
       const [rows] = await connection.execute(`
         SELECT 
@@ -26,9 +26,14 @@ router.get('/', async (req, res) => {
           created_at as createdAt,
           updated_at as updatedAt
         FROM expenses 
-        ORDER BY expense_date DESC, created_at DESC
+        ORDER BY 
+          CASE 
+            WHEN transaction_type = 'income' THEN expense_date 
+            ELSE issue_date 
+          END DESC, 
+          created_at DESC
       `);
-      
+
       res.json(rows);
     } catch (sqlError) {
       console.error('SQL 오류:', sqlError);
@@ -49,7 +54,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await mysql.createConnection(dbConfig);
-    
+
     try {
       const [rows] = await connection.execute(`
         SELECT 
@@ -69,13 +74,13 @@ router.get('/:id', async (req, res) => {
         FROM expenses 
         WHERE id = ?
       `, [id]);
-      
+
       await connection.end();
-      
+
       if (rows.length === 0) {
         return res.status(404).json({ error: '지출 항목을 찾을 수 없습니다.' });
       }
-      
+
       res.json(rows[0]);
     } catch (sqlError) {
       console.error('SQL 오류:', sqlError);
@@ -93,7 +98,7 @@ router.post('/', async (req, res) => {
   try {
     // 요청 본문 로깅 (디버깅용)
     console.log('📝 지출 추가 요청 데이터:', JSON.stringify(req.body, null, 2));
-    
+
     const {
       companyName,
       businessLicense,
@@ -108,8 +113,8 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     // 필수 필드 검증 (expenseDate는 필수, issueDate는 선택 사항)
-    if (!companyName || !expenseDate || !item || !paymentMethod || 
-        supplyAmount === undefined) {
+    if (!companyName || !expenseDate || !item || !paymentMethod ||
+      supplyAmount === undefined) {
       return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
     }
 
@@ -117,10 +122,10 @@ router.post('/', async (req, res) => {
     const finalVatAmount = transactionType === 'income' ? 0 : (vatAmount || 0);
 
     const connection = await mysql.createConnection(dbConfig);
-    
+
     // expenseDate가 없으면 null로 저장 (선택적 필드)
     const finalExpenseDate = expenseDate && expenseDate !== '-' && expenseDate.trim() !== '' ? expenseDate : null;
-    
+
     console.log('📝 저장할 데이터:', {
       companyName,
       finalExpenseDate,
@@ -131,7 +136,7 @@ router.post('/', async (req, res) => {
       totalAmount,
       transactionType
     });
-    
+
     try {
       const [result] = await connection.execute(`
         INSERT INTO expenses (
@@ -158,12 +163,12 @@ router.post('/', async (req, res) => {
         parseFloat(totalAmount) || 0,
         transactionType || 'expense'
       ]);
-      
+
       await connection.end();
-      
-      res.status(201).json({ 
+
+      res.status(201).json({
         id: result.insertId,
-        message: '지출이 성공적으로 추가되었습니다.' 
+        message: '지출이 성공적으로 추가되었습니다.'
       });
     } catch (sqlError) {
       console.error('SQL 오류:', sqlError);
@@ -195,8 +200,8 @@ router.put('/:id', async (req, res) => {
     } = req.body;
 
     // 필수 필드 검증 (expenseDate는 필수, issueDate는 선택 사항)
-    if (!companyName || !expenseDate || !item || !paymentMethod || 
-        supplyAmount === undefined) {
+    if (!companyName || !expenseDate || !item || !paymentMethod ||
+      supplyAmount === undefined) {
       return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
     }
 
@@ -245,13 +250,13 @@ router.put('/:id', async (req, res) => {
         parseFloat(totalAmount) || 0,
         id
       ]);
-      
+
       await connection.end();
-      
+
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: '지출 항목을 찾을 수 없습니다.' });
       }
-      
+
       res.json({ message: '지출이 성공적으로 수정되었습니다.' });
     } catch (sqlError) {
       console.error('SQL 오류:', sqlError);
@@ -262,8 +267,8 @@ router.put('/:id', async (req, res) => {
     console.error('❌ 지출 수정 오류:', error);
     console.error('❌ SQL 에러:', error.sqlMessage || error.message);
     console.error('❌ 에러 코드:', error.code);
-    res.status(500).json({ 
-      error: '지출 수정에 실패했습니다.', 
+    res.status(500).json({
+      error: '지출 수정에 실패했습니다.',
       detail: error.sqlMessage || error.message,
       code: error.code
     });
@@ -275,18 +280,18 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await mysql.createConnection(dbConfig);
-    
+
     const [result] = await connection.execute(
       'DELETE FROM expenses WHERE id = ?',
       [id]
     );
-    
+
     await connection.end();
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: '지출 항목을 찾을 수 없습니다.' });
     }
-    
+
     res.json({ message: '지출이 성공적으로 삭제되었습니다.' });
   } catch (error) {
     console.error('지출 삭제 오류:', error);

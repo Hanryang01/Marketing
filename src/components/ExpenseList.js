@@ -37,7 +37,8 @@ const ExpenseList = () => {
     getCurrentMonthYear,
     getCalendarDays,
     goToToday,
-    formatDate
+    formatDate,
+    handleDateInputChange
   } = useCalendar();
 
   const handleDateChange = (field, value) => {
@@ -49,7 +50,8 @@ const ExpenseList = () => {
   // 날짜 프리셋 변경 핸들러
   const handleDatePresetChange = useCallback((preset) => {
     setDatePreset(preset);
-    const now = new Date();
+    const koreaTimeStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+    const now = new Date(koreaTimeStr);
     if (preset === 'thisMonth') {
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -66,10 +68,10 @@ const ExpenseList = () => {
     }
   }, []);
 
-  // 커스텀 필터링 + 탭별 필터링 적용
+  // 커스텀 필터링 + 탭별 필터링 + 발행일 기준 정렬 적용
   const filteredExpenses = useMemo(() => {
     if (!expenses || expenses.length === 0) return [];
-    return expenses.filter(item => {
+    const filtered = expenses.filter(item => {
       // 탭별 필터
       const transactionType = item.transactionType || 'expense';
       if (activeTab === 'income' ? transactionType !== 'income' : transactionType !== 'expense') return false;
@@ -85,15 +87,29 @@ const ExpenseList = () => {
       }
       // 결제 방법 필터
       if (paymentMethodFilter && item.paymentMethod !== paymentMethodFilter) return false;
-      // 조회 기간 필터 (지출일/입금일 기준)
+      // 조회 기간 필터 (발행일 기준)
       if (startDate || endDate) {
-        const expDate = (item.expenseDate || '').substring(0, 10);
-        if (startDate && expDate < startDate) return false;
-        if (endDate && expDate > endDate) return false;
+        const targetDateStr = transactionType === 'income' ? item.expenseDate : item.issueDate;
+        const targetDate = formatDate(targetDateStr);
+        if (startDate && targetDate < startDate) return false;
+        if (endDate && targetDate > endDate) return false;
       }
       return true;
     });
-  }, [expenses, activeTab, companyNameFilter, itemFilter, paymentMethodFilter, startDate, endDate]);
+
+    // 발행일 기준 최신순 정렬 (지출: issueDate, 입금: expenseDate)
+    filtered.sort((a, b) => {
+      const dateA = formatDate(activeTab === 'income' ? a.expenseDate : a.issueDate) || '';
+      const dateB = formatDate(activeTab === 'income' ? b.expenseDate : b.issueDate) || '';
+      if (dateB !== dateA) return dateB.localeCompare(dateA);
+      // 동일 발행일이면 생성일 최신순
+      const createdA = a.createdAt || '';
+      const createdB = b.createdAt || '';
+      return String(createdB).localeCompare(String(createdA));
+    });
+
+    return filtered;
+  }, [expenses, activeTab, companyNameFilter, itemFilter, paymentMethodFilter, startDate, endDate, formatDate]);
 
   // 지출 목록 로드
   const loadExpenses = useCallback(async () => {
@@ -121,7 +137,7 @@ const ExpenseList = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -222,13 +238,13 @@ const ExpenseList = () => {
       {/* 탭 네비게이션 */}
       <div className="user-tabs">
         <div className="user-tabs-left">
-          <button 
+          <button
             className={`tab-button ${activeTab === 'expense' ? 'active' : ''}`}
             onClick={() => setActiveTab('expense')}
           >
             💸 지출
           </button>
-          <button 
+          <button
             className={`tab-button ${activeTab === 'income' ? 'active' : ''}`}
             onClick={() => setActiveTab('income')}
           >
@@ -236,14 +252,14 @@ const ExpenseList = () => {
           </button>
         </div>
         <div className="user-tabs-right">
-          <button 
+          <button
             className="export-excel-button"
             onClick={exportToExcel}
             title={`${activeTab === 'expense' ? '지출' : '입금'} 리스트를 엑셀 파일로 다운로드`}
           >
             엑셀 추출
           </button>
-          <button 
+          <button
             className="add-expense-button"
             onClick={handleAddExpense}
             disabled={isLoading}
@@ -303,12 +319,12 @@ const ExpenseList = () => {
                   value={startDate}
                   maxLength="10"
                   onChange={(e) => {
-                    setStartDate(e.target.value);
+                    handleDateInputChange('startDate', e.target.value, (fn) => setStartDate(fn({ startDate }).startDate));
                     setDatePreset('');
                   }}
                 />
-                <span 
-                  className="sales-date-icon" 
+                <span
+                  className="sales-date-icon"
                   style={{ cursor: 'pointer' }}
                   onClick={(e) => {
                     const inputElement = e.target.previousElementSibling;
@@ -327,12 +343,12 @@ const ExpenseList = () => {
                   value={endDate}
                   maxLength="10"
                   onChange={(e) => {
-                    setEndDate(e.target.value);
+                    handleDateInputChange('endDate', e.target.value, (fn) => setEndDate(fn({ endDate }).endDate));
                     setDatePreset('');
                   }}
                 />
-                <span 
-                  className="sales-date-icon" 
+                <span
+                  className="sales-date-icon"
                   style={{ cursor: 'pointer' }}
                   onClick={(e) => {
                     const inputElement = e.target.previousElementSibling;
@@ -383,7 +399,7 @@ const ExpenseList = () => {
                 {filteredExpenses.map((expense) => {
                   const transactionType = expense.transactionType || 'expense';
                   const isIncome = transactionType === 'income';
-                  
+
                   return (
                     <tr key={expense.id} onDoubleClick={() => handleEditExpense(expense)}>
                       <td>{activeTab === 'expense' ? formatDate(expense.issueDate) : formatDate(expense.expenseDate)}</td>
@@ -456,8 +472,8 @@ const ExpenseList = () => {
       {/* 시작일 달력 팝업창 */}
       {showStartDatePicker && (
         <div className="date-picker-overlay" onClick={() => setShowStartDatePicker(false)}>
-          <div 
-            className="date-picker" 
+          <div
+            className="date-picker"
             onClick={(e) => e.stopPropagation()}
             style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
           >
@@ -480,7 +496,7 @@ const ExpenseList = () => {
                     <div
                       key={index}
                       className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'start', (date) => { setStartDate(date); setDatePreset(''); })}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'start', handleDateChange)}
                     >
                       {day.day}
                     </div>
@@ -495,8 +511,8 @@ const ExpenseList = () => {
       {/* 종료일 달력 팝업창 */}
       {showEndDatePicker && (
         <div className="date-picker-overlay" onClick={() => setShowEndDatePicker(false)}>
-          <div 
-            className="date-picker" 
+          <div
+            className="date-picker"
             onClick={(e) => e.stopPropagation()}
             style={{ position: 'absolute', top: `${calendarPosition.top}px`, left: `${calendarPosition.left}px`, zIndex: 9999 }}
           >
@@ -519,7 +535,7 @@ const ExpenseList = () => {
                     <div
                       key={index}
                       className={`calendar-day ${day.isCurrentMonth ? '' : 'other-month'} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'end', (date) => { setEndDate(date); setDatePreset(''); })}
+                      onClick={() => day.isCurrentMonth && handleDateSelect(day.date, 'end', handleDateChange)}
                     >
                       {day.day}
                     </div>
