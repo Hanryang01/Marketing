@@ -5,7 +5,7 @@ const useUserModals = () => {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRevenueModal, setShowRevenueModal] = useState(false);
-  
+
   // 선택된 사용자들
   const [selectedUser, setSelectedUser] = useState(null);
   const [revenueUser, setRevenueUser] = useState(null);
@@ -111,7 +111,7 @@ const useUserModals = () => {
     setRevenueUser,
     newUser,
     setNewUser,
-    
+
     // 모달 핸들러들
     handleOpenAddUserModal,
     handleCloseAddUserModal,

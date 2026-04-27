@@ -7,7 +7,8 @@ const useUserFilters = (users) => {
     userId: '',
     companyType: '',
     pricingPlan: '',
-    approvalStatus: ''
+    approvalStatus: '',
+    subscriptionType: ''
   });
   const [activeTab, setActiveTab] = useState('전체');
 
@@ -22,6 +23,14 @@ const useUserFilters = (users) => {
   // 탭 변경 핸들러
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    // 탭 변경 시 검색 필터 초기화 (업체명, 사용자 ID 제외한 드롭다운들)
+    setSearchFilters(prev => ({
+      ...prev,
+      companyType: '',
+      pricingPlan: '',
+      approvalStatus: '',
+      subscriptionType: ''
+    }));
   };
 
   // 필터링된 사용자 데이터
@@ -30,19 +39,19 @@ const useUserFilters = (users) => {
     if (!Array.isArray(users)) {
       return [];
     }
-    
+
     let filteredUsers = users;
 
     // 탭별 필터링 (백업 파일의 탭 카운트 로직과 동일하게 수정)
     switch (activeTab) {
       case '무료':
         // 업체 형태와 상관없이 승인 예정 상태인 모든 사용자
-        filteredUsers = users.filter(user => 
+        filteredUsers = users.filter(user =>
           user.approvalStatus === '승인 예정'
         );
         break;
       case '구독중':
-        filteredUsers = users.filter(user => 
+        filteredUsers = users.filter(user =>
           (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
           (user.companyType === '일반 업체' && isUserActive({
             approvalStatus: user.approvalStatus,
@@ -58,7 +67,7 @@ const useUserFilters = (users) => {
         filteredUsers = []; // 승인 이력은 별도 처리
         break;
       case '탈퇴':
-        filteredUsers = users.filter(user => 
+        filteredUsers = users.filter(user =>
           user.approvalStatus === '탈퇴' && user.companyType === '탈퇴 사용자'
         );
         break;
@@ -69,29 +78,42 @@ const useUserFilters = (users) => {
 
     // 검색 필터 적용
     if (searchFilters.companyName) {
-      filteredUsers = filteredUsers.filter(user => 
+      filteredUsers = filteredUsers.filter(user =>
         user.companyName && user.companyName.toLowerCase().includes(searchFilters.companyName.toLowerCase())
       );
     }
     if (searchFilters.userId) {
-      filteredUsers = filteredUsers.filter(user => 
+      filteredUsers = filteredUsers.filter(user =>
         user.userId && user.userId.toLowerCase().includes(searchFilters.userId.toLowerCase())
       );
     }
     if (searchFilters.companyType) {
-      filteredUsers = filteredUsers.filter(user => 
+      filteredUsers = filteredUsers.filter(user =>
         user.companyType === searchFilters.companyType
       );
     }
     if (searchFilters.pricingPlan) {
-      filteredUsers = filteredUsers.filter(user => 
+      filteredUsers = filteredUsers.filter(user =>
         user.pricingPlan === searchFilters.pricingPlan
       );
     }
     if (searchFilters.approvalStatus) {
-      filteredUsers = filteredUsers.filter(user => 
+      filteredUsers = filteredUsers.filter(user =>
         user.approvalStatus === searchFilters.approvalStatus
       );
+    }
+    if (searchFilters.subscriptionType) {
+      if (searchFilters.subscriptionType === '기타') {
+        filteredUsers = filteredUsers.filter(user =>
+          (!user.subscriptionType || user.subscriptionType === '특정기간') &&
+          user.approvalStatus === '승인 완료' &&
+          user.startDate && user.endDate
+        );
+      } else {
+        filteredUsers = filteredUsers.filter(user =>
+          user.subscriptionType === searchFilters.subscriptionType
+        );
+      }
     }
 
     // 탭별 정렬 적용

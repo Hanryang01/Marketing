@@ -37,6 +37,7 @@ const useUserData = () => {
             aiReportLimit: user.ai_report_limit,
             businessLicense: user.business_license,
             isActive: user.is_active,
+            subscriptionType: user.subscription_type || null,
             // 회계 관련 필드들 추가
             accountantName: user.accountant_name,
             accountantPosition: user.accountant_position,

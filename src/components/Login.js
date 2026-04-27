@@ -13,49 +13,32 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 개발 버전과 배포 버전 구분
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    if (isDevelopment) {
-      // 개발 버전: 빈 값이어도 로그인 허용 (기본값: herlab)
-      const userEmail = email.trim() || 'herlab@marketing.com';
-      const userName = email.trim() || 'herlab';
-      
-      onLogin({ 
-        id: 1, 
-        username: userName, 
-        email: userEmail,
-        role: 'marketing' 
-      }, `marketing-session-${Date.now()}`);
-      
-      navigate('/dashboard');
-    } else {
-      // 배포 버전: 하드코딩된 ID/PW 확인
-      if (email.trim() === 'herlab' && password === 'herlab') {
-        onLogin({ 
-          id: 1, 
-          username: 'herlab', 
-          email: 'herlab@marketing.com',
-          role: 'marketing' 
-        }, `marketing-session-${Date.now()}`);
-        
-        navigate('/dashboard');
-      } else if (email.trim() === 'technonia' && password === 'nonia8123') {
-        onLogin({ 
-          id: 2, 
-          username: 'technonia', 
-          email: 'technonia@marketing.com',
-          role: 'marketing' 
-        }, `marketing-session-${Date.now()}`);
-        
+
+    try {
+      const API_BASE_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:3007').trim();
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.sessionToken) {
+        onLogin(data.user, data.sessionToken);
         navigate('/dashboard');
       } else {
-        showMessage('error', '로그인 오류', '잘못된 ID 또는 비밀번호입니다.', {
+        showMessage('error', '로그인 오류', data.error || '잘못된 ID 또는 비밀번호입니다.', {
           showCancel: false,
           confirmText: '확인'
         });
       }
+    } catch (err) {
+      console.error('로그인 오류:', err);
+      showMessage('error', '로그인 오류', '서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.', {
+        showCancel: false,
+        confirmText: '확인'
+      });
     }
   };
 
@@ -69,35 +52,35 @@ const Login = ({ onLogin }) => {
         <div className="logo-container">
           {/* SIHM 로고 이미지 */}
           <div className="logo-image">
-            <img 
-              src="/sihm-logo.png" 
-              alt="SIHM Logo" 
-              width="200" 
+            <img
+              src="/sihm-logo.png"
+              alt="SIHM Logo"
+              width="200"
               height="200"
             />
           </div>
         </div>
       </div>
-      
+
       <div className="login-divider"></div>
-      
-             <div className="login-right">
-         <div className="login-form">
-           <div className="form-header">
-             <h1>SIHM 관리자</h1>
-           </div>
-           <div className="form-group">
-             <label htmlFor="email">사용자 ID</label>
-             <input
-               type="email"
-               id="email"
-               value={email}
-               onChange={(e) => setEmail(e.target.value)}
-               placeholder=""
-               className="form-input"
-             />
+
+      <div className="login-right">
+        <div className="login-form">
+          <div className="form-header">
+            <h1>SIHM 관리자</h1>
           </div>
-          
+          <div className="form-group">
+            <label htmlFor="email">사용자 ID</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder=""
+              className="form-input"
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="password">비밀번호</label>
             <div className="password-input-container">
@@ -118,10 +101,10 @@ const Login = ({ onLogin }) => {
               </button>
             </div>
           </div>
-          
-          
-          <button 
-            type="submit" 
+
+
+          <button
+            type="submit"
             className="login-button"
             onClick={handleSubmit}
           >
@@ -129,7 +112,7 @@ const Login = ({ onLogin }) => {
           </button>
         </div>
       </div>
-      
+
       {/* 에러 메시지 모달 */}
       <MessageModal
         isOpen={showMessageModal}

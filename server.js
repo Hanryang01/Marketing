@@ -6,6 +6,47 @@ const { PDFDocument } = require('pdf-lib');
 const fontkit = require('fontkit');
 require('dotenv').config();
 
+// ─── 인증 토큰 저장소 (tokenStore 모듈) ───
+const { generateToken, saveToken, deleteToken, verifyToken, TOKEN_TTL_MS } = require('./utils/tokenStore');
+
+// 인증 불필요 경로 목록
+const AUTH_BYPASS_PATHS = [
+  '/api/auth/login',
+  '/api/test',
+  '/api/test-font',
+  '/api/timezone-test',
+  '/health',
+];
+
+// API 인증 미들웨어
+const requireAuth = (req, res, next) => {
+  // 인증 제외 경로
+  if (AUTH_BYPASS_PATHS.includes(req.path)) return next();
+  // API 경로가 아니면 통과 (정적 파일, SPA fallback)
+  if (!req.path.startsWith('/api/')) return next();
+
+  console.log(`[AUTH DEBUG] ${req.method} ${req.path}`);
+  console.log(`[AUTH DEBUG] Headers:`, JSON.stringify(req.headers));
+
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log(`[AUTH DEBUG] No valid auth header found. Blocking.`);
+    return res.status(401).json({ success: false, error: '인증이 필요합니다.' });
+  }
+
+  const token = authHeader.slice(7);
+  const tokenData = verifyToken(token);
+
+  if (!tokenData) {
+    console.log(`[AUTH DEBUG] Invalid or expired token. Blocking.`);
+    return res.status(401).json({ success: false, error: '유효하지 않거나 만료된 토큰입니다. 다시 로그인해 주세요.' });
+  }
+
+  console.log(`[AUTH DEBUG] Token valid for user ${tokenData.user.username}`);
+  req.user = tokenData.user;
+  next();
+};
+
 // 알림 관련 모듈들
 const notificationRoutes = require('./routes/notifications');
 const NotificationService = require('./services/notificationService');
@@ -53,7 +94,7 @@ const { withDatabase, handleApiError } = require('./utils/helpers');
 const DateUtils = require('./utils/dateUtils');
 
 // Middleware
-app.use(express.json({ 
+app.use(express.json({
   limit: '10mb',
   strict: false,
   type: 'application/json',
@@ -73,9 +114,9 @@ app.use((error, req, res, next) => {
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
     console.error('JSON 파싱 오류:', error.message);
     console.error('요청 본문:', req.body);
-    return res.status(400).json({ 
-      error: '잘못된 JSON 형식입니다.', 
-      details: error.message 
+    return res.status(400).json({
+      error: '잘못된 JSON 형식입니다.',
+      details: error.message
     });
   }
   next();
@@ -94,17 +135,20 @@ app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', origin);
     }
   }
-  
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
+
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
     next();
   }
 });
+
+// ─── API 인증 미들웨어 등록 (모든 라우터보다 먼저) ───
+app.use(requireAuth);
 
 // 알림 라우트 연결
 app.use('/api/notifications', notificationRoutes);
@@ -119,15 +163,15 @@ app.use('/api/expenses', expenseRoutes);
 app.post('/api/generate-pdf', async (req, res) => {
   try {
     const { companyName, date, priceInfo, selectedPlan, companyType, usagePeriod } = req.body;
-    
-    
+
+
     // PDF 템플릿 로드
     const templatePath = path.join(__dirname, 'public', '견적서 템플릿.pdf');
     const templateBytes = fs.readFileSync(templatePath);
-    
+
     // PDF 문서 로드
     const pdfDoc = await PDFDocument.load(templateBytes);
-    
+
     // fontkit 등록 (한글 폰트 지원)
     try {
       pdfDoc.registerFontkit(fontkit);
@@ -135,11 +179,11 @@ app.post('/api/generate-pdf', async (req, res) => {
       console.error('fontkit 등록 실패:', fontkitError);
       throw new Error('fontkit 등록에 실패했습니다');
     }
-    
+
     // 한글 폰트 로드
     const fontPath = path.join(__dirname, 'public', 'fonts', 'NotoSansKR-Regular.ttf');
     let koreanFont;
-    
+
     try {
       if (fs.existsSync(fontPath)) {
         const fontBytes = fs.readFileSync(fontPath);
@@ -152,13 +196,13 @@ app.post('/api/generate-pdf', async (req, res) => {
       // 폴백: 기본 폰트 사용
       koreanFont = await pdfDoc.embedFont('Helvetica-Bold');
     }
-    
+
     // 페이지 정보 가져오기
     const pages = pdfDoc.getPages();
     const page = pages[0];
     const { width, height } = page.getSize();
-    
-    
+
+
     // 텍스트 덮어쓰기 좌표 정의
     const textPositions = {
       companyName: { x: 70, y: 580, size: 18 },
@@ -168,12 +212,12 @@ app.post('/api/generate-pdf', async (req, res) => {
       finalPrice1: { x: 138, y: 201, size: 13 },
       finalPrice2: { x: 308, y: 455, size: 18 }
     };
-    
+
     // 한국 시간으로 오늘 날짜 생성
     const now = new Date();
     const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
     const todayString = koreaTime.toISOString().split('T')[0];
-    
+
     const textData = {
       companyName: companyName || '고객',
       quoteDate: todayString,
@@ -183,15 +227,15 @@ app.post('/api/generate-pdf', async (req, res) => {
       finalPrice1: priceInfo?.finalPrice || 0,
       finalPrice2: priceInfo?.finalPrice || 0
     };
-    
-    
+
+
     Object.keys(textPositions).forEach(key => {
       const position = textPositions[key];
       const text = textData[key] || '';
-      
-      
+
+
       let displayText;
-      
+
       if (key === 'companyName') {
         displayText = textData.companyName || '고객';
       } else if (key === 'quoteDate') {
@@ -215,30 +259,30 @@ app.post('/api/generate-pdf', async (req, res) => {
       } else {
         displayText = text || '';
       }
-      
-      
+
+
       page.drawText(displayText, {
         x: position.x,
         y: position.y,
         size: position.size,
         font: koreanFont
       });
-      
+
     });
-    
-    
+
+
     const pdfBytes = await pdfDoc.save();
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="quote_${date || 'temp'}.pdf"`);
     res.send(pdfBytes);
-    
-    
+
+
   } catch (error) {
     console.error('PDF 생성 중 오류:', error);
-    res.status(500).json({ 
-      error: 'PDF 생성 실패', 
-      message: error.message 
+    res.status(500).json({
+      error: 'PDF 생성 실패',
+      message: error.message
     });
   }
 });
@@ -267,8 +311,8 @@ setHistoryPool(pool);
 
 // 헬스체크 엔드포인트
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -278,8 +322,8 @@ app.get('/health', (req, res) => {
 
 // API 테스트 엔드포인트
 app.get('/api/test', (req, res) => {
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'API is working',
     timestamp: new Date().toISOString()
   });
@@ -289,11 +333,11 @@ app.get('/api/test', (req, res) => {
 app.get('/api/test-font', async (req, res) => {
   try {
     const fontPath = path.join(__dirname, 'public', 'fonts', 'NotoSansKR-Regular.ttf');
-    
+
     // 파일 존재 확인
     const fileExists = fs.existsSync(fontPath);
     const fileStats = fileExists ? fs.statSync(fontPath) : null;
-    
+
     res.json({
       success: true,
       fontPath: fontPath,
@@ -337,7 +381,7 @@ app.get('/api/admin/check-notifications', async (req, res) => {
       message: result.message,
       count: result.count || 0,
       timestamp: new Date().toISOString(),
-      koreaTime: new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"})
+      koreaTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })
     });
   } catch (error) {
     handleApiError(res, error, '알림 생성 실패');
@@ -353,7 +397,7 @@ app.post('/api/create-notifications', async (req, res) => {
       message: result.message,
       count: result.count || 0,
       timestamp: new Date().toISOString(),
-      koreaTime: new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"})
+      koreaTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })
     });
   } catch (error) {
     handleApiError(res, error, '수동 알림 생성 실패');
@@ -366,13 +410,13 @@ app.post('/api/create-notifications', async (req, res) => {
 // 시간대 테스트 API
 app.get('/api/timezone-test', (req, res) => {
   const now = new Date();
-  const koreaTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-  
+  const koreaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+
   res.json({
     success: true,
     utc: now.toISOString(),
     korea: koreaTime.toISOString(),
-    koreaString: koreaTime.toLocaleString("ko-KR", {timeZone: "Asia/Seoul"}),
+    koreaString: koreaTime.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }),
     todayString: DateUtils.getTodayString()
   });
 });
@@ -409,8 +453,8 @@ app.use('/', historyRouter);
 // SPA fallback 라우팅 - 모든 React Router 경로를 index.html로 리다이렉트
 app.use((req, res, next) => {
   // API 경로가 아닌 경우에만 SPA fallback 적용
-  if (!req.path.startsWith('/api/') && !req.path.startsWith('/health') && 
-      !req.path.startsWith('/favicon.ico') && !req.path.startsWith('/manifest.json')) {
+  if (!req.path.startsWith('/api/') && !req.path.startsWith('/health') &&
+    !req.path.startsWith('/favicon.ico') && !req.path.startsWith('/manifest.json')) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   } else {
     next();
@@ -447,49 +491,49 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
   // 중복 실행 방지를 위한 상태 (함수 내부 변수)
   let isProcessingExpiredApprovals = false;
   let lastProcessTime = 0;
-  
+
   const now = Date.now();
   if (isProcessingExpiredApprovals || (now - lastProcessTime) < 10000) {
     console.log('⏭️ 자동 만료 체크가 이미 진행 중이거나 최근에 실행되었습니다.');
     return 0;
   }
-  
+
   isProcessingExpiredApprovals = true;
   lastProcessTime = now;
-  
+
   const conn = connection || await pool.getConnection();
   let totalUpdatedCount = 0;
   let processingErrors = []; // 에러 정보를 수집할 배열
-  
+
   try {
     const today = new Date();
     const todayString = DateUtils.getTodayString();
-    
+
     logger.info('자동 만료 체크 시작 (한국 시간):', { today, todayString });
-    
-    
-    
+
+
+
     const [updateResult] = await conn.execute(`
       UPDATE users 
       SET end_date = DATE_ADD(end_date, INTERVAL 9 HOUR)
       WHERE end_date IS NOT NULL 
       AND end_date < '2025-01-01'  -- 2025년 이전 데이터만 수정
     `);
-    
+
     if (updateResult.affectedRows > 0) {
       console.log(`🔄 UTC 종료일을 한국 시간으로 수정: ${updateResult.affectedRows}개`);
     }
-    
+
     const [noEmailResult] = await conn.execute(`
       UPDATE users 
       SET email = CONCAT('user_', user_id, '@example.com')
       WHERE email = 'no-email@example.com'
     `);
-    
+
     if (noEmailResult.affectedRows > 0) {
       console.log(`📧 no-email@example.com 처리: ${noEmailResult.affectedRows}개`);
     }
-    
+
     const [expiredUsers] = await conn.execute(`
       SELECT 
         id, user_id, company_name, user_name, company_type, pricing_plan,
@@ -500,7 +544,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
       AND end_date IS NOT NULL 
       AND DATE(end_date) < ?
     `, [todayString]);
-    
+
     if (expiredUsers.length > 0) {
       for (const user of expiredUsers) {
         try {
@@ -512,7 +556,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
             const timeDiff = endDate.getTime() - startDate.getTime();
             activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
           }
-          
+
           await conn.execute(`
             INSERT INTO company_history (
               user_id_string, company_name, user_name, company_type, status_type,
@@ -545,7 +589,7 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
           });
         }
       }
-      
+
       try {
         const [updateResult] = await conn.execute(`
           UPDATE users 
@@ -575,19 +619,19 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
     } else {
       logger.info('만료된 승인 완료 상태가 없습니다.');
     }
-    
+
     console.log(`🔢 총 변경된 사용자 수: ${totalUpdatedCount}`);
-    
+
     if (processingErrors.length > 0) {
       console.log(`⚠️ 처리 중 ${processingErrors.length}개의 에러 발생`);
-      
+
       for (const errorInfo of processingErrors) {
         await logError(conn, errorInfo);
       }
     }
-    
+
     return totalUpdatedCount;
-    
+
   } catch (err) {
     console.error('❌ 만료 처리 전체 실패:', err);
     const errorInfo = {
@@ -614,19 +658,19 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
 // 서버 초기화 및 시작
 const startServer = async () => {
   try {
-    
+
     app.listen(config.server.port, () => {
       console.log(`🚀 Server running on port ${config.server.port}`);
       console.log(`📊 MySQL Database: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
-      
+      console.log(`🔧 Environment: DEVELOPMENT (sihm_local)`);
+
       // 서버 시작 시 누락된 처리 복구 - cron job으로 대체됨
       // recoverMissedProcessing();
-      
+
       console.log('✅ 서버가 준비되었습니다.');
       console.log('⏰ 알림 시스템: Cron Job으로 관리됩니다.');
     });
-    
+
   } catch (error) {
     console.error('❌ 서버 시작 실패:', error.message);
     console.error('❌ 오류 상세:', error);

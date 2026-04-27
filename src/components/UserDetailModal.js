@@ -6,10 +6,10 @@ import DatePicker from './DatePicker';
 import DetailModeView from './UserDetailModal/DetailModeView';
 import UserRevenueModal from './UserRevenueModal';
 
-const UserDetailModal = ({ 
-  isOpen, 
-  user, 
-  onClose, 
+const UserDetailModal = ({
+  isOpen,
+  user,
+  onClose,
   onSave,
   isEditable = true,
   showFooter = true,
@@ -19,7 +19,7 @@ const UserDetailModal = ({
   const [editedUser, setEditedUser] = useState(null);
   const prevUserRef = React.useRef(null);
   const [showRevenueModal, setShowRevenueModal] = useState(false);
-  
+
   // useCalendar 훅 사용
   const {
     showStartDatePicker,
@@ -53,23 +53,23 @@ const UserDetailModal = ({
   // 필드 값 처리 유틸리티 함수
   const getFieldValue = (fieldName) => {
     const editedValue = editedUser?.[fieldName];
-    
+
     // editedUser에 값이 있으면 그것을 사용 (null도 포함)
     if (editedValue !== undefined) {
       return editedValue || '';
     }
-    
+
     // user 객체에서 다양한 필드명으로 시도
     // 1. 원본 필드명
     // 2. 소문자 변환
     // 3. camelCase를 snake_case로 변환
     // 4. snake_case를 camelCase로 변환
-    const userValue = user?.[fieldName] || 
-                     user?.[fieldName.toLowerCase()] || 
-                     user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase()] ||
-                     user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')] ||
-                     user?.[fieldName.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())];
-    
+    const userValue = user?.[fieldName] ||
+      user?.[fieldName.toLowerCase()] ||
+      user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase()] ||
+      user?.[fieldName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')] ||
+      user?.[fieldName.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())];
+
     // user 값 사용 (null, undefined 모두 빈 문자열로 변환)
     return userValue || '';
   };
@@ -84,7 +84,7 @@ const UserDetailModal = ({
 
   // 모달이 열릴 때마다 사용자 데이터 복사
   React.useEffect(() => {
-    
+
     // 모달이 열릴 때마다 editedUser 초기화 (취소 후 재진입 시에도 원본 데이터로 복원)
     if (isOpen && user && user.id) {
       // editedUser에 모든 필드를 포함하여 설정
@@ -113,6 +113,7 @@ const UserDetailModal = ({
         companyName: user?.companyName || user?.company_name || '',
         companyType: user?.companyType || user?.company_type || '무료 사용자',
         pricingPlan: user?.pricingPlan || user?.pricing_plan || '무료',
+        subscriptionType: user?.subscriptionType || user?.subscription_type || null,
         approvalStatus: user?.approvalStatus || user?.approval_status || '승인 예정',
         isActive: user?.isActive ?? user?.is_active ?? 1,
         position: user?.position || user?.manager_position || '',
@@ -120,7 +121,7 @@ const UserDetailModal = ({
         aiImageLimit: user?.aiImageLimit || user?.ai_image_limit || 0,
         aiReportLimit: user?.aiReportLimit || user?.ai_report_limit || 0
       };
-      
+
       setEditedUser(userWithAdditionalFields);
       prevUserRef.current = user;
     }
@@ -130,10 +131,10 @@ const UserDetailModal = ({
 
   // 입력 필드 변경 처리
   const handleInputChange = (field, value) => {
-        if (!editedUser) {
+    if (!editedUser) {
       return;
     }
-    
+
     // 사업자등록번호 특별 처리
     if (field === 'businessLicense') {
       const processedValue = handleBusinessLicenseInput(value);
@@ -143,7 +144,7 @@ const UserDetailModal = ({
       }));
       return;
     }
-    
+
     if (field === 'companyType') {
       setEditedUser(prev => {
         const updatedUser = {
@@ -151,17 +152,18 @@ const UserDetailModal = ({
           [field]: value
         };
 
-        // 일반 업체, 컨설팅 업체, 또는 탈퇴 사용자에서 무료 사용자로 변경하는 경우
-        if (value === '무료 사용자' && (prev.companyType === '일반 업체' || prev.companyType === '컨설팅 업체' || prev.companyType === '탈퇴 사용자')) {
-                    updatedUser.pricingPlan = '무료';
+        // 무료 사용자로 변경하는 경우 (기존 데이터와 관계없이 강제 초기화)
+        if (value === '무료 사용자') {
+          updatedUser.pricingPlan = '무료';
           updatedUser.startDate = '';
           updatedUser.endDate = '';
+          updatedUser.subscriptionType = '';
           updatedUser.approvalStatus = '승인 예정';
         }
 
         // 탈퇴 사용자로 변경하는 경우
         if (value === '탈퇴 사용자') {
-                    updatedUser.pricingPlan = '무료';
+          updatedUser.pricingPlan = '무료';
           updatedUser.startDate = '';
           updatedUser.endDate = '';
           // 승인 상태는 변경하지 않음 (사용자가 직접 설정할 수 있도록)
@@ -171,14 +173,14 @@ const UserDetailModal = ({
       });
       return;
     }
-      
+
     // 날짜 필드 특별 처리 (useCalendar 훅 사용)
     if (field === 'startDate' || field === 'endDate') {
       handleDateInputChange(field, value, setEditedUser);
       return;
     }
-      
-      
+
+
     // 일반 필드 처리 - 빈 문자열도 허용
     const cleanValue = value === undefined || value === null ? '' : value.toString();
     setEditedUser(prev => ({
@@ -191,40 +193,46 @@ const UserDetailModal = ({
   // 저장 처리
   const handleSave = async () => {
     if (onSave && editedUser) {
-      
+
       // 탈퇴 사용자 일관성 검증
       if (editedUser.companyType === '탈퇴 사용자' && editedUser.approvalStatus !== '탈퇴') {
         showMessage('error', '일관성 오류', '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.', '확인', false);
         return;
       }
-      
+
       if (editedUser.approvalStatus === '탈퇴' && editedUser.companyType !== '탈퇴 사용자') {
         showMessage('error', '일관성 오류', '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.', '확인', false);
         return;
       }
-      
+
+      // 유료 업체(컨설팅/일반)의 승인 예정 상태 저장을 방지
+      if ((editedUser.companyType === '컨설팅 업체' || editedUser.companyType === '일반 업체') && editedUser.approvalStatus === '승인 예정') {
+        showMessage('error', '일관성 오류', '유료 업체(컨설팅/일반)는 승인 예정 상태로 저장할 수 없습니다. 무료 사용자로 변경하거나 승인 완료해 주세요.', '확인', false);
+        return;
+      }
+
       // 사업자등록번호 유효성 검사
       if (editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
         showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', '확인', false);
         return;
       }
-      
+
       // userId 필드 검증 및 수정
       const userId = editedUser?.userId || user?.userId || '';
-      
+
       if (!userId || userId.trim() === '') {
         alert('사용자 ID가 없습니다. 페이지를 새로고침해주세요.');
         return;
       }
-      
+
       // 승인 상태 변경 감지 (백엔드에서 처리)
       const isApprovalStatusChanged = user?.approvalStatus !== editedUser?.approvalStatus;
       const isChangedToApproved = editedUser?.approvalStatus === '승인 완료';
-      
+
       if (isApprovalStatusChanged && isChangedToApproved) {
         console.log('승인 상태가 승인 완료로 변경됨 - 백엔드에서 이력 생성 처리');
       }
-      
+
       // 서버가 기대하는 snake_case 필드명으로 변환
       const serverData = {
         id: editedUser.id,
@@ -244,6 +252,7 @@ const UserDetailModal = ({
         approval_status: editedUser.approvalStatus,
         is_active: editedUser.isActive,
         pricing_plan: editedUser.pricingPlan,
+        subscription_type: editedUser.subscriptionType,
         start_date: editedUser.startDate,
         end_date: editedUser.endDate,
         manager_position: editedUser.position || '',
@@ -257,14 +266,14 @@ const UserDetailModal = ({
         ai_image_limit: editedUser.aiImageLimit,
         ai_report_limit: editedUser.aiReportLimit
       };
-      
+
       await onSave(serverData);
-      
+
       // 승인 상태 변경 시 특별 메시지 표시
       if (isApprovalStatusChanged && isChangedToApproved) {
         showMessage('success', '승인 완료', '사용자 승인이 완료되었습니다. 이력이 자동으로 생성되었습니다.', '확인', false);
       }
-      
+
       // 사용자 정보 저장 후 승인 이력 새로고침
       window.dispatchEvent(new CustomEvent('userUpdated'));
     }
@@ -275,10 +284,29 @@ const UserDetailModal = ({
   // 달력에서 날짜 선택 (YYYY-MM-DD 형식으로 통일)
   const handleUserDateSelect = (field, value) => {
     // 달력에서 선택한 날짜는 YYYY-MM-DD 형식으로 직접 저장
-    setEditedUser(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditedUser(prev => {
+      const updated = { ...prev, [field]: value };
+
+      /* 시작일이 변경되고 구독기간이 월간/연간이면 종료일 자동 계산 - 사용자 요청으로 제거
+      if (field === 'startDate' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        if (prev.subscriptionType === '월간' || prev.subscriptionType === '연간') {
+          const [year, month, day] = value.split('-').map(Number);
+          let endDate;
+          if (prev.subscriptionType === '월간') {
+            endDate = new Date(year, month, day);
+          } else {
+            endDate = new Date(year + 1, month - 1, day);
+          }
+          const endYear = endDate.getFullYear();
+          const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+          const endDay = String(endDate.getDate()).padStart(2, '0');
+          updated.endDate = `${endYear}-${endMonth}-${endDay}`;
+        }
+      }
+      */
+
+      return updated;
+    });
   };
 
   // 사용자 이력 조회 (현재 사용되지 않음 - 향후 필요시 구현)
@@ -305,7 +333,7 @@ const UserDetailModal = ({
 
   // 메시지 팝업창 취소 버튼 클릭 처리
   const handleMessageCancel = () => {
-        setShowMessageModal(false);
+    setShowMessageModal(false);
   };
 
   // 모달이 열려있지 않으면 렌더링하지 않음
@@ -318,7 +346,7 @@ const UserDetailModal = ({
           <h2>사용자 상세 정보</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        
+
         <div className="modal-body">
           <DetailModeView
             editedUser={editedUser}
@@ -336,13 +364,13 @@ const UserDetailModal = ({
             activeTab={activeTab}
           />
         </div>
-        
+
         {/* 푸터 (선택적) */}
         {showFooter && (
           <div className="modal-footer">
             <div className="button-group">
-              <button 
-                className="add-revenue-button" 
+              <button
+                className="add-revenue-button"
                 onClick={() => setShowRevenueModal(true)}
                 title="매출 내역 조회"
               >
@@ -408,10 +436,10 @@ const UserDetailModal = ({
 
       {/* 통일된 메시지 팝업창 */}
       {showMessageModal && (
-        <div 
+        <div
           className="message-modal-overlay"
         >
-          <div 
+          <div
             className="message-modal"
             onClick={(e) => e.stopPropagation()}
           >
@@ -425,14 +453,14 @@ const UserDetailModal = ({
             <div className="message-content">{messageData.content}</div>
             <div className="message-buttons">
               {messageData.showCancel && (
-                <button 
+                <button
                   className="message-button cancel"
                   onClick={handleMessageCancel}
                 >
                   {messageData.cancelText}
                 </button>
               )}
-              <button 
+              <button
                 className={`message-button ${messageData.type === 'error' ? 'delete' : 'confirm'}`}
                 onClick={handleMessageConfirm}
               >

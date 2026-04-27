@@ -7,45 +7,59 @@ export const API_ENDPOINTS = {
   USERS: `${API_BASE_URL}/api/users`,
   USER_DETAIL: (id) => `${API_BASE_URL}/api/users/${id}`,
   USER_APPROVAL_HISTORY: (userId) => `${API_BASE_URL}/api/user-approval-history/${userId}`,
-  
+
   // 승인 이력 관련
   COMPANY_HISTORY: `${API_BASE_URL}/api/company-history`,
   COMPANY_HISTORY_LIST: `${API_BASE_URL}/api/company-history-list`,
   HISTORY_USER: (userId) => `${API_BASE_URL}/api/history/user/${userId}`,
   HISTORY_USER_DETAIL: `${API_BASE_URL}/api/history/user/detail`,
   HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/user/${id}`,
-  
+
   // 매출 관련
   REVENUE: `${API_BASE_URL}/api/revenue`,
   REVENUE_DETAIL: (id) => `${API_BASE_URL}/api/revenue/${id}`,
-  
+
   // 대시보드 관련
   DASHBOARD_STATS: `${API_BASE_URL}/api/dashboard/stats`,
   DASHBOARD_ACTIVE_COMPANIES: `${API_BASE_URL}/api/dashboard/active-companies`,
-  
+
   // 기타
   END_DATE_CHECK: `${API_BASE_URL}/api/users/end-date-check`,
-  
+
   // 알림 관련 (서버 기반)
   NOTIFICATIONS: `${API_BASE_URL}/api/notifications`,
   NOTIFICATION_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
   NOTIFICATION_DELETE: (id) => `${API_BASE_URL}/api/notifications/${id}`,
   CREATE_NOTIFICATIONS: `${API_BASE_URL}/api/create-notifications`,
-  
+
   // 세금계산서 알림 설정 관련
   TAX_INVOICE_SETTINGS: `${API_BASE_URL}/api/tax-invoice-settings`,
-  
+
   // 지출 관련
   EXPENSES: `${API_BASE_URL}/api/expenses`,
   EXPENSE_DETAIL: (id) => `${API_BASE_URL}/api/expenses/${id}`,
 };
 
+// localStorage에서 인증 토큰 가져오기
+const getAuthToken = () => {
+  try {
+    const authData = localStorage.getItem('marketing_auth');
+    if (authData) {
+      const { sessionToken } = JSON.parse(authData);
+      return sessionToken || null;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
 // API 호출 헬퍼 함수
 export const apiCall = async (url, options = {}) => {
-  
+
   // API_BASE_URL에서 공백 제거
   const cleanApiBaseUrl = API_BASE_URL.trim();
-  
+
   let fullUrl;
   if (url.startsWith('http')) {
     fullUrl = url;
@@ -57,21 +71,39 @@ export const apiCall = async (url, options = {}) => {
     // /api/로 시작하지 않는 경우 추가
     fullUrl = `${cleanApiBaseUrl}/api${url}`;
   }
-  
+
+  // 인증 토큰 헤더 자동 추가
+  const token = getAuthToken();
+  const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...authHeaders,
+      ...(options.headers || {}),
     },
   };
-  
+
+  // options.headers는 이미 defaultOptions.headers에 병합되었으므로
+  // 옵션을 병합할 때 headers 속성은 제외하거나 defaultOptions.headers를 유지하도록 합니다.
+  const finalOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: defaultOptions.headers
+  };
+
   try {
-    const response = await fetch(fullUrl, { ...defaultOptions, ...options });
-    
+    const response = await fetch(fullUrl, finalOptions);
+
+    // 401: 인증 실패 - 에러를 throw하고 호출한 곳에서 처리
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {

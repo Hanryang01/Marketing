@@ -23,19 +23,19 @@ import { apiCall, API_ENDPOINTS } from '../config/api';
 const UserManagement = () => {
   // 커스텀 훅들 사용
   const { users, loading, companyHistory, fetchCompanyHistory, loadUsers } = useUserData();
-  const { 
-    searchFilters, 
-    activeTab, 
-    handleFilterChange, 
-    handleTabChange, 
-    getFilteredUsers 
+  const {
+    searchFilters,
+    activeTab,
+    handleFilterChange,
+    handleTabChange,
+    getFilteredUsers
   } = useUserFilters(users);
-  
+
   // 메시지 관련 로직을 useMessage 훅으로 분리
   const messageProps = useMessage();
   const { showMessage } = messageProps;
   const showMessageRef = useRef(showMessage);
-  
+
   // showMessage 함수가 변경될 때마다 ref 업데이트
   React.useEffect(() => {
     showMessageRef.current = showMessage;
@@ -55,13 +55,13 @@ const UserManagement = () => {
 
     window.addEventListener('historyDeleted', handleHistoryDeleted);
     window.addEventListener('userUpdated', handleUserUpdated);
-    
+
     return () => {
       window.removeEventListener('historyDeleted', handleHistoryDeleted);
       window.removeEventListener('userUpdated', handleUserUpdated);
     };
   }, [fetchCompanyHistory]);
-  
+
   // 사용자 추가 함수 (백업 파일에서 복원)
   const handleAddUser = async (userData) => {
     try {
@@ -73,7 +73,7 @@ const UserManagement = () => {
         });
         return;
       }
-      
+
       // 프론트엔드 필드명을 서버 필드명으로 변환
       const serverData = {
         user_id: userData.userId,
@@ -112,16 +112,16 @@ const UserManagement = () => {
         },
         body: JSON.stringify(serverData)
       });
-      
+
       if (result && result.success) {
         // 사용자 목록 새로고침
         await loadUsers();
-        
+
         showMessage('success', '성공', '사용자가 성공적으로 추가되었습니다.', {
           showCancel: false,
           confirmText: '확인'
         });
-        
+
         handleCloseAddUserModal();
       } else {
         showMessage('error', '오류', result.error || '사용자 추가에 실패했습니다.', {
@@ -129,12 +129,12 @@ const UserManagement = () => {
           confirmText: '확인'
         });
       }
-     } catch (error) {
+    } catch (error) {
       showMessage('error', '오류', '사용자 추가 중 오류가 발생했습니다.', {
-         showCancel: false,
-         confirmText: '확인'
-       });
-     }
+        showCancel: false,
+        confirmText: '확인'
+      });
+    }
   };
   const {
     showAddUserModal,
@@ -151,11 +151,11 @@ const UserManagement = () => {
     handleCloseRevenueModal,
     handleDoubleClick
   } = useUserModals();
-  
+
   // 날짜 처리 관련 로직을 useCalendar 훅으로 분리
   const calendarProps = useCalendar();
   const { formatDate } = calendarProps;
-  
+
 
 
   // 사용자 상세 저장 (백업 파일에서 복원)
@@ -169,23 +169,23 @@ const UserManagement = () => {
         });
         return;
       }
-      
+
       // 승인 탭에서 수정하는 경우, 실제 사용자 ID를 찾아서 사용
       let actualUserId = userData.id;
-      
+
       if (activeTab === '승인' && selectedUser) {
         // 승인 이력에서 실제 사용자 ID 찾기
-        const historyItem = companyHistory.find(history => 
-          history.user_id_string === selectedUser.userId && 
+        const historyItem = companyHistory.find(history =>
+          history.user_id_string === selectedUser.userId &&
           history.company_name === selectedUser.companyName
         );
-        
+
         if (historyItem && historyItem.user_id) {
           actualUserId = historyItem.user_id;
         } else {
           // 승인 이력에서 찾을 수 없는 경우, users 배열에서 찾기
-          const actualUser = users.find(user => 
-            user.userId === selectedUser.userId && 
+          const actualUser = users.find(user =>
+            user.userId === selectedUser.userId &&
             user.companyName === selectedUser.companyName
           );
           if (actualUser) {
@@ -193,16 +193,16 @@ const UserManagement = () => {
           }
         }
       }
-      
+
       const result = await apiCall(API_ENDPOINTS.USER_DETAIL(actualUserId), {
         method: 'PUT',
         body: JSON.stringify(userData)
       });
-      
+
       if (result.message) {
         // 사용자 목록 새로고침
         await loadUsers();
-        
+
         showMessage('success', '성공', '사용자 정보가 성공적으로 저장되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -235,7 +235,7 @@ const UserManagement = () => {
           const result = await apiCall(API_ENDPOINTS.HISTORY_DELETE(historyId), {
             method: 'DELETE'
           });
-          
+
           if (result.success) {
             // 승인 이력 데이터 새로고침
             fetchCompanyHistory();
@@ -274,11 +274,11 @@ const UserManagement = () => {
       const result = await apiCall(API_ENDPOINTS.USER_DETAIL(user.id), {
         method: 'DELETE'
       });
-      
+
       if (result.success) {
         // 사용자 목록 새로고침
         await loadUsers();
-        
+
         showMessage('success', '성공', '사용자가 성공적으로 삭제되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -307,7 +307,7 @@ const UserManagement = () => {
       });
       return;
     }
-    
+
     // 필수 필드 검증
     if (!revenueData.companyName || !revenueData.businessLicense || !revenueData.issueDate || !revenueData.paymentMethod || !revenueData.companyType || !revenueData.item || !revenueData.supplyAmount) {
       messageProps.showMessage('error', '오류', '필수 항목을 모두 입력해주세요.', {
@@ -321,7 +321,7 @@ const UserManagement = () => {
       // 날짜 형식 변환 (8자리 숫자를 DATE 형식으로 변환)
       let formattedIssueDate = revenueData.issueDate || null;
       let formattedPaymentDate = revenueData.paymentDate || null;
-      
+
       // 콤마 제거하고 숫자로 변환하여 서버 데이터 구성
       const serverData = {
         company_name: revenueData.companyName,
@@ -340,11 +340,11 @@ const UserManagement = () => {
         method: 'POST',
         body: JSON.stringify(serverData)
       });
-      
+
       if (result.success) {
         // 사용자 목록 새로고침
         await loadUsers();
-        
+
         messageProps.showMessage('success', '성공', '매출이 성공적으로 등록되었습니다.', {
           showCancel: false,
           confirmText: '확인'
@@ -371,60 +371,60 @@ const UserManagement = () => {
   return (
     <div className="user-management">
       {/* 탭 네비게이션 */}
-        <div className="user-tabs">
-          <div className="user-tabs-left">
-            <button 
-              className={`tab-button ${activeTab === '전체' ? 'active' : ''}`}
-              onClick={() => handleTabChange('전체')}
-            >
-              👥 전체 ({users.length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '구독중' ? 'active' : ''}`}
-              onClick={() => handleTabChange('구독중')}
-            >
-              🏢 구독중 ({users.filter(user => 
-                (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
-                (user.companyType === '일반 업체' && isUserActive({
-                  approvalStatus: user.approvalStatus,
-                  companyType: user.companyType,
-                  pricingPlan: user.pricingPlan,
-                  startDate: user.startDate,
-                  endDate: user.endDate
-                }))
-              ).length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '무료' ? 'active' : ''}`}
-              onClick={() => handleTabChange('무료')}
-            >
-              💰 무료 ({users.filter(user => 
-                // 업체 형태와 상관없이 승인 예정 상태인 모든 사용자
-                user.approvalStatus === '승인 예정'
-              ).length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '탈퇴' ? 'active' : ''}`}
-              onClick={() => handleTabChange('탈퇴')}
-            >
-              🚪 탈퇴 ({users.filter(user => user.approvalStatus === '탈퇴' && user.companyType === '탈퇴 사용자').length}명)
-            </button>
-            <button 
-              className={`tab-button ${activeTab === '승인' ? 'active' : ''}`}
-              onClick={() => handleTabChange('승인')}
-            >
-              📋 승인 이력 ({Array.isArray(companyHistory) ? companyHistory.length : 0}건)
-            </button>
-          </div>
-          <div className="user-tabs-right">
-            <button 
-              className="add-user-button"
-              onClick={handleOpenAddUserModal}
-            >
-              사용자 추가
-            </button>
-          </div>
+      <div className="user-tabs">
+        <div className="user-tabs-left">
+          <button
+            className={`tab-button ${activeTab === '전체' ? 'active' : ''}`}
+            onClick={() => handleTabChange('전체')}
+          >
+            👥 전체 ({users.length}명)
+          </button>
+          <button
+            className={`tab-button ${activeTab === '구독중' ? 'active' : ''}`}
+            onClick={() => handleTabChange('구독중')}
+          >
+            🏢 구독중 ({users.filter(user =>
+              (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
+              (user.companyType === '일반 업체' && isUserActive({
+                approvalStatus: user.approvalStatus,
+                companyType: user.companyType,
+                pricingPlan: user.pricingPlan,
+                startDate: user.startDate,
+                endDate: user.endDate
+              }))
+            ).length}명)
+          </button>
+          <button
+            className={`tab-button ${activeTab === '무료' ? 'active' : ''}`}
+            onClick={() => handleTabChange('무료')}
+          >
+            💰 무료 ({users.filter(user =>
+              // 업체 형태와 상관없이 승인 예정 상태인 모든 사용자
+              user.approvalStatus === '승인 예정'
+            ).length}명)
+          </button>
+          <button
+            className={`tab-button ${activeTab === '탈퇴' ? 'active' : ''}`}
+            onClick={() => handleTabChange('탈퇴')}
+          >
+            🚪 탈퇴 ({users.filter(user => user.approvalStatus === '탈퇴' && user.companyType === '탈퇴 사용자').length}명)
+          </button>
+          <button
+            className={`tab-button ${activeTab === '승인' ? 'active' : ''}`}
+            onClick={() => handleTabChange('승인')}
+          >
+            📋 승인 이력 ({Array.isArray(companyHistory) ? companyHistory.length : 0}건)
+          </button>
         </div>
+        <div className="user-tabs-right">
+          <button
+            className="add-user-button"
+            onClick={handleOpenAddUserModal}
+          >
+            사용자 추가
+          </button>
+        </div>
+      </div>
 
       {/* 검색 필터 */}
       <div className="user-search-area">
@@ -496,11 +496,30 @@ const UserManagement = () => {
               <span className="user-dropdown-icon">▼</span>
             </div>
           </div>
+          {/* 전체 탭, 구독중 탭에서만 결제 주기 필터 표시 */}
+          {['전체', '구독중'].includes(activeTab) && (
+            <div className="user-search-group">
+              <label className="user-search-label">결제 주기</label>
+              <div className="user-dropdown-wrapper">
+                <select
+                  className="user-search-dropdown"
+                  value={searchFilters.subscriptionType}
+                  onChange={(e) => handleFilterChange('subscriptionType', e.target.value)}
+                >
+                  <option value="">전체</option>
+                  <option value="월간">월간</option>
+                  <option value="연간">연간</option>
+                  <option value="기타">기타</option>
+                </select>
+                <span className="user-dropdown-icon">▼</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* 사용자 테이블 */}
-      <UserTable 
+      <UserTable
         activeTab={activeTab}
         filteredUsers={getFilteredUsers}
         companyHistory={companyHistory}
@@ -524,34 +543,34 @@ const UserManagement = () => {
       />
 
       {/* 사용자 상세 모달 */}
-        <UserDetailModal
-          isOpen={showDetailModal}
+      <UserDetailModal
+        isOpen={showDetailModal}
         onClose={handleCloseDetailModal}
-          onSave={handleDetailSave}
-          user={selectedUser}
-          companyHistory={companyHistory}
+        onSave={handleDetailSave}
+        user={selectedUser}
+        companyHistory={companyHistory}
         activeTab={activeTab}
-        />
+      />
 
       {/* 매출 모달 */}
-       <RevenueModal
-         isOpen={showRevenueModal}
-         onClose={handleCloseRevenueModal}
-         onSave={handleRevenueSave}
-         mode="add"
-         initialData={revenueUser}
-         title="매출 입력"
-       />
+      <RevenueModal
+        isOpen={showRevenueModal}
+        onClose={handleCloseRevenueModal}
+        onSave={handleRevenueSave}
+        mode="add"
+        initialData={revenueUser}
+        title="매출 입력"
+      />
 
       {/* 메시지 모달 */}
-        <MessageModal
-          isOpen={messageProps.showMessageModal}
-          messageData={messageProps.messageData}
-          onConfirm={messageProps.handleMessageConfirm}
-          onCancel={messageProps.handleMessageCancel}
-        />
-      </div>
-    );
-  };
+      <MessageModal
+        isOpen={messageProps.showMessageModal}
+        messageData={messageProps.messageData}
+        onConfirm={messageProps.handleMessageConfirm}
+        onCancel={messageProps.handleMessageCancel}
+      />
+    </div>
+  );
+};
 
 export default UserManagement;

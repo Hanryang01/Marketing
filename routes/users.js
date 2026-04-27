@@ -1,5 +1,6 @@
 const express = require('express');
 const { DateUtils, QueryBuilder, handleApiError, Response } = require('../utils/helpers');
+const { generateToken, saveToken } = require('../utils/tokenStore');
 
 // handleError는 handleApiError의 별칭
 const handleError = handleApiError;
@@ -17,39 +18,26 @@ const setPool = (databasePool) => {
 router.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     let isValid = false;
     let user = null;
-    
-    if (isDevelopment) {
-      // 개발 버전: 기본 admin 계정 또는 빈 값 허용
-      if ((email === 'admin@example.com' && password === 'admin123') || 
-          (!email && !password)) {
-        isValid = true;
-        user = {
-          id: 1,
-          username: 'admin',
-          email: 'admin@example.com',
-          role: 'admin'
-        };
-      }
-    } else {
-      // 배포 버전: 하드코딩된 계정만 허용
-      if (email === 'technonia' && password === 'nonia8123') {
-        isValid = true;
-        user = {
-          id: 1,
-          username: 'technonia',
-          email: 'technonia@admin.com',
-          role: 'admin'
-        };
-      }
+
+    // 허용된 계정 목록 (개발/배포 공통)
+    const accounts = [
+      { id: 1, username: 'herlab', email: 'herlab@marketing.com', password: 'herlab', role: 'admin' },
+      { id: 2, username: 'technonia', email: 'technonia@marketing.com', password: 'nonia8123', role: 'admin' },
+    ];
+
+    const matched = accounts.find(a => a.username === email && a.password === password);
+    if (matched) {
+      isValid = true;
+      user = { id: matched.id, username: matched.username, email: matched.email, role: matched.role };
     }
-    
+
     if (isValid) {
-      const sessionToken = `admin-session-${Date.now()}`;
-      
+      const sessionToken = generateToken();
+      saveToken(sessionToken, user);
+
       res.json({
         success: true,
         user,
@@ -75,16 +63,16 @@ router.get('/api/users', async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
-    
+
     // 데이터베이스 연결 정보 확인
     const [dbInfo] = await connection.execute('SELECT DATABASE() as current_db');
     console.log('현재 연결된 데이터베이스:', dbInfo[0].current_db);
-    
+
     const [rows] = await connection.execute(`
       SELECT 
         u.id, u.company_name, u.user_id, u.email, u.user_name, u.department,
         u.mobile_phone, u.phone_number, u.fax_number, u.address, u.business_license,
-        u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan,
+        u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan, u.subscription_type,
         DATE_FORMAT(u.start_date, '%Y-%m-%d') as start_date,
         DATE_FORMAT(u.end_date, '%Y-%m-%d') as end_date,
         DATE_FORMAT(u.registration_date, '%Y-%m-%d') as registration_date,
@@ -95,10 +83,10 @@ router.get('/api/users', async (req, res) => {
       FROM users u
       ORDER BY u.id DESC
     `);
-    
+
     console.log('조회된 사용자 수:', rows.length);
     console.log('첫 번째 사용자 ID:', rows[0]?.id);
-    
+
     // 날짜는 이미 YYYY-MM-DD 형식으로 저장되어 있으므로 변환 불필요
     const formattedRows = rows.map(user => ({
       ...user,
@@ -108,7 +96,7 @@ router.get('/api/users', async (req, res) => {
       created_at: user.created_at,
       updated_at: user.updated_at
     }));
-    
+
     res.json({
       success: true,
       data: formattedRows
@@ -129,14 +117,14 @@ router.get('/api/users/end-date-check', async (req, res) => {
     connection = await pool.getConnection();
     const today = new Date();
     const todayString = DateUtils.getTodayString();
-    
+
     const twoWeeksLater = new Date();
     twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
-    const twoWeeksLaterString = twoWeeksLater.getFullYear() + '-' + 
-      String(twoWeeksLater.getMonth() + 1).padStart(2, '0') + '-' + 
+    const twoWeeksLaterString = twoWeeksLater.getFullYear() + '-' +
+      String(twoWeeksLater.getMonth() + 1).padStart(2, '0') + '-' +
       String(twoWeeksLater.getDate()).padStart(2, '0');
-    
-    
+
+
     // 오늘 종료일인 사용자들 (한국 시간 기준)
     const [todayEndUsers] = await connection.execute(`
       SELECT id, company_name, user_id, end_date
@@ -146,7 +134,7 @@ router.get('/api/users/end-date-check', async (req, res) => {
       AND end_date IS NOT NULL
       AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
     `, [todayString]);
-    
+
     // 14일 후 종료일인 사용자들 (한국 시간 기준)
     const [twoWeekEndUsers] = await connection.execute(`
       SELECT id, company_name, user_id, end_date
@@ -156,8 +144,8 @@ router.get('/api/users/end-date-check', async (req, res) => {
       AND end_date IS NOT NULL
       AND DATE_FORMAT(CONVERT_TZ(end_date, '+00:00', '+09:00'), '%Y-%m-%d') = ?
     `, [twoWeeksLaterString]);
-    
-    
+
+
     res.json({
       success: true,
       data: {
@@ -182,15 +170,15 @@ router.get('/api/users/end-date-check', async (req, res) => {
 router.get('/api/users/:id', async (req, res) => {
   const userId = req.params.id;
   let connection;
-  
+
   try {
     connection = await pool.getConnection();
-    
+
     const [rows] = await connection.execute(`
       SELECT 
         u.id, u.company_name, u.user_id, u.email, u.user_name, u.department,
         u.mobile_phone, u.phone_number, u.fax_number, u.address, u.business_license,
-        u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan,
+        u.notes, u.account_info, u.company_type, u.approval_status, u.is_active, u.pricing_plan, u.subscription_type,
         DATE_FORMAT(u.start_date, '%Y-%m-%d') as start_date,
         DATE_FORMAT(u.end_date, '%Y-%m-%d') as end_date,
         DATE_FORMAT(u.registration_date, '%Y-%m-%d') as registration_date,
@@ -201,14 +189,14 @@ router.get('/api/users/:id', async (req, res) => {
       FROM users u
       WHERE u.id = ?
     `, [userId]);
-    
+
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
       });
     }
-    
+
     const user = rows[0];
     const formattedUser = {
       ...user,
@@ -218,7 +206,7 @@ router.get('/api/users/:id', async (req, res) => {
       created_at: user.created_at,
       updated_at: user.updated_at
     };
-    
+
     res.json({
       success: true,
       data: formattedUser
@@ -241,49 +229,45 @@ router.post('/api/users', async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
-    
+
     const {
       company_name, user_id, email, password_hash, company_type,
       user_name, department, mobile_phone, business_license,
       phone_number, fax_number, address, notes, account_info, msds_limit,
       ai_image_limit, ai_report_limit, is_active, approval_status,
-      pricing_plan, start_date, end_date, manager_position, representative, industry,
+      pricing_plan, subscription_type, start_date, end_date, manager_position, representative, industry,
       accountant_name, accountant_position, accountant_mobile, accountant_email
     } = req.body;
 
     const finalCompanyType = company_type || '무료 사용자';
-    
+
     // 탈퇴 사용자 일관성 검증
     if (finalCompanyType === '탈퇴 사용자' && approval_status !== '탈퇴') {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.'
       });
     }
-    
+
     if (approval_status === '탈퇴' && finalCompanyType !== '탈퇴 사용자') {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.'
       });
     }
-    
+
     const validCompanyTypes = ['무료 사용자', '컨설팅 업체', '일반 업체', '탈퇴 사용자', '기타'];
-    
+
     if (!validCompanyTypes.includes(finalCompanyType)) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: `유효하지 않은 회사 유형입니다. 허용되는 값: ${validCompanyTypes.join(', ')}`
       });
     }
-    
+
     const validPricingPlans = ['무료', '스탠다드', '프리미엄'];
     const finalPricingPlan = pricing_plan || '무료';
     if (!validPricingPlans.includes(finalPricingPlan)) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: `유효하지 않은 요금제입니다. 허용되는 값: ${validPricingPlans.join(', ')}`
@@ -291,7 +275,6 @@ router.post('/api/users', async (req, res) => {
     }
 
     if (!user_id || !user_id.trim()) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '사용자 ID는 필수 항목입니다.'
@@ -300,9 +283,8 @@ router.post('/api/users', async (req, res) => {
 
     const { query: checkQuery, values: checkValues } = QueryBuilder.checkUserIdExists(user_id.trim());
     const [existingUser] = await connection.execute(checkQuery, checkValues);
-    
+
     if (existingUser.length > 0) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '이미 존재하는 사용자 ID입니다.'
@@ -310,10 +292,9 @@ router.post('/api/users', async (req, res) => {
     }
 
     if (finalCompanyType !== '무료 사용자' && finalCompanyType !== '탈퇴 사용자') {
-      if (!start_date || !end_date || 
-          (typeof start_date === 'string' && start_date.trim() === '') ||
-          (typeof end_date === 'string' && end_date.trim() === '')) {
-        connection.release();
+      if (!start_date || !end_date ||
+        (typeof start_date === 'string' && start_date.trim() === '') ||
+        (typeof end_date === 'string' && end_date.trim() === '')) {
         return res.status(400).json({
           success: false,
           error: '일반 업체와 컨설팅 업체는 시작일과 종료일을 입력해야 합니다.'
@@ -325,22 +306,24 @@ router.post('/api/users', async (req, res) => {
     const startDateValue = (start_date && typeof start_date === 'string' && start_date.trim() && finalCompanyType !== '무료 사용자' && finalCompanyType !== '탈퇴 사용자') ? start_date.trim() : null;
     const endDateValue = (end_date && typeof end_date === 'string' && end_date.trim() && finalCompanyType !== '무료 사용자' && finalCompanyType !== '탈퇴 사용자') ? end_date.trim() : null;
 
+    const finalSubscriptionType = subscription_type || null;
+
     const [result] = await connection.execute(`
       INSERT INTO users (
         company_name, user_id, email, password_hash, company_type,
         user_name, department, mobile_phone, business_license,
         phone_number, fax_number, address, notes, account_info, msds_limit,
         ai_image_limit, ai_report_limit, is_active, approval_status,
-        pricing_plan, start_date, end_date, manager_position, representative, industry,
+        pricing_plan, subscription_type, start_date, end_date, manager_position, representative, industry,
         accountant_name, accountant_position, accountant_mobile, accountant_email,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       company_name || null, user_id || null, email || null, password_hash || null, finalCompanyType,
       user_name || null, department || null, mobile_phone || null, business_license || null,
       phone_number || null, fax_number || null, address || null, notes || null, account_info || null,
       msds_limit || null, ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || '승인 예정',
-      finalPricingPlan, startDateValue, endDateValue, manager_position || null, representative || null, industry || null,
+      finalPricingPlan, finalSubscriptionType, startDateValue, endDateValue, manager_position || null, representative || null, industry || null,
       accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null,
       new Date(), new Date()
     ]);
@@ -365,18 +348,17 @@ router.put('/api/users/:id', async (req, res) => {
   try {
     const userId = req.params.id;
     connection = await pool.getConnection();
-    
+
     const {
       company_name, user_id, email, password_hash, company_type,
       user_name, department, mobile_phone, business_license,
       phone_number, fax_number, address, notes, account_info, msds_limit,
       ai_image_limit, ai_report_limit, is_active, approval_status,
-      pricing_plan, start_date, end_date, manager_position, representative, industry,
+      pricing_plan, subscription_type, start_date, end_date, manager_position, representative, industry,
       accountant_name, accountant_position, accountant_mobile, accountant_email
     } = req.body;
 
     if (!user_id || !user_id.trim()) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '사용자 ID는 필수 항목입니다.'
@@ -385,9 +367,8 @@ router.put('/api/users/:id', async (req, res) => {
 
     const { query: checkQuery, values: checkValues } = QueryBuilder.checkUserIdExists(user_id.trim(), userId);
     const [existingUser] = await connection.execute(checkQuery, checkValues);
-    
+
     if (existingUser.length > 0) {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '이미 존재하는 사용자 ID입니다.'
@@ -396,15 +377,13 @@ router.put('/api/users/:id', async (req, res) => {
 
     // 탈퇴 사용자 일관성 검증
     if (company_type === '탈퇴 사용자' && approval_status !== '탈퇴') {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '탈퇴 사용자는 승인 상태가 "탈퇴"여야 합니다.'
       });
     }
-    
+
     if (approval_status === '탈퇴' && company_type !== '탈퇴 사용자') {
-      connection.release();
       return res.status(400).json({
         success: false,
         error: '승인 상태가 "탈퇴"인 사용자는 업체 형태가 "탈퇴 사용자"여야 합니다.'
@@ -416,14 +395,13 @@ router.put('/api/users/:id', async (req, res) => {
         (typeof start_date === 'number' && start_date.toString().length === 8) ||
         (typeof start_date === 'string' && start_date.trim() && /^\d{4}-\d{2}-\d{2}$/.test(start_date.trim()))
       );
-      
+
       const isValidEndDate = end_date && (
         (typeof end_date === 'number' && end_date.toString().length === 8) ||
         (typeof end_date === 'string' && end_date.trim() && /^\d{4}-\d{2}-\d{2}$/.test(end_date.trim()))
       );
-      
+
       if (!isValidStartDate || !isValidEndDate) {
-        connection.release();
         return res.status(400).json({
           success: false,
           error: '일반 업체와 컨설팅 업체는 시작일과 종료일을 입력해야 합니다.'
@@ -434,7 +412,7 @@ router.put('/api/users/:id', async (req, res) => {
     // 날짜를 YYYY-MM-DD 형식으로 그대로 저장 (시간 정보 제거)
     let startDateValue = null;
     let endDateValue = null;
-    
+
     if (company_type !== '무료 사용자' && company_type !== '탈퇴 사용자') {
       if (start_date) {
         if (typeof start_date === 'number' && start_date.toString().length === 8) {
@@ -447,7 +425,7 @@ router.put('/api/users/:id', async (req, res) => {
           startDateValue = start_date.trim();
         }
       }
-      
+
       if (end_date) {
         if (typeof end_date === 'number' && end_date.toString().length === 8) {
           const dateStr = end_date.toString();
@@ -465,16 +443,21 @@ router.put('/api/users/:id', async (req, res) => {
     const [currentUserData] = await connection.execute(`
       SELECT manager_position FROM users WHERE id = ?
     `, [userId]);
-    
+
     const preservedManagerPosition = currentUserData.length > 0 ? currentUserData[0].manager_position : null;
-    
+
+    let finalSubscriptionType = subscription_type || null;
+    if (company_type === '무료 사용자' || company_type === '탈퇴 사용자') {
+      finalSubscriptionType = null;
+    }
+
     const [result] = await connection.execute(`
       UPDATE users SET
         company_name = ?, user_id = ?, email = ?, password_hash = ?, company_type = ?,
         user_name = ?, department = ?, mobile_phone = ?, business_license = ?,
         phone_number = ?, fax_number = ?, address = ?, notes = ?, account_info = ?, msds_limit = ?,
         ai_image_limit = ?, ai_report_limit = ?, is_active = ?, approval_status = ?,
-        pricing_plan = ?, start_date = ?, end_date = ?, manager_position = ?, representative = ?, industry = ?,
+        pricing_plan = ?, subscription_type = ?, start_date = ?, end_date = ?, manager_position = ?, representative = ?, industry = ?,
         accountant_name = ?, accountant_position = ?, accountant_mobile = ?, accountant_email = ?,
         updated_at = NOW()
       WHERE id = ?
@@ -483,13 +466,12 @@ router.put('/api/users/:id', async (req, res) => {
       user_name || null, department || null, mobile_phone || null, business_license || null,
       phone_number || null, fax_number || null, address || null, notes || null, account_info || null,
       msds_limit || null, ai_image_limit || null, ai_report_limit || null, is_active || false, approval_status || null,
-      pricing_plan || null, startDateValue || null, endDateValue || null, 
+      pricing_plan || null, finalSubscriptionType, startDateValue || null, endDateValue || null,
       manager_position || preservedManagerPosition, representative || null, industry || null,
       accountant_name || null, accountant_position || null, accountant_mobile || null, accountant_email || null, userId
     ]);
 
     if (result.affectedRows === 0) {
-      connection.release();
       return res.status(404).json({
         success: false,
         error: 'User not found'
@@ -498,19 +480,19 @@ router.put('/api/users/:id', async (req, res) => {
 
     let statusChanged = false;
     let newStatus = approval_status;
-    
+
     // 종료일이 지난 경우 이력 생성 및 무료 사용자 전환 로직
     if (end_date && company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
       const today = new Date();
       const todayString = DateUtils.getTodayString();
-      
+
       const endDateString = end_date;
-      
+
       const endDateObj = new Date(endDateString);
       const todayObj = new Date(todayString);
-      
+
       if (endDateObj < todayObj) {
-        
+
         // 먼저 승인 완료 시점의 원본 데이터를 히스토리에 기록
         try {
           // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
@@ -519,10 +501,10 @@ router.put('/api/users/:id', async (req, res) => {
                    mobile_phone, email, manager_position, start_date, end_date
             FROM users WHERE id = ?
           `, [userId]);
-          
+
           if (userData.length > 0) {
             const user = userData[0];
-            
+
             // 활성화 일수 계산
             let activeDays = 0;
             if (user.start_date && user.end_date) {
@@ -531,7 +513,7 @@ router.put('/api/users/:id', async (req, res) => {
               const timeDiff = endDate.getTime() - startDate.getTime();
               activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
             }
-            
+
             await connection.execute(`
               INSERT INTO company_history (
                 user_id_string, company_name, user_name, company_type, status_type,
@@ -556,7 +538,7 @@ router.put('/api/users/:id', async (req, res) => {
         } catch (historyError) {
           console.error(`이력 기록 실패:`, historyError.message);
         }
-        
+
         // 그 후에 사용자 상태를 무료 사용자로 전환
         await connection.execute(`
           UPDATE users 
@@ -569,22 +551,22 @@ router.put('/api/users/:id', async (req, res) => {
               updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `, [userId]);
-        
+
         statusChanged = true;
         newStatus = '승인 예정';
       }
     }
 
     // 승인 완료 상태로 변경 시 이력 생성 (종료일이 지난 경우만)
-    if (approval_status === '승인 완료' && !statusChanged && endDateValue && 
-        company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
-      
+    if (approval_status === '승인 완료' && !statusChanged && endDateValue &&
+      company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
+
       // 종료일이 지났는지 확인
       const today = new Date();
       const todayString = DateUtils.getTodayString();
       const endDateObj = new Date(endDateValue);
       const todayObj = new Date(todayString);
-      
+
       // 종료일이 지난 경우에만 이력 생성
       if (endDateObj < todayObj) {
         try {
@@ -594,10 +576,10 @@ router.put('/api/users/:id', async (req, res) => {
                    mobile_phone, email, manager_position, start_date, end_date
             FROM users WHERE id = ?
           `, [userId]);
-          
+
           if (userData.length > 0) {
             const user = userData[0];
-            
+
             // 활성화 일수 계산
             let activeDays = 0;
             if (user.start_date && user.end_date) {
@@ -606,7 +588,7 @@ router.put('/api/users/:id', async (req, res) => {
               const timeDiff = endDate.getTime() - startDate.getTime();
               activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
             }
-            
+
             await connection.execute(`
               INSERT INTO company_history (
                 user_id_string, company_name, user_name, company_type, status_type,
@@ -635,15 +617,15 @@ router.put('/api/users/:id', async (req, res) => {
         console.log(`📝 ${user_id} - 승인 완료 상태로 변경되었지만 종료일이 아직 지나지 않아 이력 기록하지 않음`);
       }
     }
-    
+
     res.json({
       success: true,
-      data: { 
+      data: {
         id: userId,
         statusChanged: statusChanged,
         newStatus: newStatus
       },
-      message: statusChanged ? 
+      message: statusChanged ?
         `사용자 정보가 업데이트되었습니다. 종료일이 지나 승인 예정으로 변경되었습니다.` :
         '사용자 정보가 성공적으로 업데이트되었습니다.'
     });
@@ -662,16 +644,16 @@ router.delete('/api/users/:id', async (req, res) => {
   try {
     const userId = req.params.id;
     connection = await pool.getConnection();
-    
+
     const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [userId]);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
       });
     }
-    
+
     res.json({
       success: true,
       message: '사용자가 성공적으로 삭제되었습니다.'

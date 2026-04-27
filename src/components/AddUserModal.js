@@ -1,13 +1,13 @@
 import React from 'react';
 import { handleBusinessLicenseInput, formatBusinessLicense, isValidBusinessLicense } from '../utils/businessLicenseUtils';
 
-const AddUserModal = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  newUser, 
+const AddUserModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  newUser,
   setNewUser,
-  showMessage 
+  showMessage
 }) => {
   if (!isOpen) return null;
 
@@ -22,7 +22,7 @@ const AddUserModal = ({
       }));
       return;
     }
-    
+
     // 빈 문자열도 허용하도록 처리
     const cleanValue = value === undefined || value === null ? '' : String(value);
     setNewUser(prev => ({
@@ -58,7 +58,7 @@ const AddUserModal = ({
       }
       return;
     }
-    
+
     // 저장 실행
     onSave(newUser);
   };
@@ -92,7 +92,7 @@ const AddUserModal = ({
               />
             </div>
           </div>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label>직책</label>
@@ -113,7 +113,7 @@ const AddUserModal = ({
               />
             </div>
           </div>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label>이메일</label>
@@ -135,7 +135,7 @@ const AddUserModal = ({
             </div>
           </div>
 
-          
+
           <div className="form-row">
             <div className="form-group">
               <label>회사명</label>
@@ -157,7 +157,7 @@ const AddUserModal = ({
               />
             </div>
           </div>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label>전화번호</label>
@@ -178,7 +178,7 @@ const AddUserModal = ({
               />
             </div>
           </div>
-          
+
           <div className="form-row-single">
             <div className="form-group">
               <label>주소</label>
@@ -196,8 +196,8 @@ const AddUserModal = ({
           <button className="cancel-button" onClick={onClose}>
             취소
           </button>
-          <button 
-            className="submit-button" 
+          <button
+            className="submit-button"
             onClick={handleSave}
             disabled={!newUser.userId}
           >

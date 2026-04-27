@@ -5,35 +5,37 @@ import useApprovalFields from '../../hooks/useApprovalFields';
  * 공통 승인 필드 컴포넌트
  * @param {Object} props - 컴포넌트 props
  */
-const ApprovalFields = ({ 
-  editedUser, 
-  user, 
-  handleInputChange, 
+const ApprovalFields = ({
+  editedUser,
+  user,
+  handleInputChange,
   handleDateInputChange,
   handleOpenCalendar,
   isEditable = true,
   setEditedUser,
   showLabels = true,
   compactMode = false,
-  fieldsToShow = ['companyType', 'pricingPlan', 'startDate', 'endDate', 'approvalStatus'],
+  fieldsToShow = ['companyType', 'pricingPlan', 'subscriptionType', 'approvalStatus', 'startDate', 'endDate'],
   activeTab = '전체'
 }) => {
   const {
     isFreeUser,
+    isAutoEndDate,
     getDisabledStyle,
     handleCalendarClick,
     getCalendarIconStyle,
     handleCompanyTypeChange,
     handlePricingPlanChange,
+    handleSubscriptionTypeChange,
     handleApprovalStatusChange,
     handleDateChange
   } = useApprovalFields(
-    editedUser, 
-    user, 
-    handleInputChange, 
-    handleDateInputChange, 
-    handleOpenCalendar, 
-    setEditedUser, 
+    editedUser,
+    user,
+    handleInputChange,
+    handleDateInputChange,
+    handleOpenCalendar,
+    setEditedUser,
     isEditable,
     activeTab
   );
@@ -77,61 +79,21 @@ const ApprovalFields = ({
         </div>
       )}
 
-      {/* 시작일 */}
-      {fieldsToShow.includes('startDate') && (
+      {/* 결제 주기 (사용자 요청 1, 2, 4번) */}
+      {fieldsToShow.includes('subscriptionType') && (
         <div className="form-group">
-          {showLabels && <label>시작일</label>}
-          <div className="date-input-container">
-            <input
-              type="text"
-              value={editedUser?.startDate || ''}
-              onChange={(e) => handleDateChange('startDate', e.target.value)}
-              placeholder="YYYY-MM-DD"
-              maxLength="10"
-              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
-              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
-              style={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #ccc'
-              }}
-            />
-            <div 
-              className="calendar-icon" 
-              onClick={(e) => handleCalendarClick('startDate', e)}
-              style={getCalendarIconStyle('startDate')}
-            >
-              📅
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 종료일 */}
-      {fieldsToShow.includes('endDate') && (
-        <div className="form-group">
-          {showLabels && <label>종료일</label>}
-          <div className="date-input-container">
-            <input
-              type="text"
-              value={editedUser?.endDate || ''}
-              onChange={(e) => handleDateChange('endDate', e.target.value)}
-              placeholder="YYYY-MM-DD"
-              maxLength="10"
-              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
-              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
-              style={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #ccc'
-              }}
-            />
-            <div 
-              className="calendar-icon" 
-              onClick={(e) => handleCalendarClick('endDate', e)}
-              style={getCalendarIconStyle('endDate')}
-            >
-              📅
-            </div>
-          </div>
+          {showLabels && <label>결제 주기</label>}
+          <select
+            value={editedUser?.subscriptionType || ''}
+            onChange={(e) => handleSubscriptionTypeChange(e.target.value)}
+            disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+            className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
+            style={getDisabledStyle(!isEditable || isFreeUser || activeTab === '탈퇴')}
+          >
+            <option value="">선택 안 함</option>
+            <option value="월간">월간</option>
+            <option value="연간">연간</option>
+          </select>
         </div>
       )}
 
@@ -150,6 +112,64 @@ const ApprovalFields = ({
             <option value="승인 완료">승인 완료</option>
             <option value="탈퇴">탈퇴</option>
           </select>
+        </div>
+      )}
+
+      {/* 시작일 */}
+      {fieldsToShow.includes('startDate') && (
+        <div className="form-group">
+          {showLabels && <label>시작일</label>}
+          <div className="date-input-container">
+            <input
+              type="text"
+              value={editedUser?.startDate || ''}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
+              placeholder="YYYY-MM-DD"
+              maxLength="10"
+              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
+              style={{
+                backgroundColor: 'white',
+                border: '1px solid #ccc'
+              }}
+            />
+            <div
+              className="calendar-icon"
+              onClick={(e) => handleCalendarClick('startDate', e)}
+              style={getCalendarIconStyle('startDate')}
+            >
+              📅
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 종료일 (사용자 요청 5번: 비활성화 제거) */}
+      {fieldsToShow.includes('endDate') && (
+        <div className="form-group">
+          {showLabels && <label>종료일</label>}
+          <div className="date-input-container">
+            <input
+              type="text"
+              value={editedUser?.endDate || ''}
+              onChange={(e) => handleDateChange('endDate', e.target.value)}
+              placeholder="YYYY-MM-DD"
+              maxLength="10"
+              disabled={!isEditable || isFreeUser || activeTab === '탈퇴'}
+              className={(!isEditable || isFreeUser || activeTab === '탈퇴') ? 'readonly-input' : ''}
+              style={{
+                backgroundColor: 'white',
+                border: '1px solid #ccc'
+              }}
+            />
+            <div
+              className="calendar-icon"
+              onClick={(e) => handleCalendarClick('endDate', e)}
+              style={getCalendarIconStyle('endDate')}
+            >
+              📅
+            </div>
+          </div>
         </div>
       )}
     </>

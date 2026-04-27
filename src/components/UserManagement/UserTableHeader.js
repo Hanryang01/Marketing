@@ -28,6 +28,7 @@ const UserTableHeader = ({ activeTab }) => {
             <th>휴대전화</th>
             <th>업체 형태</th>
             <th>요금제</th>
+            <th>결제 주기</th>
             <th>시작일</th>
             <th>종료일</th>
             <th>MSDS</th>
@@ -78,6 +79,7 @@ const UserTableHeader = ({ activeTab }) => {
             <th>이메일</th>
             <th>업체 형태</th>
             <th>요금제</th>
+            <th>결제 주기</th>
             <th>시작일</th>
             <th>종료일</th>
             <th>승인 상태</th>
