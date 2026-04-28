@@ -208,17 +208,20 @@ const UserManagement = () => {
           confirmText: '확인'
         });
         handleCloseDetailModal();
+        return true;
       } else {
         showMessage('error', '오류', result.error || '사용자 정보 저장에 실패했습니다.', {
           showCancel: false,
           confirmText: '확인'
         });
+        return false;
       }
     } catch (error) {
       showMessage('error', '오류', '사용자 정보 저장 중 오류가 발생했습니다.', {
         showCancel: false,
         confirmText: '확인'
       });
+      return false;
     }
   };
 

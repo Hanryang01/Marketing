@@ -264,6 +264,9 @@ router.post('/api/revenue', async (req, res) => {
       payment_method, company_type, item, supply_amount, vat, total_amount
     } = req.body;
 
+    const finalIssueDate = issue_date && issue_date.trim() !== '' ? issue_date : null;
+    const finalPaymentDate = payment_date && payment_date.trim() !== '' ? payment_date : null;
+
     const [result] = await connection.execute(`
       INSERT INTO revenue (
         company_name, business_license, issue_date, payment_date,
@@ -271,7 +274,7 @@ router.post('/api/revenue', async (req, res) => {
         created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `, [
-      company_name, business_license, issue_date, payment_date,
+      company_name, business_license, finalIssueDate, finalPaymentDate,
       payment_method, company_type, item, supply_amount, vat, total_amount
     ]);
 
@@ -301,6 +304,9 @@ router.put('/api/revenue/:id', async (req, res) => {
       payment_method, company_type, item, supply_amount, vat, total_amount
     } = req.body;
 
+    const finalIssueDate = issue_date && issue_date.trim() !== '' ? issue_date : null;
+    const finalPaymentDate = payment_date && payment_date.trim() !== '' ? payment_date : null;
+
     const [result] = await connection.execute(`
       UPDATE revenue SET
         company_name = ?, business_license = ?, issue_date = ?, payment_date = ?,
@@ -308,7 +314,7 @@ router.put('/api/revenue/:id', async (req, res) => {
         updated_at = NOW()
       WHERE id = ?
     `, [
-      company_name, business_license, issue_date, payment_date,
+      company_name, business_license, finalIssueDate, finalPaymentDate,
       payment_method, company_type, item, supply_amount, vat, total_amount, revenueId
     ]);
 

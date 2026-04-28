@@ -211,6 +211,20 @@ const UserDetailModal = ({
         return;
       }
 
+      // 무료 사용자의 승인 완료 상태 저장을 방지
+      if (editedUser.companyType === '무료 사용자' && editedUser.approvalStatus === '승인 완료') {
+        showMessage('error', '승인 오류', '무료 사용자는 승인 완료 상태로 저장할 수 없습니다. 업체 형태를 일반 업체나 컨설팅 업체로 먼저 변경해 주세요.', '확인', false);
+        return;
+      }
+
+      // 유료 업체 및 기타 업체의 시작일/종료일 필수 검증
+      if (editedUser.companyType !== '무료 사용자' && editedUser.companyType !== '탈퇴 사용자') {
+        if (!editedUser.startDate || !editedUser.endDate || editedUser.startDate.trim() === '' || editedUser.endDate.trim() === '') {
+          showMessage('error', '입력 오류', '유료 업체(일반/컨설팅/기타)는 시작일과 종료일을 반드시 입력해야 합니다.', '확인', false);
+          return;
+        }
+      }
+
       // 사업자등록번호 유효성 검사
       if (editedUser.businessLicense && !isValidBusinessLicense(editedUser.businessLicense)) {
         showMessage('error', '사업자등록번호 오류', '사업자등록번호는 숫자 10자리여야 합니다.', '확인', false);
@@ -267,7 +281,11 @@ const UserDetailModal = ({
         ai_report_limit: editedUser.aiReportLimit
       };
 
-      await onSave(serverData);
+      const isSuccess = await onSave(serverData);
+
+      if (isSuccess === false) {
+        return;
+      }
 
       // 승인 상태 변경 시 특별 메시지 표시
       if (isApprovalStatusChanged && isChangedToApproved) {

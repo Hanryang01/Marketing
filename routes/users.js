@@ -1,5 +1,5 @@
 const express = require('express');
-const { DateUtils, QueryBuilder, handleApiError, Response } = require('../utils/helpers');
+const { DateUtils, QueryBuilder, handleApiError } = require('../utils/helpers');
 const { generateToken, saveToken } = require('../utils/tokenStore');
 
 // handleError는 handleApiError의 별칭
@@ -113,7 +113,6 @@ router.get('/api/users/end-date-check', async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
-    const today = new Date();
     const todayString = DateUtils.getTodayString();
 
     const twoWeeksLater = new Date();
@@ -481,7 +480,6 @@ router.put('/api/users/:id', async (req, res) => {
 
     // 종료일이 지난 경우 이력 생성 및 무료 사용자 전환 로직
     if (end_date && company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
-      const today = new Date();
       const todayString = DateUtils.getTodayString();
 
       const endDateString = end_date;
@@ -560,7 +558,6 @@ router.put('/api/users/:id', async (req, res) => {
       company_type !== '탈퇴 사용자' && company_type !== '무료 사용자') {
 
       // 종료일이 지났는지 확인
-      const today = new Date();
       const todayString = DateUtils.getTodayString();
       const endDateObj = new Date(endDateValue);
       const todayObj = new Date(todayString);

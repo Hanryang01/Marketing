@@ -37,29 +37,7 @@ const useApprovalFields = (
     } : {};
   }, []);
 
-  // 시작일 기반으로 종료일 자동 계산
-  const calculateEndDate = useCallback((startDateStr, subscriptionType) => {
-    if (!startDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) return '';
 
-    const [year, month, day] = startDateStr.split('-').map(Number);
-    const startDate = new Date(year, month - 1, day);
-
-    if (isNaN(startDate.getTime())) return '';
-
-    let endDate;
-    if (subscriptionType === '월간') {
-      endDate = new Date(year, month, day); // +1개월
-    } else if (subscriptionType === '연간') {
-      endDate = new Date(year + 1, month - 1, day); // +1년
-    } else {
-      return '';
-    }
-
-    const endYear = endDate.getFullYear();
-    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-    const endDay = String(endDate.getDate()).padStart(2, '0');
-    return `${endYear}-${endMonth}-${endDay}`;
-  }, []);
 
   // 달력 아이콘 클릭 핸들러
   const handleCalendarClick = useCallback((field, e) => {
@@ -120,7 +98,7 @@ const useApprovalFields = (
 
       return updated;
     });
-  }, [setEditedUser, calculateEndDate]);
+  }, [setEditedUser]);
 
   // 승인 상태 변경 핸들러
   const handleApprovalStatusChange = useCallback((value) => {
@@ -133,25 +111,9 @@ const useApprovalFields = (
 
     // 시작일이 변경되고 구독기간이 월간/연간이면 종료일 자동 계산
     if (field === 'startDate') {
-      // 8자리 숫자를 YYYY-MM-DD로 변환
-      let dateStr = value;
-      const numericValue = value.replace(/\D/g, '');
-      if (numericValue.length === 8) {
-        dateStr = `${numericValue.substring(0, 4)}-${numericValue.substring(4, 6)}-${numericValue.substring(6, 8)}`;
-      }
-
-      /* 시작일이 변경되고 구독기간이 월간/연간이면 종료일 자동 계산 - 사용자 요청으로 제거
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        setEditedUser(prev => {
-          if (prev.subscriptionType === '월간' || prev.subscriptionType === '연간') {
-            return { ...prev, endDate: calculateEndDate(dateStr, prev.subscriptionType) };
-          }
-          return prev;
-        });
-      }
-      */
+      // (사용자 요청으로 종료일 자동 계산 기능 제거됨)
     }
-  }, [handleDateInputChange, setEditedUser, calculateEndDate]);
+  }, [handleDateInputChange, setEditedUser]);
 
   return {
     isFreeUser,

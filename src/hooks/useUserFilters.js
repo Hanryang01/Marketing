@@ -51,16 +51,7 @@ const useUserFilters = (users) => {
         );
         break;
       case '구독중':
-        filteredUsers = users.filter(user =>
-          (user.companyType === '컨설팅 업체' && user.approvalStatus === '승인 완료') ||
-          (user.companyType === '일반 업체' && isUserActive({
-            approvalStatus: user.approvalStatus,
-            companyType: user.companyType,
-            pricingPlan: user.pricingPlan,
-            startDate: user.startDate,
-            endDate: user.endDate
-          }))
-        );
+        filteredUsers = users.filter(user => isUserActive(user));
         break;
       case '승인':
         // 승인 이력은 companyHistory 데이터를 사용 (users가 아닌)

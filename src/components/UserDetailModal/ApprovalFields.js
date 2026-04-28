@@ -20,7 +20,6 @@ const ApprovalFields = ({
 }) => {
   const {
     isFreeUser,
-    isAutoEndDate,
     getDisabledStyle,
     handleCalendarClick,
     getCalendarIconStyle,
