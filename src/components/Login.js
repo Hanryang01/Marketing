@@ -5,7 +5,7 @@ import MessageModal from './MessageModal';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Login = ({ onLogin }) => {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ userId: userId.trim(), password })
       });
 
       const data = await response.json();
@@ -70,12 +70,12 @@ const Login = ({ onLogin }) => {
             <h1>SIHM 관리자</h1>
           </div>
           <div className="form-group">
-            <label htmlFor="email">사용자 ID</label>
+            <label htmlFor="userId">사용자 ID</label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="userId"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
               placeholder=""
               className="form-input"
             />

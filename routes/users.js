@@ -17,21 +17,19 @@ const setPool = (databasePool) => {
 // 로그인 API (독립적인 인증 시스템)
 router.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { userId, email, password } = req.body;
+    const inputId = userId || email; // 기존 호환성을 위해 둘 다 허용
 
     let isValid = false;
     let user = null;
 
-    // 허용된 계정 목록 (개발/배포 공통)
-    const accounts = [
-      { id: 1, username: 'herlab', email: 'herlab@marketing.com', password: 'herlab', role: 'admin' },
-      { id: 2, username: 'technonia', email: 'technonia@marketing.com', password: 'nonia8123', role: 'admin' },
-    ];
-
-    const matched = accounts.find(a => a.username === email && a.password === password);
-    if (matched) {
+    // 환경 변수에서 관리자 계정 정보 확인
+    if (inputId === process.env.ADMIN1_ID && password === process.env.ADMIN1_PW) {
       isValid = true;
-      user = { id: matched.id, username: matched.username, email: matched.email, role: matched.role };
+      user = { id: 1, username: process.env.ADMIN1_ID, role: 'admin' };
+    } else if (inputId === process.env.ADMIN2_ID && password === process.env.ADMIN2_PW) {
+      isValid = true;
+      user = { id: 2, username: process.env.ADMIN2_ID, role: 'admin' };
     }
 
     if (isValid) {
