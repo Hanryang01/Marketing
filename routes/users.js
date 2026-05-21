@@ -14,6 +14,48 @@ const setPool = (databasePool) => {
   pool = databasePool;
 };
 
+// 이력 기록 헬퍼 함수
+async function insertApprovalHistory(connection, dbUserId, userIdString) {
+  const [userData] = await connection.execute(`
+    SELECT user_name, company_name, company_type, pricing_plan, 
+           mobile_phone, email, manager_position, start_date, end_date
+    FROM users WHERE id = ?
+  `, [dbUserId]);
+
+  if (userData.length === 0) return;
+
+  const user = userData[0];
+
+  // 활성화 일수 계산
+  let activeDays = 0;
+  if (user.start_date && user.end_date) {
+    const startDate = new Date(user.start_date);
+    const endDate = new Date(user.end_date);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
+  }
+
+  await connection.execute(`
+    INSERT INTO company_history (
+      user_id_string, company_name, user_name, company_type, status_type,
+      start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+  `, [
+    userIdString || null,
+    user.company_name || null,
+    user.user_name || null,
+    user.company_type || null,
+    '승인 완료',
+    user.start_date || null,
+    user.end_date || null,
+    user.pricing_plan || null,
+    user.mobile_phone || null,
+    user.email || null,
+    user.manager_position || null,
+    activeDays
+  ]);
+}
+
 // 로그인 API (독립적인 인증 시스템)
 router.post('/api/auth/login', async (req, res) => {
   try {
@@ -85,19 +127,9 @@ router.get('/api/users', async (req, res) => {
     console.log('조회된 사용자 수:', rows.length);
     console.log('첫 번째 사용자 ID:', rows[0]?.id);
 
-    // 날짜는 이미 YYYY-MM-DD 형식으로 저장되어 있으므로 변환 불필요
-    const formattedRows = rows.map(user => ({
-      ...user,
-      start_date: user.start_date,
-      end_date: user.end_date,
-      registration_date: user.registration_date,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    }));
-
     res.json({
       success: true,
-      data: formattedRows
+      data: rows
     });
   } catch (err) {
     handleError(res, err, '사용자 데이터 조회 오류');
@@ -194,19 +226,9 @@ router.get('/api/users/:id', async (req, res) => {
       });
     }
 
-    const user = rows[0];
-    const formattedUser = {
-      ...user,
-      start_date: user.start_date,
-      end_date: user.end_date,
-      registration_date: user.registration_date,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    };
-
     res.json({
       success: true,
-      data: formattedUser
+      data: rows[0]
     });
   } catch (err) {
     console.error('Error fetching user:', err);
@@ -489,48 +511,10 @@ router.put('/api/users/:id', async (req, res) => {
 
       if (endDateObj < todayObj) {
 
-        // 먼저 승인 완료 시점의 원본 데이터를 히스토리에 기록
+        // 승인 완료 시점의 원본 데이터를 히스토리에 기록
         try {
-          // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
-          const [userData] = await connection.execute(`
-            SELECT user_name, company_name, company_type, pricing_plan, 
-                   mobile_phone, email, manager_position, start_date, end_date
-            FROM users WHERE id = ?
-          `, [userId]);
-
-          if (userData.length > 0) {
-            const user = userData[0];
-
-            // 활성화 일수 계산
-            let activeDays = 0;
-            if (user.start_date && user.end_date) {
-              const startDate = new Date(user.start_date);
-              const endDate = new Date(user.end_date);
-              const timeDiff = endDate.getTime() - startDate.getTime();
-              activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
-            }
-
-            await connection.execute(`
-              INSERT INTO company_history (
-                user_id_string, company_name, user_name, company_type, status_type,
-                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            `, [
-              user_id || null,
-              user.company_name || null,
-              user.user_name || null,
-              user.company_type || null,
-              '승인 완료',
-              user.start_date || null,
-              user.end_date || null,
-              user.pricing_plan || null,
-              user.mobile_phone || null,
-              user.email || null,
-              user.manager_position || null,
-              activeDays
-            ]);
-            console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료`);
-          }
+          await insertApprovalHistory(connection, userId, user_id);
+          console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료`);
         } catch (historyError) {
           console.error(`이력 기록 실패:`, historyError.message);
         }
@@ -565,46 +549,8 @@ router.put('/api/users/:id', async (req, res) => {
       // 종료일이 지난 경우에만 이력 생성
       if (endDateObj < todayObj) {
         try {
-          // 현재 사용자의 실제 데이터를 가져와서 히스토리 기록
-          const [userData] = await connection.execute(`
-            SELECT user_name, company_name, company_type, pricing_plan, 
-                   mobile_phone, email, manager_position, start_date, end_date
-            FROM users WHERE id = ?
-          `, [userId]);
-
-          if (userData.length > 0) {
-            const user = userData[0];
-
-            // 활성화 일수 계산
-            let activeDays = 0;
-            if (user.start_date && user.end_date) {
-              const startDate = new Date(user.start_date);
-              const endDate = new Date(user.end_date);
-              const timeDiff = endDate.getTime() - startDate.getTime();
-              activeDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // 시작일과 종료일 포함
-            }
-
-            await connection.execute(`
-              INSERT INTO company_history (
-                user_id_string, company_name, user_name, company_type, status_type,
-                start_date, end_date, pricing_plan, mobile_phone, email, manager_position, active_days, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            `, [
-              user_id || null,
-              user.company_name || null,
-              user.user_name || null,
-              user.company_type || null,
-              '승인 완료',
-              user.start_date || null,
-              user.end_date || null,
-              user.pricing_plan || null,
-              user.mobile_phone || null,
-              user.email || null,
-              user.manager_position || null,
-              activeDays
-            ]);
-            console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료 (종료일 지남)`);
-          }
+          await insertApprovalHistory(connection, userId, user_id);
+          console.log(`📝 ${user_id} - 승인 완료 이력 기록 완료 (종료일 지남)`);
         } catch (historyError) {
           console.error(`승인 완료 이력 기록 실패:`, historyError.message);
         }

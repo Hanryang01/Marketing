@@ -56,7 +56,7 @@ const taxInvoiceRoutes = require('./routes/taxInvoice');
 const TaxInvoiceService = require('./services/taxInvoiceService');
 
 // 지출 관련 모듈들
-const expenseRoutes = require('./routes/expenses');
+const { router: expenseRouter, setPool: setExpensesPool } = require('./routes/expenses');
 
 
 // 한국 시간대 설정
@@ -157,7 +157,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/tax-invoice-settings', taxInvoiceRoutes);
 
 // 지출 라우트 연결
-app.use('/api/expenses', expenseRoutes);
+app.use('/api/expenses', expenseRouter);
 
 // PDF 생성 API - 텍스트 덮어쓰기 방식
 app.post('/api/generate-pdf', async (req, res) => {
@@ -308,6 +308,7 @@ const { router: historyRouter, setPool: setHistoryPool } = require('./routes/his
 setUsersPool(pool);
 setRevenuePool(pool);
 setHistoryPool(pool);
+setExpensesPool(pool);
 
 // 헬스체크 엔드포인트
 app.get('/health', (req, res) => {
@@ -486,12 +487,12 @@ async function logError(connection, errorInfo) {
 }
 
 
+// 중복 실행 방지를 위한 상태 (모듈 스코프)
+let isProcessingExpiredApprovals = false;
+let lastProcessTime = 0;
+
 // Helper function to check and update expired approvals
 async function checkAndUpdateExpiredApprovals(connection = null) {
-  // 중복 실행 방지를 위한 상태 (함수 내부 변수)
-  let isProcessingExpiredApprovals = false;
-  let lastProcessTime = 0;
-
   const now = Date.now();
   if (isProcessingExpiredApprovals || (now - lastProcessTime) < 10000) {
     console.log('⏭️ 자동 만료 체크가 이미 진행 중이거나 최근에 실행되었습니다.');
@@ -513,26 +514,6 @@ async function checkAndUpdateExpiredApprovals(connection = null) {
 
 
 
-    const [updateResult] = await conn.execute(`
-      UPDATE users 
-      SET end_date = DATE_ADD(end_date, INTERVAL 9 HOUR)
-      WHERE end_date IS NOT NULL 
-      AND end_date < '2025-01-01'  -- 2025년 이전 데이터만 수정
-    `);
-
-    if (updateResult.affectedRows > 0) {
-      console.log(`🔄 UTC 종료일을 한국 시간으로 수정: ${updateResult.affectedRows}개`);
-    }
-
-    const [noEmailResult] = await conn.execute(`
-      UPDATE users 
-      SET email = CONCAT('user_', user_id, '@example.com')
-      WHERE email = 'no-email@example.com'
-    `);
-
-    if (noEmailResult.affectedRows > 0) {
-      console.log(`📧 no-email@example.com 처리: ${noEmailResult.affectedRows}개`);
-    }
 
     const [expiredUsers] = await conn.execute(`
       SELECT 

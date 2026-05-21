@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `company_type` enum('무료 사용자','컨설팅 업체','일반 업체','탈퇴 사용자','기타') COLLATE utf8mb4_unicode_ci DEFAULT '무료 사용자',
   `approval_status` enum('승인 예정','승인 완료','기간 종료','탈퇴') COLLATE utf8mb4_unicode_ci DEFAULT '승인 예정',
   `is_active` tinyint(1) DEFAULT '0',
-  `pricing_plan` enum('무료','기본','스탠다드','프리미엄','엔터프라이즈') COLLATE utf8mb4_unicode_ci DEFAULT '무료',
+  `pricing_plan` enum('무료','스탠다드','프리미엄') COLLATE utf8mb4_unicode_ci DEFAULT '무료',
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `registration_date` date DEFAULT NULL,

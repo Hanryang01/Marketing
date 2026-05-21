@@ -53,99 +53,45 @@ router.get('/api/dashboard/stats', async (req, res) => {
   try {
     connection = await pool.getConnection();
     
-    const today = new Date().toISOString().split('T')[0];
-    
-    // 전체 사용자 수
-    const [totalUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as total_count
+    // 사용자 통계를 단일 쿼리로 통합
+    const [userStats] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_count,
+        SUM(CASE WHEN approval_status = '승인 예정' THEN 1 ELSE 0 END) as pending_count,
+        SUM(CASE WHEN approval_status = '승인 완료' THEN 1 ELSE 0 END) as approved_count,
+        SUM(CASE WHEN company_type = '컨설팅 업체' AND approval_status = '승인 완료' THEN 1 ELSE 0 END) as consulting_count,
+        SUM(CASE WHEN company_type = '일반 업체' AND approval_status = '승인 완료' THEN 1 ELSE 0 END) as general_count,
+        SUM(CASE WHEN company_type = '탈퇴 사용자' THEN 1 ELSE 0 END) as withdrawn_count
       FROM users
     `);
     
-    // 승인 예정 사용자 수
-    const [pendingUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as pending_count
-      FROM users 
-      WHERE approval_status = '승인 예정'
-    `);
-    
-    // 승인 완료 사용자 수
-    const [approvedUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as approved_count
-      FROM users 
-      WHERE approval_status = '승인 완료'
-    `);
-    
-    // 무료 사용자 수
-    const [freeUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as free_count
-      FROM users 
-      WHERE approval_status = '승인 예정'
-    `);
-    
-    // 컨설팅 업체 수
-    const [consultingUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as consulting_count
-      FROM users 
-      WHERE company_type = '컨설팅 업체'
-        AND approval_status = '승인 완료'
-    `);
-    
-    // 일반 업체 수
-    const [generalUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as general_count
-      FROM users 
-      WHERE company_type = '일반 업체'
-        AND approval_status = '승인 완료'
-    `);
-    
-    // 탈퇴 사용자 수
-    const [withdrawnUsersRows] = await connection.execute(`
-      SELECT COUNT(*) as withdrawn_count
-      FROM users 
-      WHERE company_type = '탈퇴 사용자'
-    `);
-    
-    // 총 매출
-    const [totalRevenueRows] = await connection.execute(`
-      SELECT COALESCE(SUM(supply_amount), 0) as total_revenue
+    // 매출 통계를 단일 쿼리로 통합
+    const [revenueStats] = await connection.execute(`
+      SELECT 
+        COALESCE(SUM(supply_amount), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN company_type = '컨설팅 업체' THEN supply_amount ELSE 0 END), 0) as consulting_revenue,
+        COALESCE(SUM(CASE WHEN company_type = '일반 업체' THEN supply_amount ELSE 0 END), 0) as general_revenue,
+        COALESCE(SUM(CASE WHEN company_type = '기타' THEN supply_amount ELSE 0 END), 0) as other_revenue
       FROM revenue
     `);
     
-    // 컨설팅 업체 매출
-    const [consultingRevenueRows] = await connection.execute(`
-      SELECT COALESCE(SUM(supply_amount), 0) as consulting_revenue
-      FROM revenue
-      WHERE company_type = '컨설팅 업체'
-    `);
-    
-    // 일반 업체 매출
-    const [generalRevenueRows] = await connection.execute(`
-      SELECT COALESCE(SUM(supply_amount), 0) as general_revenue
-      FROM revenue
-      WHERE company_type = '일반 업체'
-    `);
-    
-    // 기타 매출
-    const [otherRevenueRows] = await connection.execute(`
-      SELECT COALESCE(SUM(supply_amount), 0) as other_revenue
-      FROM revenue
-      WHERE company_type = '기타'
-    `);
+    const u = userStats[0];
+    const r = revenueStats[0];
     
     res.json({
       success: true,
       data: {
-        totalUsers: totalUsersRows[0].total_count,
-        pendingUsers: pendingUsersRows[0].pending_count,
-        approvedUsers: approvedUsersRows[0].approved_count,
-        totalFreeUsers: freeUsersRows[0].free_count,
-        consultingUsers: consultingUsersRows[0].consulting_count,
-        generalUsers: generalUsersRows[0].general_count,
-        withdrawnUsers: withdrawnUsersRows[0].withdrawn_count,
-        totalRevenue: totalRevenueRows[0].total_revenue,
-        consultingRevenue: consultingRevenueRows[0].consulting_revenue,
-        generalRevenue: generalRevenueRows[0].general_revenue,
-        otherRevenue: otherRevenueRows[0].other_revenue
+        totalUsers: u.total_count,
+        pendingUsers: u.pending_count,
+        approvedUsers: u.approved_count,
+        totalFreeUsers: u.pending_count,
+        consultingUsers: u.consulting_count,
+        generalUsers: u.general_count,
+        withdrawnUsers: u.withdrawn_count,
+        totalRevenue: r.total_revenue,
+        consultingRevenue: r.consulting_revenue,
+        generalRevenue: r.general_revenue,
+        otherRevenue: r.other_revenue
       }
     });
   } catch (error) {
@@ -169,16 +115,34 @@ router.get('/api/dashboard/active-companies', async (req, res) => {
     
     const today = new Date().toISOString().split('T')[0];
     
-    const [currentRows] = await connection.execute(`
-      SELECT COUNT(*) as active_count
-      FROM users 
-      WHERE approval_status = '승인 완료'
-        AND company_type IN ('컨설팅 업체', '일반 업체')
-        AND pricing_plan != '무료'
-        AND (start_date IS NULL OR DATE(start_date) <= ?)
-        AND (end_date IS NULL OR DATE(end_date) >= ?)
-    `, [today, today]);
+    // 활성 사용자 통계를 단일 쿼리로 통합
+    const [activeStats] = await connection.execute(`
+      SELECT 
+        COUNT(CASE 
+          WHEN approval_status = '승인 완료' AND company_type IN ('컨설팅 업체', '일반 업체')
+            AND pricing_plan != '무료'
+            AND (start_date IS NULL OR DATE(start_date) <= ?)
+            AND (end_date IS NULL OR DATE(end_date) >= ?)
+          THEN 1 END) as active_count,
+        COUNT(CASE 
+          WHEN approval_status = '승인 완료' AND company_type = '컨설팅 업체'
+            AND pricing_plan != '무료'
+            AND (start_date IS NULL OR DATE(start_date) <= ?)
+            AND (end_date IS NULL OR DATE(end_date) >= ?)
+          THEN 1 END) as consulting_count,
+        COUNT(CASE 
+          WHEN approval_status = '승인 완료' AND company_type = '일반 업체'
+            AND pricing_plan != '무료'
+            AND (start_date IS NULL OR DATE(start_date) <= ?)
+            AND (end_date IS NULL OR DATE(end_date) >= ?)
+          THEN 1 END) as general_count,
+        COUNT(CASE WHEN approval_status = '승인 완료' AND company_type = '무료 사용자' THEN 1 END) as free_count,
+        COUNT(CASE WHEN approval_status = '승인 예정' THEN 1 END) as pending_count,
+        COUNT(*) as total_count
+      FROM users
+    `, [today, today, today, today, today, today]);
     
+    // 이력 활성 업체 수
     const [historyRows] = await connection.execute(`
       SELECT COUNT(DISTINCT user_id_string) as history_count
       FROM company_history 
@@ -189,55 +153,19 @@ router.get('/api/dashboard/active-companies', async (req, res) => {
         AND (end_date IS NULL OR DATE(end_date) >= ?)
     `, [today, today]);
     
-    const [consultingRows] = await connection.execute(`
-      SELECT COUNT(*) as consulting_count
-      FROM users 
-      WHERE approval_status = '승인 완료'
-        AND company_type = '컨설팅 업체'
-        AND pricing_plan != '무료'
-        AND (start_date IS NULL OR DATE(start_date) <= ?)
-        AND (end_date IS NULL OR DATE(end_date) >= ?)
-    `, [today, today]);
-    
-    const [generalRows] = await connection.execute(`
-      SELECT COUNT(*) as general_count
-      FROM users 
-      WHERE approval_status = '승인 완료'
-        AND company_type = '일반 업체'
-        AND pricing_plan != '무료'
-        AND (start_date IS NULL OR DATE(start_date) <= ?)
-        AND (end_date IS NULL OR DATE(end_date) >= ?)
-    `, [today, today]);
-    
-    const [freeRows] = await connection.execute(`
-      SELECT COUNT(*) as free_count
-      FROM users 
-      WHERE approval_status = '승인 완료'
-        AND company_type = '무료 사용자'
-    `);
-    
-    const [pendingRows] = await connection.execute(`
-      SELECT COUNT(*) as pending_count
-      FROM users 
-      WHERE approval_status = '승인 예정'
-    `);
-    
-    const [totalRows] = await connection.execute(`
-      SELECT COUNT(*) as total_count
-      FROM users
-    `);
+    const a = activeStats[0];
     
     res.json({
       success: true,
       data: {
-        currentActive: currentRows[0].active_count,
+        currentActive: a.active_count,
         historyActive: historyRows[0].history_count,
-        totalActive: currentRows[0].active_count + historyRows[0].history_count,
-        consultingActive: consultingRows[0].consulting_count,
-        generalActive: generalRows[0].general_count,
-        freeActive: freeRows[0].free_count,
-        pendingCount: pendingRows[0].pending_count,
-        totalCount: totalRows[0].total_count
+        totalActive: a.active_count + historyRows[0].history_count,
+        consultingActive: a.consulting_count,
+        generalActive: a.general_count,
+        freeActive: a.free_count,
+        pendingCount: a.pending_count,
+        totalCount: a.total_count
       }
     });
   } catch (error) {
